@@ -1574,6 +1574,8 @@ in
 
   hdate = callPackage ../applications/misc/hdate { };
 
+  https-everywhere = callPackage ../applications/networking/browsers/mozilla-addons/https-everywhere { };
+
   heatseeker = callPackage ../tools/misc/heatseeker { };
 
   hebcal = callPackage ../tools/misc/hebcal {};
