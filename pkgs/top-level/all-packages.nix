@@ -6058,6 +6058,8 @@ in
 
   torsocks = callPackage ../tools/security/tor/torsocks.nix { };
 
+  torrent-search = callPackage ../applications/search/torrent-search {};
+
   tox-node = callPackage ../tools/networking/tox-node { };
 
   toxvpn = callPackage ../tools/networking/toxvpn { };
