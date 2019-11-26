@@ -1,4 +1,4 @@
-{ stdenv, lib, makeDesktopItem, makeWrapper, lndir, config
+{ stdenv, lib, makeDesktopItem, makeWrapper, lndir, config, replace
 
 ## various stuff that can be plugged in
 , flashplayer, hal-flash
@@ -12,13 +12,15 @@
 , kerberos
 }:
 
+
+
 ## configurability of the wrapper itself
 
 browser:
 
 let
   wrapper =
-    { browserName ? browser.browserName or (lib.getName browser)
+  {  browserName ? browser.browserName or (lib.getName browser)
     , pname ? browserName
     , version ? lib.getVersion browser
     , desktopName ? # browserName with first letter capitalized
@@ -29,11 +31,41 @@ let
     , extraNativeMessagingHosts ? []
     , gdkWayland ? false
     , cfg ? config.${browserName} or {}
+
+    , extraPrefs ? ""
+    , extraExtensions ? [ ]
+    , noNewProfileOnFFUpdate ? true
+    , allowNonSigned ? false
+    , disablePocket ? false
+    , disableTelemetry ? true
+    , disableDrmPlugin ? false
+    , showPunycodeUrls ? true
+    , disableFirefoxStudies ? true
+    , disableFirefoxSync ? false
+    , disableFirefoxUpdatePage ? true
+    , useSystemCertificates ? true
+    , dontCheckDefaultBrowser ? false
+    # For more information about anti tracking
+    # vist https://wiki.kairaven.de/open/app/firefox
+    , activateAntiTracking ? true
+    , disableFeedbackCommands ? true
+    , disableDNSOverHTTPS ? true
+    , disableGoogleSafebrowsing ? false
+    , clearDataOnShutdown ? false
+    , homepage ? "about:home"
+    , enableDarkDevTools ? true
+    # For more information about policies visit
+    # https://github.com/mozilla/policy-templates#enterprisepoliciesenabled
+    , extraPolicies ? {}
     }:
 
     assert gdkWayland -> (browser ? gtk3); # Can only use the wayland backend if gtk3 is being used
 
     let
+
+      # If extraExtensions has been set disable manual extensions
+      disableManualExtensions = if lib.count (x: true) extraExtensions > 0 then true else false;
+
       enableAdobeFlash = cfg.enableAdobeFlash or false;
       ffmpegSupport = browser.ffmpegSupport or false;
       gssSupport = browser.gssSupport or false;
@@ -44,6 +76,7 @@ let
         stdenv.hostPlatform.system == "x86_64-linux" ||
         stdenv.hostPlatform.system == "armv7l-linux" ||
         stdenv.hostPlatform.system == "aarch64-linux";
+
 
       plugins =
         assert !(jre && icedtea);
@@ -63,16 +96,17 @@ let
           ++ lib.optional (cfg.enableAdobeReader or false) adobe-reader
           ++ extraPlugins
         );
+
       nativeMessagingHosts =
         ([ ]
           ++ lib.optional (cfg.enableBrowserpass or false) (lib.getBin browserpass)
           ++ lib.optional (cfg.enableBukubrow or false) bukubrow
-          ++ lib.optional (cfg.enableTridactylNative or false) tridactyl-native
           ++ lib.optional (cfg.enableGnomeExtensions or false) chrome-gnome-shell
           ++ lib.optional (cfg.enableUgetIntegrator or false) uget-integrator
           ++ lib.optional (cfg.enablePlasmaBrowserIntegration or false) plasma-browser-integration
           ++ extraNativeMessagingHosts
         );
+
       libs =   lib.optional stdenv.isLinux udev
             ++ lib.optional ffmpegSupport ffmpeg
             ++ lib.optional gssSupport kerberos
@@ -83,6 +117,237 @@ let
             ++ lib.optional (config.pulseaudio or true) libpulseaudio;
       gtk_modules = [ libcanberra-gtk2 ];
 
+
+      enterprisePolicies =
+      {
+        policies = {
+          DisableAppUpdate = true;
+        } // lib.optionalAttrs disableManualExtensions (
+        {
+          ExtensionSettings = {
+            "*" = {
+                blocked_install_message = "You can't have manual extension mixed with nix extensions";
+                installation_mode = "blocked";
+              };
+
+          } // lib.foldr (e: ret:
+              ret // {
+                "${e.extid}" = {
+                  installation_mode = "allowed";
+                };
+              }
+            ) {} extraExtensions;
+          }
+      ) // lib.optionalAttrs noNewProfileOnFFUpdate (
+        {
+          LegacyProfiles = true;
+        }
+      ) // lib.optionalAttrs disableFirefoxUpdatePage (
+        {
+          OverridePostUpdatePage = "";
+        }
+      ) // lib.optionalAttrs disablePocket (
+        {
+          DisablePocket = true;
+        }
+      ) // lib.optionalAttrs disableTelemetry (
+        {
+          DisableTelemetry = true;
+        }
+      ) // lib.optionalAttrs disableFirefoxStudies (
+        {
+          DisableFirefoxStudies = true;
+        }
+      ) // lib.optionalAttrs disableFirefoxSync (
+        {
+          DisableFirefoxAccounts = true;
+        }
+      ) // lib.optionalAttrs useSystemCertificates (
+        {
+          # Disable useless firefox certificate store
+          Certificates = {
+            ImportEnterpriseRoots = true;
+          };
+        }
+      ) // lib.optionalAttrs (
+        if lib.count (x: true) extraExtensions > 0 then true else false) (
+        {
+          # Don't try to update nix installed addons
+          DisableSystemAddonUpdate = true;
+
+          # But update manually installed addons
+          ExtensionUpdate = false;
+        }
+      ) // lib.optionalAttrs dontCheckDefaultBrowser (
+        {
+          DontCheckDefaultBrowser = true;
+        }
+      )// lib.optionalAttrs disableDNSOverHTTPS (
+        {
+          DNSOverHTTPS = {
+            Enabled = false;
+          };
+        }
+      ) // lib.optionalAttrs clearDataOnShutdown (
+        {
+          SanitizeOnShutdown = true;
+        }
+      ) // lib.optionalAttrs disableFeedbackCommands (
+        {
+          DisableFeedbackCommands = true;
+        }
+      ) // lib.optionalAttrs ( if homepage == "" then false else true) (
+        {
+          Homepage = {
+            URL = homepage;
+            Locked = true;
+          };
+        }
+      ) // extraPolicies ;} ;
+
+
+      extensions = builtins.map (a:
+        if ! (builtins.hasAttr "signed" a) || ! (builtins.isBool a.signed) then
+          throw "Addon ${a.pname} needs boolean attribute 'signed' "
+        else if ! (builtins.hasAttr "extid" a) || ! (builtins.isString a.extid) then
+          throw "Addon ${a.pname} needs a string attribute 'extid'"
+        else if a.signed == false && !allowNonSigned then
+          throw "Disable signature checking in firefox if you want ${a.pname} addon"
+        else  a
+      ) extraExtensions;
+
+      policiesJson = builtins.toFile "policies.json"
+        (builtins.toJSON enterprisePolicies);
+
+      mozillaCfg = builtins.toFile "mozilla.cfg" ''
+// First line must be a comment
+
+        // Remove default top sites
+        lockPref("browser.newtabpage.pinned", "");
+        lockPref("browser.newtabpage.activity-stream.default.sites", "");
+
+        // Deactivate first run homepage
+        lockPref("browser.startup.firstrunSkipsHomepage", false);
+
+        // If true, don't show the privacy policy tab on first run
+        lockPref("datareporting.policy.dataSubmissionPolicyBypassNotification", true);
+
+        ${
+          if enableDarkDevTools == true then
+          ''
+            //TODO: activeThemeID does not work. Enterprise Policies seem to
+            // have an option for that
+            // lockPref("extensions.activeThemeID","firefox-compact-dark@mozilla.org");
+            lockPref("devtools.theme","dark");
+          ''
+          else
+            ""
+        }
+
+        ${
+          if allowNonSigned == true then
+          ''
+            lockPref("xpinstall.signatures.required", false);
+          ''
+          else
+            ""
+        }
+
+       ${
+        if showPunycodeUrls == true then
+          ''
+            lockPref("network.IDN_show_punycode", true);
+          ''
+          else
+            ""
+        }
+
+        ${
+          if disableManualExtensions == true then
+          ''
+            lockPref("extensions.getAddons.showPane", false);
+            lockPref("extensions.htmlaboutaddons.recommendations.enabled", false);
+            lockPref("app.update.auto", false);
+            ''
+          else
+            ""
+        }
+
+        ${
+          if disableDrmPlugin == true then
+          ''
+            lockPref("media.gmp-gmpopenh264.enabled", false);
+            lockPref("media.gmp-widevinecdm.enabled", false);
+            ''
+          else
+            ""
+        }
+
+        ${
+          if activateAntiTracking == true then
+            ''
+              // Tracking
+              lockPref("browser.send_pings", false);
+              lockPref("browser.send_pings.require_same_host", true);
+              lockPref("network.dns.disablePrefetch", true);
+              lockPref("browser.contentblocking.trackingprotection.control-center.ui.enabled", false);
+              lockPref("browser.search.geoip.url", "");
+              lockPref("privacy.firstparty.isolate",  true);
+              lockPref("privacy.userContext.enabled", true);
+              lockPref("privacy.userContext.ui.enabled", true);
+              lockPref("privacy.firstparty.isolate.restrict_opener_access", false);
+              lockPref("network.http.referer.XOriginPolicy", 1);
+              lockPref("network.http.referer.hideOnionSource", true);
+              lockPref(" privacy.spoof_english", true);
+
+             // This option is currently not usable because of bug:
+             // https://bugzilla.mozilla.org/show_bug.cgi?id=1557620
+               lockPref("privacy.resistFingerprinting", true);
+            ''
+            else ""
+        }
+        ${
+          if disableTelemetry == true then
+            ''
+              // Telemetry
+              lockPref("browser.newtabpage.activity-stream.feeds.telemetry", false);
+              lockPref("browser.ping-centre.telemetry", false);
+              lockPref("devtools.onboarding.telemetry.logged", false);
+              lockPref("toolkit.telemetry.archive.enabled", false);
+              lockPref("toolkit.telemetry.bhrPing.enabled", false);
+              lockPref("toolkit.telemetry.enabled", false);
+              lockPref("toolkit.telemetry.firstShutdownPing.enabled", false);
+              lockPref("toolkit.telemetry.hybridContent.enabled", false);
+              lockPref("toolkit.telemetry.newProfilePing.enabled", false);
+              lockPref("toolkit.telemetry.shutdownPingSender.enabled", false);
+              lockPref("toolkit.telemetry.reportingpolicy.firstRun", false);
+              lockPref("dom.push.enabled", false);
+              lockPref("browser.newtabpage.activity-stream.feeds.snippets", false);
+              lockPref("security.ssl.errorReporting.enabled", false);
+            ''
+          else ""
+        }
+
+       ${
+          if disableGoogleSafebrowsing == true then
+          ''
+            // Google data sharing
+            lockPref("browser.safebrowsing.blockedURIs.enabled", false);
+            lockPref("browser.safebrowsing.downloads.enabled", false);
+            lockPref("browser.safebrowsing.malware.enabled", false);
+            lockPref("browser.safebrowsing.passwords.enabled", false);
+            lockPref("browser.safebrowsing.provider.google4.dataSharing.enabled", false);
+            lockPref("browser.safebrowsing.malware.enabled", false);
+            lockPref("browser.safebrowsing.phishing.enabled", false);
+            lockPref("browser.safebrowsing.provider.mozilla.gethashURL", "");
+            lockPref("browser.safebrowsing.provider.mozilla.updateURL", "");
+          ''
+          else ""
+       }
+
+        // User customization
+        ${extraPrefs}
+      '';
     in stdenv.mkDerivation {
       inherit pname version;
 
@@ -113,13 +378,62 @@ let
         cp -R --no-preserve=mode,ownership ${browser}/Applications/${browserName}.app $out/Applications
         rm -f $out${browser.execdir or "/bin"}/${browserName}
       '' + ''
+
+        # Link the runtime. The executable itself has to be copied,
+        # because it will resolve paths relative to its true location.
+        # Any symbolic links have to be replicated as well.
+        cd "${browser}"
+        find . -type d -exec mkdir -p "$out"/{} \;
+
+        find . -type f \( -not -name "${browserName}" \) -exec ln -sT "${browser}"/{} "$out"/{} \;
+
+        find . -type f -name "${browserName}" -print0 | while read -d $'\0' f; do
+          cp -P --no-preserve=mode,ownership "${browser}/$f" "$out/$f"
+          chmod a+rwx "$out/$f"
+        done
+
+        # fix links and absolute references
+        cd "${browser}"
+
+        find . -type l -print0 | while read -d $'\0' l; do
+          target="$(readlink "$l" | ${replace}/bin/replace-literal -es -- "${browser}" "$out")"
+          ln -sfT "$target" "$out/$l"
+        done
+
+        # This will not patch binaries, only "text" files.
+        # Its there for the wrapper mostly.
+        cd "$out"
+        ${replace}/bin/replace-literal -esfR -- "${browser}" "$out"
+
+        # create the wrapper
+
+        executablePrefix="$out${browser.execdir or "/bin"}"
+        executablePath="$executablePrefix/${browserName}"
+
+        if [ ! -x "$executablePath" ]
+        then
+            echo "cannot find executable file \`${browser}${browser.execdir or "/bin"}/${browserName}'"
+            exit 1
+        fi
+
+        if [ ! -L "$executablePath" ]
+        then
+          # Careful here, the file at executablePath may already be
+          # a wrapper. That is why we postfix it with -old instead
+          # of -wrapped.
+          oldExe="$executablePrefix"/".${browserName}"-old
+          mv "$executablePath" "$oldExe"
+        else
+          oldExe="$(readlink -v --canonicalize-existing "$executablePath")"
+        fi
+
         if [ ! -x "${browser}${browser.execdir or "/bin"}/${browserName}" ]
         then
             echo "cannot find executable file \`${browser}${browser.execdir or "/bin"}/${browserName}'"
             exit 1
         fi
 
-        makeWrapper "$(readlink -v --canonicalize-existing "${browser}${browser.execdir or "/bin"}/${browserName}")" \
+        makeWrapper "$oldExe" \
           "$out${browser.execdir or "/bin"}/${browserName}${nameSuffix}" \
             --suffix-each MOZ_PLUGIN_PATH ':' "$plugins" \
             --suffix LD_LIBRARY_PATH ':' "$libs" \
@@ -163,6 +477,30 @@ let
         # For manpages, in case the program supplies them
         mkdir -p $out/nix-support
         echo ${browser} > $out/nix-support/propagated-user-env-packages
+
+        # user customization
+        mkdir -p $out/lib/firefox
+
+        # creating policies.json
+        mkdir -p "$out/lib/firefox/distribution"
+
+        cat > "$out/lib/firefox/distribution/policies.json" < ${policiesJson}
+
+        # preparing for autoconfig
+        mkdir -p "$out/lib/firefox/defaults/pref"
+
+        cat > "$out/lib/firefox/defaults/pref/autoconfig.js" <<EOF
+          pref("general.config.filename", "mozilla.cfg");
+          pref("general.config.obscure_value", 0);
+        EOF
+
+        cat > "$out/lib/firefox/mozilla.cfg" < ${mozillaCfg}
+
+        mkdir -p $out/lib/firefox/distribution/extensions
+
+        for i in ${toString extensions}; do
+          ln -s -t $out/lib/firefox/distribution/extensions $i/*
+        done
       '';
 
       preferLocalBuild = true;
