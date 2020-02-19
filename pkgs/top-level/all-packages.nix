@@ -187,6 +187,8 @@ in
 
   archiver = callPackage ../applications/misc/archiver { };
 
+  aocc = callPackage ../development/compilers/aocc {};
+
   digitalbitbox = libsForQt5.callPackage ../applications/misc/digitalbitbox { };
 
   grsync = callPackage ../applications/misc/grsync { };
