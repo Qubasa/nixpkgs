@@ -7,6 +7,7 @@
   zlib,
   libffi,
   elfutils,
+  libstdcxx5,
 }:
 
 stdenv.mkDerivation rec {
@@ -26,6 +27,8 @@ stdenv.mkDerivation rec {
        autoPatchelfHook
     ];
 
+    LIBRARY_PATH = (stdenv.lib.makeLibraryPath [ zlib libstdcxx5 gcc-unwrapped ]);
+
     buildInputs = [
        gcc-unwrapped
        libxml2
@@ -40,6 +43,7 @@ stdenv.mkDerivation rec {
     
         mkdir -p $out/bin
         mkdir -p $out/lib
+        mkdir -p $out/lib32
         mkdir -p $out/include
         mkdir -p $out/share
 
