@@ -1,8 +1,12 @@
 { stdenv,
   fetchurl,
   autoPatchelfHook,
-  gfortran8,
-  gcc8
+  gcc-unwrapped,
+  libxml2,
+  tlf,
+  zlib,
+  libffi,
+  elfutils,
 }:
 
 stdenv.mkDerivation rec {
@@ -20,18 +24,15 @@ stdenv.mkDerivation rec {
 
     nativeBuildInputs = [
        autoPatchelfHook
-       gfortran8.out
-       gcc8
-    ];
-
-    runtimeDependencies = [
-       gfortran8.out
-       gcc8
     ];
 
     buildInputs = [
-       gfortran8.out
-       gcc8
+       gcc-unwrapped
+       libxml2
+       zlib
+       tlf
+       libffi
+       elfutils
     ];
 
     installPhase = ''
