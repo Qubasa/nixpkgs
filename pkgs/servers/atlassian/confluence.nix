@@ -1,15 +1,18 @@
-{ stdenv, lib, fetchurl
+{ stdenvNoCC, lib, fetchurl, mysql_jdbc ? null
 , enableSSO ? false
 , crowdProperties ? null
+, withMysql ? true
 }:
 
-stdenv.mkDerivation rec {
+assert withMysql -> (mysql_jdbc != null);
+
+stdenvNoCC.mkDerivation rec {
   pname = "atlassian-confluence";
-  version = "7.0.3";
+  version = "7.2.1";
 
   src = fetchurl {
     url = "https://product-downloads.atlassian.com/software/confluence/downloads/${pname}-${version}.tar.gz";
-    sha256 = "1anmhfdy4q74wchzha8fd2bd5hx0a2v3bgp9p5yvb8cal31zqcpd";
+    sha256 = "1d37hiabph56frsp8jrn80fmglgw6k1dlc4x8p7m82fb3vild049";
   };
 
   buildPhase = ''
@@ -28,6 +31,8 @@ stdenv.mkDerivation rec {
     cat <<EOF > confluence/WEB-INF/classes/crowd.properties
     ${crowdProperties}
     EOF
+  '' + lib.optionalString withMysql ''
+    cp -v ${mysql_jdbc}/share/java/*jar confluence/WEB-INF/lib/
   '';
 
   installPhase = ''
@@ -35,10 +40,10 @@ stdenv.mkDerivation rec {
     patchShebangs $out/bin
   '';
 
-  meta = with stdenv.lib; {
+  meta = with lib; {
     description = "Team collaboration software written in Java and mainly used in corporate environments";
-    homepage = https://www.atlassian.com/software/confluence;
+    homepage = "https://www.atlassian.com/software/confluence";
     license = licenses.unfree;
-    maintainers = with maintainers; [ fpletz globin ];
+    maintainers = with maintainers; [ fpletz globin willibutz ];
   };
 }

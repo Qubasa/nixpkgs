@@ -80,8 +80,8 @@ in
       #kdm = 39; # dropped in 17.03
       #ghostone = 40; # dropped in 18.03
       git = 41;
-      fourstore = 42;
-      fourstorehttp = 43;
+      #fourstore = 42; # dropped in 20.03
+      #fourstorehttp = 43; # dropped in 20.03
       virtuoso = 44;
       rtkit = 45;
       dovecot2 = 46;
@@ -299,7 +299,7 @@ in
       couchpotato = 267;
       gogs = 268;
       pdns-recursor = 269;
-      kresd = 270;
+      #kresd = 270; # switched to "knot-resolver" with dynamic ID
       rpc = 271;
       geoip = 272;
       fcron = 273;
@@ -600,7 +600,7 @@ in
       headphones = 266;
       couchpotato = 267;
       gogs = 268;
-      kresd = 270;
+      #kresd = 270; # switched to "knot-resolver" with dynamic ID
       #rpc = 271; # unused
       #geoip = 272; # unused
       fcron = 273;

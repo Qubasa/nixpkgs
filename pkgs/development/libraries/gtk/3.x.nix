@@ -48,7 +48,7 @@ with stdenv.lib;
 
 stdenv.mkDerivation rec {
   pname = "gtk+3";
-  version = "3.24.12";
+  version = "3.24.14";
 
   outputs = [ "out" "dev" ] ++ optional withGtkDoc "devdoc";
   outputBin = "dev";
@@ -60,7 +60,7 @@ stdenv.mkDerivation rec {
 
   src = fetchurl {
     url = "mirror://gnome/sources/gtk+/${stdenv.lib.versions.majorMinor version}/gtk+-${version}.tar.xz";
-    sha256 = "10xyyhlfb0yk4hglngxh2zsv9xrxkqv343df8h01dvagc6jyp10k";
+    sha256 = "120yz5gxqbv7sgdbcy4i0b6ixm8jpjzialdrqs0gv15q7bwnjk8w";
   };
 
   patches = [
@@ -88,10 +88,7 @@ stdenv.mkDerivation rec {
 
   # These are the defines that'd you'd get with --enable-debug=minimum (default).
   # See: https://developer.gnome.org/gtk3/stable/gtk-building.html#extra-configuration-options
-  NIX_CFLAGS_COMPILE = [
-    "-DG_ENABLE_DEBUG"
-    "-DG_DISABLE_CAST_CHECKS"
-  ];
+  NIX_CFLAGS_COMPILE = "-DG_ENABLE_DEBUG -DG_DISABLE_CAST_CHECKS";
 
   postPatch = ''
     files=(
@@ -118,8 +115,7 @@ stdenv.mkDerivation rec {
     pkgconfig
     python3
     sassc
-    setupHooks
-  ] ++ optionals withGtkDoc [
+  ] ++ setupHooks ++ optionals withGtkDoc [
     docbook_xml_dtd_43
     docbook_xsl
     gtk-doc

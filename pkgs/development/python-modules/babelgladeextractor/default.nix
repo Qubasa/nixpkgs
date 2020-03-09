@@ -1,30 +1,29 @@
 { stdenv
 , lib
+, isPy3k
 , buildPythonPackage
 , fetchPypi
 , Babel
-, lxml
 }:
 
 buildPythonPackage rec {
   pname = "babelgladeextractor";
-  version = "0.6.0";
+  version = "0.7.0";
+  disabled = (!isPy3k); # uses python3 specific file io in setup.py
 
   src = fetchPypi {
     pname = "BabelGladeExtractor";
     inherit version;
     extension = "tar.bz2";
-    sha256 = "18m5vi3sj2h26ibmb6fzfjs2lscg757ivk1bjgkn1haf9gdwyjj6";
+    sha256 = "160p4wi2ss69g141c2z59azvrhn7ymy5m9h9d65qrcabigi0by5w";
   };
 
   propagatedBuildInputs = [
     Babel
-    lxml # TODO: remove in 0.7.0
   ];
 
-  # Tests missing
-  # https://github.com/gnome-keysign/babel-glade/issues/5
-  doCheck = false;
+  # SyntaxError: Non-ASCII character '\xc3' in file /build/BabelGladeExtractor-0.6.3/babelglade/tests/test_translate.py on line 20, but no encoding declared; see http://python.org/dev/peps/pep-0263/ for details
+  doCheck = isPy3k;
 
   meta = with lib; {
     homepage = "https://github.com/gnome-keysign/babel-glade";

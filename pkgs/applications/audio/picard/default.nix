@@ -4,13 +4,13 @@ let
   pythonPackages = python3Packages;
 in pythonPackages.buildPythonApplication rec {
   pname = "picard";
-  version = "2.2.2";
+  version = "2.3.1";
 
   src = fetchFromGitHub {
     owner = "metabrainz";
     repo = pname;
     rev = "release-${version}";
-    sha256 = "1iibkvwpj862wcrl0fmyi6qhcgx4q5ay63yr0zyg0bkqgcka0gpr";
+    sha256 = "0xalg4dvaqb396h4s6gzxnplgv1lcvsczmmrlhyrj0kfj10amhsj";
   };
 
   nativeBuildInputs = [ gettext qt5.wrapQtAppsHook qt5.qtbase ];
@@ -33,7 +33,7 @@ in pythonPackages.buildPythonApplication rec {
   '';
 
   meta = with stdenv.lib; {
-    homepage = http://musicbrainz.org/doc/MusicBrainz_Picard;
+    homepage = "https://picard.musicbrainz.org/";
     description = "The official MusicBrainz tagger";
     maintainers = with maintainers; [ ehmry ];
     license = licenses.gpl2;

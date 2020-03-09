@@ -4,11 +4,11 @@
 
 stdenv.mkDerivation rec {
   pname = "libsoup";
-  version = "2.68.2";
+  version = "2.68.4";
 
   src = fetchurl {
     url = "mirror://gnome/sources/${pname}/${stdenv.lib.versions.majorMinor version}/${pname}-${version}.tar.xz";
-    sha256 = "0crr9qprmacr626fx83cx81ggk85zsgxr4mn577kpzj6m40k1bai";
+    sha256 = "151j5dc84gbl6a917pxvd0b372lw5za48n63lyv6llfc48lv2l1d";
   };
 
   postPatch = ''
@@ -40,7 +40,7 @@ stdenv.mkDerivation rec {
 
   meta = {
     description = "HTTP client/server library for GNOME";
-    homepage = https://wiki.gnome.org/Projects/libsoup;
+    homepage = "https://wiki.gnome.org/Projects/libsoup";
     license = stdenv.lib.licenses.gpl2;
     inherit (glib.meta) maintainers platforms;
   };

@@ -4,17 +4,17 @@
 , gobject-introspection, modemmanager, openresolv, libndp, newt, libsoup
 , ethtool, gnused, iputils, kmod, jansson, gtk-doc, libxslt
 , docbook_xsl, docbook_xml_dtd_412, docbook_xml_dtd_42, docbook_xml_dtd_43
-, openconnect, curl, meson, ninja, libpsl }:
+, openconnect, curl, meson, ninja, libpsl, mobile-broadband-provider-info, runtimeShell }:
 
 let
   pythonForDocs = python3.withPackages (pkgs: with pkgs; [ pygobject3 ]);
 in stdenv.mkDerivation rec {
   pname = "network-manager";
-  version = "1.20.4";
+  version = "1.22.8";
 
   src = fetchurl {
     url = "mirror://gnome/sources/NetworkManager/${stdenv.lib.versions.majorMinor version}/NetworkManager-${version}.tar.xz";
-    sha256 = "0k4i6m8acp48vl6l13267wv6kfkmzfjq2mraaa5m9n82wyvkimx3";
+    sha256 = "0kxbgln78lb1cxhd79vbpdbncsb0cppr15fycgqb9df6f8nbj4cm";
   };
 
   outputs = [ "out" "dev" "devdoc" "man" "doc" ];
@@ -54,24 +54,17 @@ in stdenv.mkDerivation rec {
   patches = [
     (substituteAll {
       src = ./fix-paths.patch;
-      inherit iputils kmod openconnect ethtool gnused dbus;
-      inherit (stdenv) shell;
+      inherit iputils kmod openconnect ethtool gnused systemd;
+      inherit runtimeShell;
     })
 
     # Meson does not support using different directories during build and
     # for installation like Autotools did with flags passed to make install.
     ./fix-install-paths.patch
-
-    # Fixes https://github.com/NixOS/nixpkgs/issues/72330
-    # Upstream MR: https://gitlab.freedesktop.org/NetworkManager/NetworkManager/merge_requests/323
-    (fetchpatch {
-      url = "https://gitlab.freedesktop.org/NetworkManager/NetworkManager/commit/4c11364201c094ad19ab9980ea6051a82bd2a550.patch";
-      sha256 = "14dgb6ijxyzcglrk67is2fn49iwrhljf2sld8w557i6zkypilmsv";
-    })
   ];
 
   buildInputs = [
-    systemd libselinux audit libpsl libuuid polkit ppp libndp curl
+    systemd libselinux audit libpsl libuuid polkit ppp libndp curl mobile-broadband-provider-info
     bluez5 dnsmasq gobject-introspection modemmanager readline newt libsoup jansson
   ];
 

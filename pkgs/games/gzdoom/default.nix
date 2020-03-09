@@ -4,13 +4,13 @@
 
 stdenv.mkDerivation rec {
   pname = "gzdoom";
-  version = "4.2.4";
+  version = "4.3.3";
 
   src = fetchFromGitHub {
     owner = "coelckers";
     repo = "gzdoom";
     rev = "g${version}";
-    sha256 = "1mkfpa3mx1rpd6lywdcqcf0y9ydzr1jxpk330kl9lxw59xihk0pc";
+    sha256 = "1c4vhnvvwy1rs8xm01kqd486h5xsiccwkf95fjx7912zr49yalks";
   };
 
   nativeBuildInputs = [ cmake makeWrapper ];
@@ -21,7 +21,7 @@ stdenv.mkDerivation rec {
 
   enableParallelBuilding = true;
 
-  NIX_CFLAGS_LINK = [ "-lopenal" "-lfluidsynth" ];
+  NIX_CFLAGS_LINK = "-lopenal -lfluidsynth";
 
   preConfigure = ''
     sed -i \
@@ -33,6 +33,12 @@ stdenv.mkDerivation rec {
   installPhase = ''
     install -Dm755 gzdoom "$out/lib/gzdoom/gzdoom"
     for i in *.pk3; do
+      install -Dm644 "$i" "$out/lib/gzdoom/$i"
+    done
+    for i in fm_banks/*; do
+      install -Dm644 "$i" "$out/lib/gzdoom/$i"
+    done
+    for i in soundfonts/*; do
       install -Dm644 "$i" "$out/lib/gzdoom/$i"
     done
     mkdir $out/bin

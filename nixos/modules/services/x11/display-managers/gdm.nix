@@ -31,44 +31,9 @@ let
     load-module module-position-event-sounds
   '';
 
-  dmDefault = config.services.xserver.desktopManager.default;
-  wmDefault = config.services.xserver.windowManager.default;
-  hasDefaultUserSession = dmDefault != "none" || wmDefault != "none";
-  defaultSessionName = dmDefault + optionalString (wmDefault != "none") ("+" + wmDefault);
+  defaultSessionName = config.services.xserver.displayManager.defaultSession;
 
-  setSessionScript = pkgs.python3.pkgs.buildPythonApplication {
-    name = "set-session";
-
-    format = "other";
-
-    src = ./set-session.py;
-
-    dontUnpack = true;
-
-    strictDeps = false;
-
-    nativeBuildInputs = with pkgs; [
-      wrapGAppsHook
-      gobject-introspection
-    ];
-
-    buildInputs = with pkgs; [
-      accountsservice
-      glib
-    ];
-
-    propagatedBuildInputs = with pkgs.python3.pkgs; [
-      pygobject3
-      ordered-set
-    ];
-
-    installPhase = ''
-      mkdir -p $out/bin
-      cp $src $out/bin/set-session
-      chmod +x $out/bin/set-session
-    '';
-  };
-
+  setSessionScript = pkgs.callPackage ./account-service-util.nix { };
 in
 
 {
@@ -126,9 +91,19 @@ in
       wayland = mkOption {
         default = true;
         description = ''
-          Allow GDM run on Wayland instead of Xserver
+          Allow GDM to run on Wayland instead of Xserver.
+          Note to enable Wayland with Nvidia you need to
+          enable the <option>nvidiaWayland</option>.
         '';
         type = types.bool;
+      };
+
+      nvidiaWayland = mkOption {
+        default = false;
+        description = ''
+          Whether to allow wayland to be used with the proprietary
+          NVidia graphics driver.
+        '';
       };
 
       autoSuspend = mkOption {
@@ -176,7 +151,7 @@ in
         environment = {
           GDM_X_SERVER_EXTRA_ARGS = toString
             (filter (arg: arg != "-terminate") cfg.xserverArgs);
-          XDG_DATA_DIRS = "${cfg.session.desktops}/share/";
+          XDG_DATA_DIRS = "${cfg.sessionData.desktops}/share/";
         } // optionalAttrs (xSessionWrapper != null) {
           # Make GDM use this wrapper before running the session, which runs the
           # configured setupCommands. This relies on a patched GDM which supports
@@ -184,23 +159,33 @@ in
           GDM_X_SESSION_WRAPPER = "${xSessionWrapper}";
         };
         execCmd = "exec ${gdm}/bin/gdm";
-        preStart = optionalString config.hardware.pulseaudio.enable ''
-          mkdir -p /run/gdm/.config/pulse
-          ln -sf ${pulseConfig} /run/gdm/.config/pulse/default.pa
-          chown -R gdm:gdm /run/gdm/.config
-        '' + optionalString config.services.gnome3.gnome-initial-setup.enable ''
-          # Create stamp file for gnome-initial-setup to prevent run.
-          mkdir -p /run/gdm/.config
-          cat - > /run/gdm/.config/gnome-initial-setup-done <<- EOF
-          yes
-          EOF
-        '' + optionalString hasDefaultUserSession ''
-          ${setSessionScript}/bin/set-session ${defaultSessionName}
+        preStart = optionalString (defaultSessionName != null) ''
+          # Set default session in session chooser to a specified values – basically ignore session history.
+          ${setSessionScript}/bin/set-session ${cfg.sessionData.autologinSession}
         '';
       };
 
-    # Because sd_login_monitor_new requires /run/systemd/machines
-    systemd.services.display-manager.wants = [ "systemd-machined.service" ];
+    systemd.tmpfiles.rules = [
+      "d /run/gdm/.config 0711 gdm gdm"
+    ] ++ optionals config.hardware.pulseaudio.enable [
+      "d /run/gdm/.config/pulse 0711 gdm gdm"
+      "L+ /run/gdm/.config/pulse/${pulseConfig.name} - - - - ${pulseConfig}"
+    ] ++ optionals config.services.gnome3.gnome-initial-setup.enable [
+      # Create stamp file for gnome-initial-setup to prevent it starting in GDM.
+      "f /run/gdm/.config/gnome-initial-setup-done 0711 gdm gdm - yes"
+    ];
+
+    # Otherwise GDM will not be able to start correctly and display Wayland sessions
+    systemd.packages = with pkgs.gnome3; [ gnome-session gnome-shell ];
+    environment.systemPackages = [ pkgs.gnome3.adwaita-icon-theme ];
+
+    systemd.services.display-manager.wants = [
+      # Because sd_login_monitor_new requires /run/systemd/machines
+      "systemd-machined.service"
+      # setSessionScript wants AccountsService
+      "accounts-daemon.service"
+    ];
+
     systemd.services.display-manager.after = [
       "rc-local.service"
       "systemd-machined.service"
@@ -237,6 +222,19 @@ in
 
     services.dbus.packages = [ gdm ];
 
+    # We duplicate upstream's udev rules manually to make wayland with nvidia configurable
+    services.udev.extraRules = ''
+      # disable Wayland on Cirrus chipsets
+      ATTR{vendor}=="0x1013", ATTR{device}=="0x00b8", ATTR{subsystem_vendor}=="0x1af4", ATTR{subsystem_device}=="0x1100", RUN+="${gdm}/libexec/gdm-disable-wayland"
+      # disable Wayland on Hi1710 chipsets
+      ATTR{vendor}=="0x19e5", ATTR{device}=="0x1711", RUN+="${gdm}/libexec/gdm-disable-wayland"
+      ${optionalString (!cfg.gdm.nvidiaWayland) ''
+        DRIVER=="nvidia", RUN+="${gdm}/libexec/gdm-disable-wayland"
+      ''}
+      # disable Wayland when modesetting is disabled
+      IMPORT{cmdline}="nomodeset", RUN+="${gdm}/libexec/gdm-disable-wayland"
+    '';
+
     systemd.user.services.dbus.wantedBy = [ "default.target" ];
 
     programs.dconf.profiles.gdm =
@@ -258,7 +256,7 @@ in
       customDconfDb = pkgs.stdenv.mkDerivation {
         name = "gdm-dconf-db";
         buildCommand = ''
-          ${pkgs.gnome3.dconf}/bin/dconf compile $out ${customDconf}/dconf
+          ${pkgs.dconf}/bin/dconf compile $out ${customDconf}/dconf
         '';
       };
     in pkgs.stdenv.mkDerivation {
@@ -303,7 +301,7 @@ in
       ${optionalString cfg.gdm.debug "Enable=true"}
     '';
 
-    environment.etc."gdm/Xsession".source = config.services.xserver.displayManager.session.wrapper;
+    environment.etc."gdm/Xsession".source = config.services.xserver.displayManager.sessionData.wrapper;
 
     # GDM LFS PAM modules, adapted somehow to NixOS
     security.pam.services = {

@@ -1,12 +1,12 @@
 { stdenv, fetchurl, cmake, vtk, darwin }:
 
 stdenv.mkDerivation rec {
-  version = "3.0.4";
+  version = "3.0.5";
   pname = "gdcm";
 
   src = fetchurl {
     url = "mirror://sourceforge/gdcm/${pname}-${version}.tar.bz2";
-    sha256 = "0g46l7fjvn37sg29m0nb7wlnnpnxmlm9ryp7vam26ni02l73paid";
+    sha256 = "16d3sf81n4qhwbbx1d80jg6fhrla5paan384c4bbbqvbhm222yby";
   };
 
   dontUseCmakeBuildDir = true;
@@ -16,11 +16,11 @@ stdenv.mkDerivation rec {
     cd ../build
   '';
 
-  cmakeFlags = ''
-    -DGDCM_BUILD_APPLICATIONS=ON
-    -DGDCM_BUILD_SHARED_LIBS=ON
-    -DGDCM_USE_VTK=ON
-  '';
+  cmakeFlags = [
+    "-DGDCM_BUILD_APPLICATIONS=ON"
+    "-DGDCM_BUILD_SHARED_LIBS=ON"
+    "-DGDCM_USE_VTK=ON"
+  ];
 
   enableParallelBuilding = true;
   buildInputs = [ cmake vtk ] ++ stdenv.lib.optional stdenv.isDarwin [ darwin.apple_sdk.frameworks.ApplicationServices darwin.apple_sdk.frameworks.Cocoa ];

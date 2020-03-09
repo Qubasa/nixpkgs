@@ -5,11 +5,11 @@ let
 in
 buildPythonApplication rec {
   pname = "fava";
-  version = "1.11";
+  version = "1.13";
 
   src = fetchPypi {
     inherit pname version;
-    sha256 = "0gyrxqmfr8igfjnp9lcsl4km17yakj556xns3jp4m9l2407b5zhc";
+    sha256 = "1pjfa5xb2imhcf7q037h8g0bp9nrnj1xyblgqphnjnz6hbr58a59";
   };
 
   checkInputs = [ python3.pkgs.pytest ];
@@ -25,6 +25,7 @@ buildPythonApplication rec {
       markdown2
       ply
       simplejson
+      werkzeug
       jaraco_functools
     ];
 

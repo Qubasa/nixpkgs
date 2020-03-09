@@ -37,10 +37,13 @@ let
     licenses = callLibs ./licenses.nix;
     systems = callLibs ./systems;
 
+    # serialization
+    cli = callLibs ./cli.nix;
+    generators = callLibs ./generators.nix;
+
     # misc
     asserts = callLibs ./asserts.nix;
     debug = callLibs ./debug.nix;
-    generators = callLibs ./generators.nix;
     misc = callLibs ./deprecated.nix;
 
     # domain-specific
@@ -70,7 +73,8 @@ let
       genAttrs isDerivation toDerivation optionalAttrs
       zipAttrsWithNames zipAttrsWith zipAttrs recursiveUpdateUntil
       recursiveUpdate matchAttrs overrideExisting getOutput getBin
-      getLib getDev chooseDevOutputs zipWithNames zip;
+      getLib getDev chooseDevOutputs zipWithNames zip
+      recurseIntoAttrs dontRecurseIntoAttrs;
     inherit (lists) singleton forEach foldr fold foldl foldl' imap0 imap1
       concatMap flatten remove findSingle findFirst any all count
       optional optionals toList range partition zipListsWith zipLists
@@ -100,9 +104,9 @@ let
     inherit (sources) pathType pathIsDirectory cleanSourceFilter
       cleanSource sourceByRegex sourceFilesBySuffices
       commitIdFromGitRepo cleanSourceWith pathHasContext
-      canCleanSource;
-    inherit (modules) evalModules closeModules unifyModuleSyntax
-      applyIfFunction unpackSubmodule packSubmodule mergeModules
+      canCleanSource pathIsRegularFile pathIsGitRepo;
+    inherit (modules) evalModules unifyModuleSyntax
+      applyIfFunction mergeModules
       mergeModules' mergeOptionDecls evalOptionValue mergeDefinitions
       pushDownProperties dischargeProperties filterOverrides
       sortProperties fixupOptionType mkIf mkAssert mkMerge mkOverride
@@ -110,7 +114,7 @@ let
       mkFixStrictness mkOrder mkBefore mkAfter mkAliasDefinitions
       mkAliasAndWrapDefinitions fixMergeModules mkRemovedOptionModule
       mkRenamedOptionModule mkMergedOptionModule mkChangedOptionModule
-      mkAliasOptionModule doRename filterModules;
+      mkAliasOptionModule doRename;
     inherit (options) isOption mkEnableOption mkSinkUndeclaredOptions
       mergeDefaultOption mergeOneOption mergeEqualOption getValues
       getFiles optionAttrSetToDocList optionAttrSetToDocList'

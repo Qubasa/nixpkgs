@@ -7,11 +7,11 @@
 
 buildPythonPackage rec {
   pname = "jupytext";
-  version = "1.2.4";
+  version = "1.3.4";
 
   src = fetchPypi {
     inherit pname version;
-    sha256 = "490e1127033fceed5c49f7b1cde6aabffb059fe0a778a0e8b10d28d9eecef1f0";
+    sha256 = "0jijf4a3iaskzi6frjwhd8drh7brn94r1zl7gni6d0dzr296mm93";
   };
 
   propagatedBuildInputs = [
@@ -32,7 +32,7 @@ buildPythonPackage rec {
 
   meta = with lib; {
     description = "Jupyter notebooks as Markdown documents, Julia, Python or R scripts";
-    homepage = https://github.com/mwouts/jupytext;
+    homepage = "https://github.com/mwouts/jupytext";
     license = licenses.mit;
     maintainers = with maintainers; [ timokau ];
   };

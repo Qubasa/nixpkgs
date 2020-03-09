@@ -2,13 +2,13 @@
 
 buildGoPackage rec {
   pname = "vault";
-  version = "1.3.0";
+  version = "1.3.3";
 
   src = fetchFromGitHub {
     owner = "hashicorp";
     repo = "vault";
     rev = "v${version}";
-    sha256 = "0ayvmqg4fj9cliwbl4pb12mailq7062j3f9v8arpv6x5r4hydlpy";
+    sha256 = "1scwclkpb7v5pcx1afgjqrfgcp0c1bd9gqvwdmjbpfcyxv1f032d";
   };
 
   goPackagePath = "github.com/hashicorp/vault";
@@ -26,7 +26,7 @@ buildGoPackage rec {
   '';
 
   meta = with stdenv.lib; {
-    homepage = https://www.vaultproject.io;
+    homepage = "https://www.vaultproject.io/";
     description = "A tool for managing secrets";
     platforms = platforms.linux ++ platforms.darwin;
     license = licenses.mpl20;

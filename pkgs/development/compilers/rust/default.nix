@@ -1,8 +1,10 @@
 { rustcVersion
 , rustcSha256
+, enableRustcDev ? true
 , bootstrapVersion
 , bootstrapHashes
 , selectRustPackage
+, rustcPatches ? []
 }:
 { stdenv, lib
 , buildPackages
@@ -11,17 +13,31 @@
 , llvmPackages_5
 , pkgsBuildTarget, pkgsBuildBuild
 }: rec {
-  makeRustPlatform = { rustc, cargo, ... }: {
+  toRustTarget = platform: with platform.parsed; let
+    cpu_ = {
+      "armv7a" = "armv7";
+      "armv7l" = "armv7";
+      "armv6l" = "arm";
+    }.${cpu.name} or cpu.name;
+  in "${cpu_}-${vendor.name}-${kernel.name}${lib.optionalString (abi.name != "unknown") "-${abi.name}"}";
+
+  makeRustPlatform = { rustc, cargo, ... }: rec {
     rust = {
       inherit rustc cargo;
     };
 
-    buildRustPackage = callPackage ../../../build-support/rust {
-      inherit rustc cargo;
+    fetchCargoTarball = buildPackages.callPackage ../../../build-support/rust/fetchCargoTarball.nix {
+      inherit cargo;
+    };
 
-      fetchcargo = buildPackages.callPackage ../../../build-support/rust/fetchcargo.nix {
-        inherit cargo;
-      };
+    # N.B. This is a legacy fetcher implementation that is being phased out and deleted.
+    # See ../../../build-support/rust/README.md for details.
+    fetchcargo = buildPackages.callPackage ../../../build-support/rust/fetchcargo.nix {
+      inherit cargo;
+    };
+
+    buildRustPackage = callPackage ../../../build-support/rust {
+      inherit rustc cargo fetchcargo fetchCargoTarball;
     };
 
     rustcSrc = callPackage ./rust-src.nix {
@@ -62,6 +78,9 @@
       rustc = self.callPackage ./rustc.nix ({
         version = rustcVersion;
         sha256 = rustcSha256;
+        inherit enableRustcDev;
+
+        patches = rustcPatches;
 
         # Use boot package set to break cycle
         rustPlatform = bootRustPlatform;

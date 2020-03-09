@@ -4,13 +4,13 @@
 
 stdenv.mkDerivation rec {
   pname = "xmrig";
-  version = "5.0.0";
+  version = "5.7.0";
 
   src = fetchFromGitHub {
     owner = "xmrig";
     repo = "xmrig";
     rev = "v${version}";
-    sha256 = "17bgz1rpix1zgzzn4zz84jp7hl6b2k968h918y3av5asxn0mji49";
+    sha256 = "14mqfjwff7mj3xckz4wkxlmqm6a0ci1bz0zj1h045ac8hfvw5k4k";
   };
 
   nativeBuildInputs = [ cmake ];

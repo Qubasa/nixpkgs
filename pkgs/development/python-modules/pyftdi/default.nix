@@ -8,19 +8,19 @@
 
 buildPythonPackage rec {
   pname = "pyftdi";
-  version = "0.30.3";
+  version = "0.44.2";
   disabled = pythonOlder "3.5";
 
   src = fetchPypi {
     inherit pname version;
-    sha256 = "ed55f0cb2d2f84b6e97be9583d582480ba9777cb0179aac0bb0ac480cd6760f5";
+    sha256 = "18k9wnpjxg71v4jm0pwr2bmksq7sckr6ylh1slf0xgpg89b27bxq";
   };
 
   propagatedBuildInputs = [ pyusb pyserial ];
 
   meta = {
     description = "User-space driver for modern FTDI devices";
-    homepage = "http://github.com/eblot/pyftdi";
+    homepage = "https://github.com/eblot/pyftdi";
     license = lib.licenses.lgpl2;
   };
 }

@@ -7,7 +7,8 @@
 with stdenv.lib;
 
 let
-  common = { version, sha256, patches ? [], withDocs ? false }: stdenv.mkDerivation rec {
+  common = { version, sha256, patches ? [], withDocs ? false, extraMeta ? {} }:
+   stdenv.mkDerivation rec {
     pname = "openssl";
     inherit version;
 
@@ -36,7 +37,7 @@ let
 
     outputs = [ "bin" "dev" "out" "man" ] ++ optional withDocs "doc";
     setOutputFlags = false;
-    separateDebugInfo = stdenv.hostPlatform.isLinux;
+    separateDebugInfo = !(stdenv.hostPlatform.useLLVM or false) && stdenv.cc.isGNU;
 
     nativeBuildInputs = [ perl ];
     buildInputs = stdenv.lib.optional withCryptodev cryptodev;
@@ -72,7 +73,11 @@ let
       "-DHAVE_CRYPTODEV"
       "-DUSE_CRYPTODEV_DIGESTS"
     ] ++ stdenv.lib.optional enableSSL2 "enable-ssl2"
-      ++ stdenv.lib.optional (versionAtLeast version "1.1.0" && stdenv.hostPlatform.isAarch64) "no-afalgeng";
+      ++ stdenv.lib.optional (versionAtLeast version "1.1.0" && stdenv.hostPlatform.isAarch64) "no-afalgeng"
+      # OpenSSL needs a specific `no-shared` configure flag.
+      # See https://wiki.openssl.org/index.php/Compilation_and_Installation#Configure_Options
+      # for a comprehensive list of configuration options.
+      ++ stdenv.lib.optional (versionAtLeast version "1.1.0" && static) "no-shared";
 
     makeFlags = [
       "MANDIR=$(man)/share/man"
@@ -126,14 +131,14 @@ let
       license = licenses.openssl;
       platforms = platforms.all;
       maintainers = [ maintainers.peti ];
-    };
+    } // extraMeta;
   };
 
 in {
 
   openssl_1_0_2 = common {
-    version = "1.0.2t";
-    sha256 = "1g67ra0ph7gpz6fgvv1i96d792jmd6ymci5kk53vbikszr74djql";
+    version = "1.0.2u";
+    sha256 = "ecd0c6ffb493dd06707d38b14bb4d8c2288bb7033735606569d8f90f89669d16";
     patches = [
       ./1.0.2/nix-ssl-cert-file.patch
 
@@ -141,6 +146,7 @@ in {
        then ./1.0.2/use-etc-ssl-certs-darwin.patch
        else ./1.0.2/use-etc-ssl-certs.patch)
     ];
+    extraMeta.knownVulnerabilities = [ "Support for OpenSSL 1.0.2 ended with 2019." ];
   };
 
   openssl_1_1 = common {

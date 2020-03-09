@@ -16,11 +16,11 @@ assert guiSupport -> pinentry != null && enableMinimal == false;
 stdenv.mkDerivation rec {
   pname = "gnupg";
 
-  version = "2.2.17";
+  version = "2.2.19";
 
   src = fetchurl {
     url = "mirror://gnupg/gnupg/${pname}-${version}.tar.bz2";
-    sha256 = "056mgy09lvsi03531a437qj58la1j2x1y1scvfi53diris3658mg";
+    sha256 = "1h6yx6sdpz3lf9gdppgxqcf73baynr8gflmh43286fkgw3058994";
   };
 
   depsBuildBuild = [ buildPackages.stdenv.cc ];
@@ -33,6 +33,9 @@ stdenv.mkDerivation rec {
   patches = [
     ./fix-libusb-include-path.patch
     ./0001-dirmngr-Only-use-SKS-pool-CA-for-SKS-pool.patch
+    ./tests-add-test-cases-for-import-without-uid.patch
+    ./allow-import-of-previously-known-keys-even-without-UI.patch
+    ./accept-subkeys-with-a-good-revocation-but-no-self-sig.patch
   ];
   postPatch = ''
     sed -i 's,hkps://hkps.pool.sks-keyservers.net,hkps://keys.openpgp.org,g' \
