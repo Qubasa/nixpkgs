@@ -247,9 +247,10 @@
   ./services/cluster/kubernetes/proxy.nix
   ./services/cluster/kubernetes/scheduler.nix
   ./services/computing/boinc/client.nix
-  ./services/computing/torque/server.nix
-  ./services/computing/torque/mom.nix
+  ./services/computing/foldingathome/client.nix
   ./services/computing/slurm/slurm.nix
+  ./services/computing/torque/mom.nix
+  ./services/computing/torque/server.nix
   ./services/continuous-integration/buildbot/master.nix
   ./services/continuous-integration/buildbot/worker.nix
   ./services/continuous-integration/buildkite-agents.nix
@@ -297,6 +298,7 @@
   ./services/desktops/geoclue2.nix
   ./services/desktops/gsignond.nix
   ./services/desktops/gvfs.nix
+  ./services/desktops/malcontent.nix
   ./services/desktops/pipewire.nix
   ./services/desktops/gnome3/at-spi2-core.nix
   ./services/desktops/gnome3/chrome-gnome-shell.nix
@@ -405,6 +407,7 @@
   ./services/mail/sympa.nix
   ./services/mail/nullmailer.nix
   ./services/misc/airsonic.nix
+  ./services/misc/ankisyncd.nix
   ./services/misc/apache-kafka.nix
   ./services/misc/autofs.nix
   ./services/misc/autorandr.nix
@@ -430,7 +433,6 @@
   ./services/misc/ethminer.nix
   ./services/misc/exhibitor.nix
   ./services/misc/felix.nix
-  ./services/misc/folding-at-home.nix
   ./services/misc/freeswitch.nix
   ./services/misc/fstrim.nix
   ./services/misc/gammu-smsd.nix
