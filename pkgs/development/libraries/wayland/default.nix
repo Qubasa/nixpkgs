@@ -23,15 +23,16 @@ in stdenv.mkDerivation rec {
 
   mesonFlags = [ "-Ddocumentation=${lib.boolToString withDocumentation}" ];
 
-  patches = lib.optional isCross ./fix-wayland-cross-compilation.patch;
-
   postPatch = lib.optionalString withDocumentation ''
     patchShebangs doc/doxygen/gen-doxygen.py
-  '' + lib.optionalString isCross ''
     substituteInPlace egl/meson.build --replace \
       "find_program('nm').path()" \
       "find_program('${stdenv.cc.targetPrefix}nm').path()"
   '';
+
+  depsBuildBuild = [
+    pkgconfig
+  ];
 
   nativeBuildInputs = [
     meson pkgconfig ninja
@@ -57,7 +58,7 @@ in stdenv.mkDerivation rec {
       and other interactions that must go through the compositor (but not
       rendering).
     '';
-    homepage    = https://wayland.freedesktop.org/;
+    homepage    = "https://wayland.freedesktop.org/";
     license     = lib.licenses.mit; # Expat version
     platforms   = lib.platforms.linux;
     maintainers = with lib.maintainers; [ primeos codyopel ];

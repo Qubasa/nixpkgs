@@ -20,19 +20,19 @@ with stdenv.lib.strings;
 
 let
 
-  version = "2.20.2";
+  version = "unstable-2020-06-08";
 
   src = fetchFromGitHub {
     owner = "grame-cncm";
     repo = "faust";
-    rev = version;
-    sha256 = "08hv8gyj6c83128z3si92r1ka5ckf9sdpn5jdnlhrqyzja4mrxsy";
+    rev = "f0037e289987818b65d3f6fb1ad943aaad2a2b28";
+    sha256 = "0h08902rgx7rhzpng4h1qw8i2nzv50f79vrlbzdk5d35wa4zibh4";
     fetchSubmodules = true;
   };
 
   meta = with stdenv.lib; {
-    homepage = http://faust.grame.fr/;
-    downloadPage = https://sourceforge.net/projects/faudiostream/files/;
+    homepage = "http://faust.grame.fr/";
+    downloadPage = "https://github.com/grame-cncm/faust/";
     license = licenses.gpl2;
     platforms = platforms.linux;
     maintainers = with maintainers; [ magnetophon pmahoney ];

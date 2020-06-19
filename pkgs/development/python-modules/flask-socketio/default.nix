@@ -8,11 +8,11 @@
 
 buildPythonPackage rec {
   pname = "Flask-SocketIO";
-  version = "4.2.1";
+  version = "4.3.0";
 
   src = fetchPypi {
     inherit pname version;
-    sha256 = "2172dff1e42415ba480cee02c30c2fc833671ff326f1598ee3d69aa02cf768ec";
+    sha256 = "7f9b54ac9cd92e28a657c58f51943d97e76b988840c8795784e7b2bafb13103f";
   };
 
   propagatedBuildInputs = [
@@ -26,7 +26,7 @@ buildPythonPackage rec {
 
   meta = with lib; {
     description = "Socket.IO integration for Flask applications";
-    homepage = https://github.com/miguelgrinberg/Flask-SocketIO/;
+    homepage = "https://github.com/miguelgrinberg/Flask-SocketIO/";
     license = licenses.mit;
     maintainers = [ maintainers.mic92 ];
   };

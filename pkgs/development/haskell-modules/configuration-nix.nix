@@ -283,11 +283,11 @@ self: super: builtins.intersectAttrs super {
   caramia = dontCheck super.caramia;
 
   llvm-hs =
-    let llvmHsWithLlvm8 = super.llvm-hs.override { llvm-config = pkgs.llvm_8; };
+    let llvmHsWithLlvm9 = super.llvm-hs.override { llvm-config = pkgs.llvm_9; };
     in
     if pkgs.stdenv.isDarwin
     then
-      overrideCabal llvmHsWithLlvm8 (oldAttrs: {
+      overrideCabal llvmHsWithLlvm9 (oldAttrs: {
         # One test fails on darwin.
         doCheck = false;
         # llvm-hs's Setup.hs file tries to add the lib/ directory from LLVM8 to
@@ -298,7 +298,7 @@ self: super: builtins.intersectAttrs super {
           substituteInPlace Setup.hs --replace "addToLdLibraryPath libDir" "pure ()"
         '';
       })
-    else llvmHsWithLlvm8;
+    else llvmHsWithLlvm9;
 
   # Needs help finding LLVM.
   spaceprobe = addBuildTool super.spaceprobe self.llvmPackages.llvm;
@@ -498,6 +498,9 @@ self: super: builtins.intersectAttrs super {
   # requires autotools to build
   secp256k1 = addBuildTools super.secp256k1 [ pkgs.buildPackages.autoconf pkgs.buildPackages.automake pkgs.buildPackages.libtool ];
 
+  # requires libsecp256k1 in pkgconfig-depends
+  secp256k1-haskell = addPkgconfigDepend super.secp256k1-haskell pkgs.secp256k1;
+
   # tests require git and zsh
   hapistrano = addBuildTools super.hapistrano [ pkgs.buildPackages.git pkgs.buildPackages.zsh ];
 
@@ -539,6 +542,9 @@ self: super: builtins.intersectAttrs super {
   # Break infinite recursion cycle between tasty and clock.
   clock = dontCheck super.clock;
 
+  # Break infinite recursion cycle between devtools and mprelude.
+  devtools = super.devtools.override { mprelude = dontCheck super.mprelude; };
+
   # loc and loc-test depend on each other for testing. Break that infinite cycle:
   loc-test = super.loc-test.override { loc = dontCheck self.loc; };
 
@@ -569,17 +575,19 @@ self: super: builtins.intersectAttrs super {
   # The test-suite requires a running PostgreSQL server.
   Frames-beam = dontCheck super.Frames-beam;
 
-  futhark = if pkgs.stdenv.isDarwin then super.futhark else with pkgs;
-    let path = stdenv.lib.makeBinPath [ gcc ];
-    in overrideCabal (addBuildTool super.futhark makeWrapper) (_drv: {
-      postInstall = ''
-        wrapProgram $out/bin/futhark \
-          --prefix PATH : "${path}" \
-          --set NIX_CC_WRAPPER_x86_64_unknown_linux_gnu_TARGET_HOST 1 \
-          --set NIX_CFLAGS_COMPILE "-I${opencl-headers}/include" \
-          --set NIX_CFLAGS_LINK "-L${ocl-icd}/lib"
-      '';
-    });
+  # Compile manpages (which are in RST and are compiled with Sphinx).
+  futhark = with pkgs;
+    overrideCabal (addBuildTools super.futhark [makeWrapper python37Packages.sphinx])
+      (_drv: {
+        postBuild = (_drv.postBuild or "") + ''
+        make -C docs man
+        '';
+
+        postInstall = (_drv.postInstall or "") + ''
+        mkdir -p $out/share/man/man1
+        mv docs/_build/man/*.1 $out/share/man/man1/
+        '';
+      });
 
   git-annex = with pkgs;
     if (!stdenv.isLinux) then
@@ -623,11 +631,6 @@ self: super: builtins.intersectAttrs super {
   http-download = dontCheck super.http-download;
   pantry = dontCheck super.pantry;
 
-  # Hadolint wants to build a statically linked binary by default.
-  hadolint = overrideCabal super.hadolint (drv: {
-    preConfigure = "sed -i -e /ld-options:/d hadolint.cabal";
-  });
-
   # gtk2hs-buildtools is listed in setupHaskellDepends, but we
   # need it during the build itself, too.
   cairo = addBuildTool super.cairo self.buildHaskellPackages.gtk2hs-buildtools;
@@ -635,22 +638,19 @@ self: super: builtins.intersectAttrs super {
 
   spago =
     let
-      # Spago needs a patch for MonadFail changes.
-      # https://github.com/purescript/spago/pull/584
-      # This can probably be removed when a version after spago-0.14.0 is released.
+      # Spago needs a small patch to work with the latest versions of rio.
+      # https://github.com/purescript/spago/pull/616
+      # This can probably be removed when a version after spago-0.15.1 is released.
       spagoWithPatches = appendPatch super.spago (pkgs.fetchpatch {
-        url = "https://github.com/purescript/spago/pull/584/commits/898a8e48665e5a73ea03525ce2c973455ab9ac52.patch";
-        sha256 = "05gs1hjlcf60cr6728rhgwwgxp3ildly14v4l2lrh6ma2fljhyjy";
+        url = "https://github.com/purescript/spago/pull/616/commits/95b5fa0f1d3bfb07972d1ef5004b8bee8a070667.patch";
+        sha256 = "0v3890lwhddfrq9mhbq92962pkxra8kwbin97wg3s0b02dk65ysc";
       });
 
       # Spago basically compiles with LTS-14, but it requires a newer version
       # of directory.  This is to work around a bug only present on windows, so
       # we can safely jailbreak spago and use the older directory package from
       # LTS-14.
-      spagoWithOverrides = doJailbreak (spagoWithPatches.override {
-        # spago requires dhall-1.29.0.
-        dhall = self.dhall_1_29_0;
-      });
+      spagoWithOverrides = doJailbreak spagoWithPatches;
 
       # This defines the version of the purescript-docs-search release we are using.
       # This is defined in the src/Spago/Prelude.hs file in the spago source.
@@ -718,8 +718,63 @@ self: super: builtins.intersectAttrs super {
   # break infinite recursion with base-orphans
   primitive = dontCheck super.primitive;
 
-  # dhall-1.29.0 tests access the network.  This override can be removed when
-  # dhall_1_29_0 is no longer used, since more recent versions of dhall don't
-  # access the network in checks.
+  # dhall's tests access the network.
   dhall_1_29_0 = dontCheck super.dhall_1_29_0;
+  dhall_1_31_1 = dontCheck super.dhall_1_31_1;
+  dhall_1_32_0 = dontCheck super.dhall_1_32_0;
+
+  cut-the-crap =
+    let path = pkgs.stdenv.lib.makeBinPath [ pkgs.ffmpeg_3 ];
+    in overrideCabal (addBuildTool super.cut-the-crap pkgs.makeWrapper) (_drv: {
+      postInstall = ''
+        wrapProgram $out/bin/cut-the-crap \
+          --prefix PATH : "${path}"
+      '';
+    });
+
+  # Tests access homeless-shelter.
+  hie-bios = dontCheck super.hie-bios;
+  hie-bios_0_5_0 = dontCheck super.hie-bios_0_5_0;
+
+  # Compiling the readme throws errors and has no purpose in nixpkgs
+  aeson-gadt-th =
+    disableCabalFlag (doJailbreak (super.aeson-gadt-th)) "build-readme";
+
+  neuron = overrideCabal (super.neuron) (drv: {
+    # neuron expects the neuron-search script to be in PATH at built-time.
+    buildTools = [ pkgs.makeWrapper ];
+    preConfigure = ''
+      mkdir -p $out/bin
+      cp src-bash/neuron-search $out/bin/neuron-search
+      chmod +x $out/bin/neuron-search
+      wrapProgram $out/bin/neuron-search --prefix 'PATH' ':' ${
+        with pkgs;
+        lib.makeBinPath [ fzf ripgrep gawk bat findutils envsubst ]
+      }
+      PATH=$PATH:$out/bin
+    '';
+  });
+
+  postgresql-syntax = super.postgresql-syntax.override {
+    rerebase = self.rerebase_1_6_1;
+  };
+
+  rerebase_1_6_1 = super.rerebase_1_6_1.override {
+    rebase = self.rebase_1_6_1;
+  };
+
+  rebase_1_6_1 = super.rebase_1_6_1.override {
+    selective = super.selective_0_4_1;
+  };
+
+  # Fix compilation of Setup.hs by removing the module declaration.
+  # See: https://github.com/tippenein/guid/issues/1
+  guid = overrideCabal (super.guid) (drv: {
+    prePatch = "sed -i '1d' Setup.hs"; # 1st line is module declaration, remove it
+    doCheck = false;
+  });
+
+  # Tests disabled as recommended at https://github.com/luke-clifton/shh/issues/39
+  shh = dontCheck super.shh;
+
 }

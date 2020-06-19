@@ -1,4 +1,4 @@
-{ stdenv, lib, fetchurl, fetchpatch
+{ stdenv, lib, fetchurl, fetchpatch, buildPackages
 , pkgconfig, intltool, ninja, meson
 , file, flex, bison, expat, libdrm, xorg, wayland, wayland-protocols, openssl
 , llvmPackages, libffi, libomxil-bellagio, libva-minimal
@@ -11,6 +11,8 @@
 , eglPlatforms ? [ "x11" "surfaceless" ] ++ lib.optionals stdenv.isLinux [ "wayland" "drm" ]
 , OpenGL, Xplugin
 , withValgrind ? stdenv.hostPlatform.isLinux && !stdenv.hostPlatform.isAarch32, valgrind-light
+, enableGalliumNine ? stdenv.isLinux
+, enableOSMesa ? stdenv.isLinux
 }:
 
 /** Packaging design:
@@ -27,7 +29,9 @@
 with stdenv.lib;
 
 let
-  version = "19.3.3";
+  # Release calendar: https://www.mesa3d.org/release-calendar.html
+  # Release frequency: https://www.mesa3d.org/releasing.html#schedule
+  version = "20.0.8"; # Update only to the final (last planned) release (i.e. X.Y.MAX)?
   branch  = versions.major version;
 in
 
@@ -37,12 +41,12 @@ stdenv.mkDerivation {
 
   src = fetchurl {
     urls = [
+      "https://mesa.freedesktop.org/archive/mesa-${version}.tar.xz"
       "ftp://ftp.freedesktop.org/pub/mesa/mesa-${version}.tar.xz"
       "ftp://ftp.freedesktop.org/pub/mesa/${version}/mesa-${version}.tar.xz"
       "ftp://ftp.freedesktop.org/pub/mesa/older-versions/${branch}.x/${version}/mesa-${version}.tar.xz"
-      "https://mesa.freedesktop.org/archive/mesa-${version}.tar.xz"
     ];
-    sha256 = "02czqdqf64i3az5p1allnxycyjad3x35cj0hz0017mi5pc84ikl1";
+    sha256 = "6cf0c010df89680f9b2bc6432ff01400031795e39bceda7535fa00af06740b6c";
   };
 
   prePatch = "patchShebangs .";
@@ -73,7 +77,13 @@ stdenv.mkDerivation {
       })
     ];
 
-  outputs = [ "out" "dev" "drivers" "osmesa" ];
+  postPatch = ''
+    substituteInPlace meson.build --replace \
+      "find_program('pkg-config')" \
+      "find_program('${buildPackages.pkg-config.targetPrefix}pkg-config')"
+  '';
+
+  outputs = [ "out" "dev" "drivers" ] ++ lib.optional enableOSMesa "osmesa";
 
   # TODO: Figure out how to enable opencl without having a runtime dependency on clang
   mesonFlags = [
@@ -97,10 +107,10 @@ stdenv.mkDerivation {
     "-Domx-libs-path=${placeholder "drivers"}/lib/bellagio"
     "-Dva-libs-path=${placeholder "drivers"}/lib/dri"
     "-Dd3d-drivers-path=${placeholder "drivers"}/lib/d3d"
+    "-Dgallium-nine=${if enableGalliumNine then "true" else "false"}" # Direct3D in Wine
+    "-Dosmesa=${if enableOSMesa then "gallium" else "none"}" # used by wine
   ] ++ optionals stdenv.isLinux [
     "-Dglvnd=true"
-    "-Dosmesa=gallium" # used by wine
-    "-Dgallium-nine=true" # Direct3D in Wine
   ];
 
   buildInputs = with xorg; [
@@ -112,10 +122,14 @@ stdenv.mkDerivation {
     ++ lib.optionals stdenv.isLinux [ libomxil-bellagio libva-minimal ]
     ++ lib.optional withValgrind valgrind-light;
 
+  depsBuildBuild = [ pkgconfig ];
+
   nativeBuildInputs = [
     pkgconfig meson ninja
     intltool bison flex file
     python3Packages.python python3Packages.Mako
+  ] ++ lib.optionals (elem "wayland" eglPlatforms) [
+    wayland # For wayland-scanner during the build
   ];
 
   propagatedBuildInputs = with xorg; [
@@ -132,17 +146,17 @@ stdenv.mkDerivation {
   '' + optionalString stdenv.isLinux ''
     mkdir -p $drivers/lib
 
-    # move gallium-related stuff to $drivers, so $out doesn't depend on LLVM
-    mv -t $drivers/lib       \
-      $out/lib/libxatracker* \
-      $out/lib/libvulkan_*
+    if [ -n "$(shopt -s nullglob; echo "$out/lib/libxatracker"*)" -o -n "$(shopt -s nullglob; echo "$out/lib/libvulkan_"*)" ]; then
+      # move gallium-related stuff to $drivers, so $out doesn't depend on LLVM
+      mv -t $drivers/lib       \
+        $out/lib/libxatracker* \
+        $out/lib/libvulkan_*
+    fi
 
-    # Move other drivers to a separate output
-    mv $out/lib/lib*_mesa* $drivers/lib
-
-    # move libOSMesa to $osmesa, as it's relatively big
-    mkdir -p $osmesa/lib
-    mv -t $osmesa/lib/ $out/lib/libOSMesa*
+    if [ -n "$(shopt -s nullglob; echo "$out"/lib/lib*_mesa*)" ]; then
+      # Move other drivers to a separate output
+      mv $out/lib/lib*_mesa* $drivers/lib
+    fi
 
     # move vendor files
     mv $out/share/ $drivers/
@@ -157,6 +171,10 @@ stdenv.mkDerivation {
     for js in $drivers/share/vulkan/icd.d/*.json; do
       substituteInPlace "$js" --replace "$out" "$drivers"
     done
+  '' + lib.optionalString enableOSMesa ''
+    # move libOSMesa to $osmesa, as it's relatively big
+    mkdir -p $osmesa/lib
+    mv -t $osmesa/lib/ $out/lib/libOSMesa*
   '';
 
   # TODO:
@@ -171,7 +189,9 @@ stdenv.mkDerivation {
 
     # Update search path used by pkg-config
     for pc in $dev/lib/pkgconfig/{d3d,dri,xatracker}.pc; do
-      substituteInPlace "$pc" --replace $out $drivers
+      if [ -f "$pc" ]; then
+        substituteInPlace "$pc" --replace $out $drivers
+      fi
     done
 
     # add RPATH so the drivers can find the moved libgallium and libdricore9
@@ -191,10 +211,20 @@ stdenv.mkDerivation {
   };
 
   meta = with stdenv.lib; {
-    description = "An open source implementation of OpenGL";
-    homepage = https://www.mesa3d.org/;
+    description = "An open source 3D graphics library";
+    longDescription = ''
+      The Mesa project began as an open-source implementation of the OpenGL
+      specification - a system for rendering interactive 3D graphics. Over the
+      years the project has grown to implement more graphics APIs, including
+      OpenGL ES (versions 1, 2, 3), OpenCL, OpenMAX, VDPAU, VA API, XvMC, and
+      Vulkan.  A variety of device drivers allows the Mesa libraries to be used
+      in many different environments ranging from software emulation to
+      complete hardware acceleration for modern GPUs.
+    '';
+    homepage = "https://www.mesa3d.org/";
+    changelog = "https://www.mesa3d.org/relnotes/${version}.html";
     license = licenses.mit; # X11 variant, in most files
     platforms = platforms.mesaPlatforms;
-    maintainers = with maintainers; [ vcunat ];
+    maintainers = with maintainers; [ primeos vcunat ]; # Help is welcome :)
   };
 }

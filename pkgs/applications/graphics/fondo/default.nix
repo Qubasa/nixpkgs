@@ -20,13 +20,13 @@
 
 stdenv.mkDerivation rec {
   pname = "fondo";
-  version = "1.3.8";
+  version = "1.3.9";
 
   src = fetchFromGitHub {
     owner = "calo001";
     repo = pname;
     rev = version;
-    sha256 = "126diirhmm2igxdpgfv1l20wnz5q8hadgq53d0j83ka72mfd3qg6";
+    sha256 = "1gyi80j2c38j62miv8a8nsx1pad169sa4fx0b85m2yv0x7fz492w";
   };
 
   nativeBuildInputs = [
@@ -65,7 +65,7 @@ stdenv.mkDerivation rec {
 
   meta = with stdenv.lib; {
     description = "Find the most beautiful wallpapers for your desktop";
-    homepage = https://github.com/calo001/fondo;
+    homepage = "https://github.com/calo001/fondo";
     license = licenses.agpl3Plus;
     maintainers = with maintainers; [ worldofpeace ];
     platforms = platforms.linux;

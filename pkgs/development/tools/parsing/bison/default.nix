@@ -2,11 +2,11 @@
 
 stdenv.mkDerivation rec {
   pname = "bison";
-  version = "3.5.1";
+  version = "3.6.2";
 
   src = fetchurl {
     url = "mirror://gnu/${pname}/${pname}-${version}.tar.gz";
-    sha256 = "09bg544pavpsivwh175ghgm7y3mkvdxfbwq41lfbwlb7v4i27vsc";
+    sha256 = "16h8panwpljwdq902v9x7inpnks51fn0kqlbyqfjvpilv6md73p2";
   };
 
   nativeBuildInputs = [ m4 perl ] ++ stdenv.lib.optional stdenv.isSunOS help2man;
@@ -16,7 +16,7 @@ stdenv.mkDerivation rec {
   doInstallCheck = false; # fails
 
   meta = {
-    homepage = https://www.gnu.org/software/bison/;
+    homepage = "https://www.gnu.org/software/bison/";
     description = "Yacc-compatible parser generator";
     license = stdenv.lib.licenses.gpl3Plus;
 

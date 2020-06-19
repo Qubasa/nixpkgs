@@ -2,11 +2,11 @@
 
 buildPythonPackage rec {
   pname = "rq";
-  version = "1.2.2";
+  version = "1.4.2";
 
   src = fetchPypi {
     inherit pname version;
-    sha256 = "0dk664lzjhj0rk4ffpv29mbcr7vh41ph1sx7ngszk3744gh1nshp";
+    sha256 = "f680c52c7079266465d5e5c49679fab0d14db11d70fec6f1470423408b6bbcf6";
   };
 
   # test require a running redis rerver, which is something we can't do yet

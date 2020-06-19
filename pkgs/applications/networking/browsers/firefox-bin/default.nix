@@ -48,7 +48,7 @@
 , gnused
 , gnugrep
 , gnupg
-, ffmpeg
+, ffmpeg_3
 , runtimeShell
 , systemLocale ? config.i18n.defaultLocale or "en-US"
 }:
@@ -134,7 +134,7 @@ stdenv.mkDerivation {
       libpulseaudio
       (lib.getDev libpulseaudio)
       systemd
-      ffmpeg
+      ffmpeg_3
     ] + ":" + stdenv.lib.makeSearchPathOutput "lib" "lib64" [
       stdenv.cc.cc
     ];
@@ -199,10 +199,10 @@ stdenv.mkDerivation {
   };
   meta = with stdenv.lib; {
     description = "Mozilla Firefox, free web browser (binary package)";
-    homepage = http://www.mozilla.org/firefox/;
+    homepage = "http://www.mozilla.org/firefox/";
     license = {
       free = false;
-      url = http://www.mozilla.org/en-US/foundation/trademarks/policy/;
+      url = "http://www.mozilla.org/en-US/foundation/trademarks/policy/";
     };
     platforms = builtins.attrNames mozillaPlatforms;
     maintainers = with maintainers; [ taku0 ];

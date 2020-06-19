@@ -11,8 +11,8 @@ let
   archive_fmt = if system == "x86_64-darwin" then "zip" else "tar.gz";
 
   sha256 = {
-    x86_64-linux = "139sqaixlcqlpcrn2vkcp9fxvcjgnhn2dwxclxq3bnb814pw7rba";
-    x86_64-darwin = "0jkd3p1jqg38z9l22k5w7b45fdnxwrhzlgyhinw7wlqz7zvflkn1";
+    x86_64-linux = "088nsflscak315704vqnh8m4q7601fczglbhdz5i70kfyg89ar4w";
+    x86_64-darwin = "0fxpx1ydsag4gyn2kq5ddq55lpw15w176p3fypk80fyfix4kziqf";
   }.${system};
 
   sourceRoot = {
@@ -25,12 +25,14 @@ in
     # The update script doesn't correctly change the hash for darwin, so please:
     # nixpkgs-update: no auto update
 
-    version = "1.43.0";
+    # Please backport all compatible updates to the stable release.
+    # This is important for the extension ecosystem.
+    version = "1.46.0";
     pname = "vscodium";
 
     executableName = "codium";
     longName = "VSCodium";
-    shortName = "Codium";
+    shortName = "vscodium";
 
     src = fetchurl {
       url = "https://github.com/VSCodium/vscodium/releases/download/${version}/VSCodium-${plat}-${version}.${archive_fmt}";
@@ -49,10 +51,10 @@ in
         and code refactoring. It is also customizable, so users can change the
         editor's theme, keyboard shortcuts, and preferences
       '';
-      homepage = https://github.com/VSCodium/vscodium;
-      downloadPage = https://github.com/VSCodium/vscodium/releases;
+      homepage = "https://github.com/VSCodium/vscodium";
+      downloadPage = "https://github.com/VSCodium/vscodium/releases";
       license = licenses.mit;
-      maintainers = with maintainers; [ synthetica ];
+      maintainers = with maintainers; [ synthetica turion ];
       platforms = [ "x86_64-linux" "x86_64-darwin" ];
     };
   }

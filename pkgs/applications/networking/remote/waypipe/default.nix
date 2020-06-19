@@ -1,7 +1,7 @@
 { stdenv, fetchFromGitLab
 , meson, ninja, pkgconfig, scdoc
 , wayland, wayland-protocols, openssh
-, mesa, lz4, zstd, ffmpeg_4, libva
+, mesa, lz4, zstd, ffmpeg, libva
 }:
 
 stdenv.mkDerivation rec {
@@ -26,7 +26,7 @@ stdenv.mkDerivation rec {
   buildInputs = [
     wayland wayland-protocols
     # Optional dependencies:
-    mesa lz4 zstd ffmpeg_4 libva
+    mesa lz4 zstd ffmpeg libva
   ];
 
   enableParallelBuilding = true;
@@ -40,7 +40,7 @@ stdenv.mkDerivation rec {
       serializes changes to shared memory buffers over a single socket. This
       makes application forwarding similar to ssh -X feasible.
     '';
-    homepage = https://mstoeckl.com/notes/gsoc/blog.html;
+    homepage = "https://mstoeckl.com/notes/gsoc/blog.html";
     license = licenses.mit;
     platforms = platforms.linux;
     maintainers = with maintainers; [ primeos ];

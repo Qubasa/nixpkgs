@@ -1,11 +1,11 @@
 { stdenv, fetchurl, pkgconfig, libpipeline, db, groff, libiconv, makeWrapper, buildPackages }:
 
 stdenv.mkDerivation rec {
-  name = "man-db-2.9.0";
+  name = "man-db-2.9.2";
 
   src = fetchurl {
     url = "mirror://savannah/man-db/${name}.tar.xz";
-    sha256 = "0qg2sdn8mayya0ril484iz1r7hi46l68d2d80cr6lvc7x3csqjjx";
+    sha256 = "0z04kwv5ymmd0pzadpaag696jfckg6rbz8x4jrgj09bmqqk3yf3v";
   };
 
   outputs = [ "out" "doc" ];
@@ -75,7 +75,7 @@ stdenv.mkDerivation rec {
   doCheck = !stdenv.hostPlatform.isMusl /* iconv binary */ && !stdenv.hostPlatform.isDarwin;
 
   meta = with stdenv.lib; {
-    homepage = http://man-db.nongnu.org;
+    homepage = "http://man-db.nongnu.org";
     description = "An implementation of the standard Unix documentation system accessed using the man command";
     license = licenses.gpl2;
     platforms = stdenv.lib.platforms.unix;

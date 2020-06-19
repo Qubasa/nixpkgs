@@ -15,11 +15,11 @@
 
 buildPythonPackage rec {
   pname = "prance";
-  version = "0.17.0";
+  version = "0.18.3";
 
   src = fetchPypi {
     inherit pname version;
-    sha256 = "a128d0d5f639a6a19eefedd787a6ce9603634c3908927b1215653e4a8375195f";
+    sha256 = "4600ec749ade4f10d1cc8b07cd7a372f02985efd66100e287e67ccb1d48b5fc5";
   };
 
   buildInputs = [
@@ -50,7 +50,7 @@ buildPythonPackage rec {
 
   meta = with lib; {
     description = "Resolving Swagger/OpenAPI 2.0 and 3.0.0 Parser";
-    homepage = https://github.com/jfinkhaeuser/prance;
+    homepage = "https://github.com/jfinkhaeuser/prance";
     license = licenses.mit;
     maintainers = [ maintainers.costrouc ];
   };

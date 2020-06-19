@@ -60,7 +60,7 @@ let
       inherit (efi) canTouchEfiVariables;
       inherit (cfg)
         version extraConfig extraPerEntryConfig extraEntries forceInstall useOSProber
-        extraEntriesBeforeNixOS extraPrepareConfig extraInitrd configurationLimit copyKernels
+        extraEntriesBeforeNixOS extraPrepareConfig configurationLimit copyKernels
         default fsIdentifier efiSupport efiInstallAsRemovable gfxmodeEfi gfxmodeBios gfxpayloadEfi gfxpayloadBios;
       path = with pkgs; makeBinPath (
         [ coreutils gnused gnugrep findutils diffutils btrfs-progs utillinux mdadm ]
@@ -83,7 +83,7 @@ let
              ] ++ (optional (cfg.fontSize!=null) "--size ${toString cfg.fontSize}")))
          );
 
-  defaultSplash = "${pkgs.nixos-artwork.wallpapers.simple-dark-gray-bootloader}/share/artwork/gnome/nix-wallpaper-simple-dark-gray_bootloader.png";
+  defaultSplash = pkgs.nixos-artwork.wallpapers.simple-dark-gray-bootloader.gnomeFilePath;
 in
 
 {
@@ -289,19 +289,6 @@ in
           Each attribute name denotes the destination file name in
           <filename>/boot</filename>, while the corresponding
           attribute value specifies the source file.
-        '';
-      };
-
-      extraInitrd = mkOption {
-        type = types.nullOr types.path;
-        default = null;
-        example = "/boot/extra_initramfs.gz";
-        description = ''
-          The path to a second initramfs to be supplied to the kernel.
-          This ramfs will not be copied to the store, so that it can
-          contain secrets such as LUKS keyfiles or ssh keys.
-          This implies that rolling back to a previous configuration
-          won't rollback the state of this file.
         '';
       };
 
@@ -588,7 +575,7 @@ in
 
     { boot.loader.grub.splashImage = mkDefault (
         if cfg.version == 1 then pkgs.fetchurl {
-          url = http://www.gnome-look.org/CONTENT/content-files/36909-soft-tux.xpm.gz;
+          url = "http://www.gnome-look.org/CONTENT/content-files/36909-soft-tux.xpm.gz";
           sha256 = "14kqdx2lfqvh40h6fjjzqgff1mwk74dmbjvmqphi6azzra7z8d59";
         }
         # GRUB 1.97 doesn't support gzipped XPMs.
@@ -607,6 +594,8 @@ in
       boot.loader.grub.mirroredBoots = optionals (cfg.devices != [ ]) [
         { path = "/boot"; inherit (cfg) devices; inherit (efi) efiSysMountPoint; }
       ];
+
+      boot.loader.supportsInitrdSecrets = true;
 
       system.build.installBootLoader =
         let
@@ -705,6 +694,24 @@ in
       (mkRenamedOptionModule [ "boot" "grubDevice" ] [ "boot" "loader" "grub" "device" ])
       (mkRenamedOptionModule [ "boot" "bootMount" ] [ "boot" "loader" "grub" "bootDevice" ])
       (mkRenamedOptionModule [ "boot" "grubSplashImage" ] [ "boot" "loader" "grub" "splashImage" ])
+      (mkRemovedOptionModule [ "boot" "loader" "grub" "extraInitrd" ] ''
+        This option has been replaced with the bootloader agnostic
+        boot.initrd.secrets option. To migrate to the initrd secrets system,
+        extract the extraInitrd archive into your main filesystem:
+
+          # zcat /boot/extra_initramfs.gz | cpio -idvmD /etc/secrets/initrd
+          /path/to/secret1
+          /path/to/secret2
+
+        then replace boot.loader.grub.extraInitrd with boot.initrd.secrets:
+
+          boot.initrd.secrets = {
+            "/path/to/secret1" = "/etc/secrets/initrd/path/to/secret1";
+            "/path/to/secret2" = "/etc/secrets/initrd/path/to/secret2";
+          };
+
+        See the boot.initrd.secrets option documentation for more information.
+      '')
     ];
 
 }

@@ -8,19 +8,19 @@
 }:
 
 buildPythonPackage rec {
-  version = "1.4.1";
+  version = "2.0.0";
   pname = "pydicom";
 
   src = fetchPypi {
     inherit pname version;
-    sha256 = "0ki4736h6mp77733rsrwicl8pyig39idywzcmwvw3nzi2r1yc7w8";
+    sha256 = "594c91f715c415ef439f498351ae68fb770c776fc5aa72f3c87eb500dc2a7470";
   };
 
   propagatedBuildInputs = [ numpy pillow ];
   checkInputs = [ pytest pytestrunner ];
 
   meta = with stdenv.lib; {
-    homepage = https://pydicom.github.io;
+    homepage = "https://pydicom.github.io";
     description = "Pure-Python package for working with DICOM files";
     license = licenses.mit;
     maintainers = with maintainers; [ bcdarwin ];

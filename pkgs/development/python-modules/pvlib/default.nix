@@ -3,14 +3,14 @@
 
 buildPythonPackage rec {
   pname = "pvlib";
-  version = "0.7.1";
+  version = "0.7.2";
 
   # Support for Python <3.5 dropped in 0.6.3 on June 1, 2019.
   disabled = pythonOlder "3.5";
 
   src = fetchPypi{
     inherit pname version;
-    sha256 = "1kqwnkbkdv4m3r68pd39va6wqvhr34a6hx4d6q5lfkibclg35c3d";
+    sha256 = "40708492ed0a41e900d36933b9b9ab7b575c72ebf3eee81293c626e301aa7ea1";
   };
 
   checkInputs = [ pytest mock pytest-mock ];
@@ -26,7 +26,7 @@ buildPythonPackage rec {
   '';
 
   meta = with stdenv.lib; {
-    homepage = https://pvlib-python.readthedocs.io;
+    homepage = "https://pvlib-python.readthedocs.io";
     description = "Simulate the performance of photovoltaic energy systems";
     license = licenses.bsd3;
     maintainers = with maintainers; [ jluttine ];

@@ -2,17 +2,17 @@
 
 buildGoModule rec {
   pname = "clash";
-  version = "0.18.0";
+  version = "0.20.0";
 
   src = fetchFromGitHub {
     owner = "Dreamacro";
     repo = pname;
     rev = "v${version}";
-    sha256 = "150zpjchldm1632z6gkydgqhx2a612lpwf5lqngd2if99nas54kk";
+    sha256 = "1nb4hl9x2lj0hy8byz14c2xn6yhrb6pqmhzl002k83qd3zrc6s3p";
   };
 
   goPackagePath = "github.com/Dreamacro/clash";
-  modSha256 = "02bki2iq99lc9iq1mjf9rbxwspalrj7hjlk1h384w3d4s4x4fyxy";
+  vendorSha256 = "0nh3cn31p7yhnhjzqp84dnhzy3hag253bjp70w8q03lw7mkhdgz3";
 
   buildFlagsArray = [
     "-ldflags="

@@ -15,11 +15,11 @@ assert pulseaudioSupport -> libpulseaudio != null;
 let
   inherit (stdenv.lib) concatStringsSep makeBinPath optional;
 
-  version = "3.5.361976.0301";
+  version = "5.1.412382.0614";
   srcs = {
     x86_64-linux = fetchurl {
       url = "https://zoom.us/client/${version}/zoom_x86_64.tar.xz";
-      sha256 = "12pqs4pk73d7y9b49vq6f4fryph27k45zm1rjrpijnbi6ln2w993";
+      sha256 = "07xb3v5i08wq0a3my9id91gizsxj5ppqvxmcbdy04j7yn4i1jm9x";
     };
   };
 
@@ -60,7 +60,6 @@ in mkDerivation {
         "zcacert.pem"
         "zoom"
         "zoom.sh"
-        "zoomlinux"
         "zopen"
       ];
     in ''
@@ -126,7 +125,7 @@ in mkDerivation {
     description = "zoom.us video conferencing application";
     license = stdenv.lib.licenses.unfree;
     platforms = builtins.attrNames srcs;
-    maintainers = with stdenv.lib.maintainers; [ danbst tadfisher ];
+    maintainers = with stdenv.lib.maintainers; [ danbst tadfisher doronbehar ];
   };
 
 }

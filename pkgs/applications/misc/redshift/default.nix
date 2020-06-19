@@ -9,6 +9,7 @@
 , withGeolocation ? true
 , withCoreLocation ? withGeolocation && stdenv.isDarwin, CoreLocation, Foundation, Cocoa
 , withGeoclue ? withGeolocation && stdenv.isLinux, geoclue
+, withAppIndicator ? true, libappindicator
 }:
 
 let
@@ -50,6 +51,7 @@ let
         ++ stdenv.lib.optional  withDrm          libdrm
         ++ stdenv.lib.optional  withQuartz       ApplicationServices
         ++ stdenv.lib.optionals withCoreLocation [ CoreLocation Foundation Cocoa ]
+        ++ stdenv.lib.optional  withAppIndicator libappindicator
         ;
 
       pythonPath = [ pygobject3 pyxdg ];
@@ -93,7 +95,7 @@ rec {
         be set to match the lamps in your room.
       '';
       license = licenses.gpl3Plus;
-      homepage = http://jonls.dk/redshift;
+      homepage = "http://jonls.dk/redshift";
       platforms = platforms.unix;
       maintainers = with maintainers; [ yegortimoshenko globin ];
     };
@@ -101,18 +103,19 @@ rec {
 
   redshift-wlr = mkRedshift {
     pname = "redshift-wlr";
-    version = "2019-04-17";
+    # upstream rebases so this is the push date
+    version = "2019-08-24";
 
     src = fetchFromGitHub {
       owner = "minus7";
       repo = "redshift";
-      rev = "eecbfedac48f827e96ad5e151de8f41f6cd3af66";
+      rev = "7da875d34854a6a34612d5ce4bd8718c32bec804";
       sha256 = "0rs9bxxrw4wscf4a8yl776a8g880m5gcm75q06yx2cn3lw2b7v22";
     };
 
     meta = redshift.meta // {
       description = redshift.meta.description + "(with wlroots patches)";
-      homepage = https://github.com/minus7/redshift;
+      homepage = "https://github.com/minus7/redshift";
     };
   };
 }

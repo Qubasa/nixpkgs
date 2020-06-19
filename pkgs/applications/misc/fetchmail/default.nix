@@ -1,7 +1,7 @@
 { stdenv, fetchurl, openssl }:
 
 let
-  version = "6.4.2";
+  version = "6.4.6";
 in
 stdenv.mkDerivation {
   pname = "fetchmail";
@@ -9,7 +9,7 @@ stdenv.mkDerivation {
 
   src = fetchurl {
     url = "mirror://sourceforge/fetchmail/fetchmail-${version}.tar.xz";
-    sha256 = "0c563if3kribnj771l14aj06irmrlhm61dc68w6dp7zj4qrnn7z2";
+    sha256 = "04b0sq1xad6gs1bfhkbmhsn1kq6y4gsx9l9ywjvd5d0rc15yrvqn";
   };
 
   buildInputs = [ openssl ];
@@ -17,7 +17,7 @@ stdenv.mkDerivation {
   configureFlags = [ "--with-ssl=${openssl.dev}" ];
 
   meta = {
-    homepage = https://www.fetchmail.info/;
+    homepage = "https://www.fetchmail.info/";
     description = "A full-featured remote-mail retrieval and forwarding utility";
     longDescription = ''
       A full-featured, robust, well-documented remote-mail retrieval and

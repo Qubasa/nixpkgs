@@ -1,6 +1,6 @@
 { stdenv, fetchurl, makeWrapper
 , alsaLib, libpulseaudio, libX11, libXcursor, libXinerama, libXrandr, libXi, libGL
-, factorio-utils
+, libSM, libICE, libXext, factorio-utils
 , releaseType
 , mods ? []
 , username ? "", token ? "" # get/reset token at https://factorio.com/profile
@@ -53,11 +53,11 @@ let
     x86_64-linux = let bdist = bdistForArch { inUrl = "linux64"; inTar = "x64"; }; in {
       alpha = {
         stable        = bdist { sha256 = "1fg2wnia6anzya4m53jf2xqwwspvwskz3awdb3j0v3fzijps94wc"; version = "0.17.79"; withAuth = true; };
-        experimental  = bdist { sha256 = "1fg2wnia6anzya4m53jf2xqwwspvwskz3awdb3j0v3fzijps94wc"; version = "0.17.79"; withAuth = true; };
+        experimental  = bdist { sha256 = "1h0gv7cdn999hm2fl93kq6g98bzd1x3c8afq8v0a04dqjarjgr86"; version = "0.18.32"; withAuth = true; };
       };
       headless = {
         stable        = bdist { sha256 = "1pr39nm23fj83jy272798gbl9003rgi4vgsi33f2iw3dk3x15kls"; version = "0.17.79"; };
-        experimental  = bdist { sha256 = "1pr39nm23fj83jy272798gbl9003rgi4vgsi33f2iw3dk3x15kls"; version = "0.17.79"; };
+        experimental  = bdist { sha256 = "017ggrsnhwyfgx99q0wjagafjvk5pb6lcxl72y37gig72bfcapab"; version = "0.18.32"; };
       };
       demo = {
         stable        = bdist { sha256 = "07qknasaqvzl9vy1fglm7xmdi7ynhmslrb0a209fhbfs0s7qqlgi"; version = "0.17.79"; };
@@ -164,9 +164,9 @@ let
         Factorio has been in development since spring of 2012 and it is
         currently in late alpha.
       '';
-      homepage = https://www.factorio.com/;
+      homepage = "https://www.factorio.com/";
       license = stdenv.lib.licenses.unfree;
-      maintainers = with stdenv.lib.maintainers; [ Baughn elitak ];
+      maintainers = with stdenv.lib.maintainers; [ Baughn elitak erictapen ];
       platforms = [ "i686-linux" "x86_64-linux" ];
     };
   };
@@ -186,6 +186,9 @@ let
         libXrandr
         libXi
         libGL
+        libSM
+        libICE
+        libXext
       ];
 
       installPhase = base.installPhase + ''

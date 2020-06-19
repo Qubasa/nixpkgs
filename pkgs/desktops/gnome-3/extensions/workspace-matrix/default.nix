@@ -2,13 +2,13 @@
 
 stdenv.mkDerivation rec {
   pname = "gnome-shell-extension-workspace-matrix";
-  version = "3.0.0";
+  version = "4.0.0";
 
   src = fetchFromGitHub {
     owner = "mzur";
     repo = "gnome-shell-wsmatrix";
     rev = "v${version}";
-    sha256 = "1fgyzmd16kklcca7600bwg8w8pbb4klmapqsvmahlwa99vmkhfkn";
+    sha256 = "0ak4067kgr0yi2hlrsbhsq28ksspmx7l811h0xqy4idg48ly8c1d";
   };
 
   uuid = "wsmatrix@martin.zurowietz.de";
@@ -29,6 +29,6 @@ stdenv.mkDerivation rec {
     description = "Arrange workspaces in a two dimensional grid with workspace thumbnails";
     license = licenses.gpl3Plus;
     maintainers = with maintainers; [ chkno ];
-    homepage =  https://github.com/mzur/gnome-shell-wsmatrix;
+    homepage =  "https://github.com/mzur/gnome-shell-wsmatrix";
   };
 }

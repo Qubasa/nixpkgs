@@ -159,14 +159,13 @@ in {
     enableShared = false;
   };
   mkl = super.mkl.override { enableStatic = true; };
-  nix = super.nix.override { withAWS = false; };
+  nix = super.nix.override { enableStatic = true; };
   openssl = (super.openssl_1_1.override { static = true; }).overrideAttrs (o: {
     # OpenSSL doesn't like the `--enable-static` / `--disable-shared` flags.
     configureFlags = (removeUnknownConfigureFlags o.configureFlags);
   });
   arrow-cpp = super.arrow-cpp.override {
     enableShared = false;
-    python = { pkgs = { python = null; numpy = null; }; };
   };
   boost = super.boost.override {
     enableStatic = true;
@@ -266,6 +265,15 @@ in {
   ) super.ocaml-ng;
 
   python27 = super.python27.override { static = true; };
+  python35 = super.python35.override { static = true; };
+  python36 = super.python36.override { static = true; };
+  python37 = super.python37.override { static = true; };
+  python38 = super.python38.override { static = true; };
+  python39 = super.python39.override { static = true; };
+  python3Minimal = super.python3Minimal.override { static = true; };
+
 
   libev = super.libev.override { static = true; };
+
+  libexecinfo = super.libexecinfo.override { enableShared = false; };
 }

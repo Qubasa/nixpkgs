@@ -17,8 +17,76 @@
 
 { lib }:
 with lib.maintainers; {
+  acme = {
+    members = [
+      aanderse
+      andrew-d
+      arianvp
+      emily
+      flokli
+      m1cr0man
+    ];
+    scope = "Maintain ACME-related packages and modules.";
+  };
+
   freedesktop = {
     members = [ jtojnar worldofpeace ];
     scope = "Maintain Freedesktop.org packages for graphical desktop.";
+  };
+
+  golang = {
+    members = [
+      c00w
+      cstrahan
+      Frostman
+      kalbasit
+      mic92
+      orivej
+      rvolosatovs
+      zowoq
+    ];
+    scope = "Maintain Golang compilers.";
+  };
+
+  gnome = {
+    members = [
+      hedning
+      jtojnar
+      worldofpeace
+    ];
+    scope = "Maintain GNOME desktop environment and platform.";
+  };
+
+  matrix = {
+    members = [
+      ma27
+      pacien
+      fadenb
+      mguentner
+      ekleog
+      ralith
+    ];
+    scope = "Maintain the ecosystem around Matrix, a decentralized messenger.";
+  };
+
+  php = {
+    members = [
+      aanderse
+      etu
+      globin
+      ma27
+      talyz
+    ];
+    scope = "Maintain PHP related packages and extensions.";
+  };
+
+  podman = {
+    members = [
+      adisbladis
+      saschagrunert
+      vdemeester
+      zowoq
+    ];
+    scope = "Maintain Podman and CRI-O related packages and modules.";
   };
 }

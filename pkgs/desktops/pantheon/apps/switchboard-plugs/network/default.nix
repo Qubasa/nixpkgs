@@ -11,18 +11,19 @@
 , gtk3
 , networkmanager
 , networkmanagerapplet
+, libnma
 , switchboard
 }:
 
 stdenv.mkDerivation rec {
   pname = "switchboard-plug-network";
-  version = "2.2.0";
+  version = "2.3.1";
 
   src = fetchFromGitHub {
     owner = "elementary";
     repo = pname;
     rev = version;
-    sha256 = "0zg4bxrrw1nmm91yp8ymji7mha2wcjrwljcnpcvxq7lf8f2k0145";
+    sha256 = "1k7925qrgjvh1x8ijhkh3p0z4ypgmx3lg21ygr8qhlp7xr3zm8d5";
   };
 
   passthru = {
@@ -43,7 +44,7 @@ stdenv.mkDerivation rec {
     gtk3
     libgee
     networkmanager
-    networkmanagerapplet
+    libnma
     switchboard
   ];
 
@@ -57,7 +58,7 @@ stdenv.mkDerivation rec {
 
   meta = with stdenv.lib; {
     description = "Switchboard Networking Plug";
-    homepage = https://github.com/elementary/switchboard-plug-network;
+    homepage = "https://github.com/elementary/switchboard-plug-network";
     license = licenses.lgpl21Plus;
     platforms = platforms.linux;
     maintainers = pantheon.maintainers;

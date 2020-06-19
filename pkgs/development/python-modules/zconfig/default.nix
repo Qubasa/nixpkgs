@@ -4,6 +4,7 @@
 , zope_testrunner
 , manuel
 , docutils
+, pythonAtLeast
 }:
 
 buildPythonPackage rec {
@@ -20,9 +21,11 @@ buildPythonPackage rec {
   buildInputs = [ manuel docutils ];
   propagatedBuildInputs = [ zope_testrunner ];
 
+  disabled = pythonAtLeast "3.8"; # 3.6.0 introduces compatibility for 3.8 and 3.9
+
   meta = with stdenv.lib; {
     description = "Structured Configuration Library";
-    homepage = https://pypi.python.org/pypi/ZConfig;
+    homepage = "https://pypi.python.org/pypi/ZConfig";
     license = licenses.zpl20;
     maintainers = [ maintainers.goibhniu ];
   };

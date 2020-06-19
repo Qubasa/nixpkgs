@@ -19,13 +19,13 @@
 
 stdenv.mkDerivation rec {
   pname = "switchboard-plug-power";
-  version = "2.4.0";
+  version = "2.4.2";
 
   src = fetchFromGitHub {
     owner = "elementary";
     repo = pname;
     rev = version;
-    sha256 = "1b25slfh8166v9z2zmb25k64pcj0lh001qh04qhfilzfcbh54krj";
+    sha256 = "0zbqv3bnwxapp9b442fjg9fizxmndva8vby5qicx0yy7l68in1xk";
   };
 
   passthru = {
@@ -62,7 +62,7 @@ stdenv.mkDerivation rec {
 
   meta = with stdenv.lib; {
     description = "Switchboard Power Plug";
-    homepage = https://github.com/elementary/switchboard-plug-power;
+    homepage = "https://github.com/elementary/switchboard-plug-power";
     license = licenses.gpl2Plus;
     platforms = platforms.linux;
     maintainers = pantheon.maintainers;

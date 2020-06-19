@@ -45,6 +45,9 @@ let
 
   # generate the font cache setting file for a fontconfig version
   # use latest when no version is passed
+  # When cross-compiling, we can’t generate the cache, so we skip the
+  # <cachedir> part. fontconfig still works but is a little slower in
+  # looking things up.
   makeCacheConf = { version ? null }:
     let
       fcPackage = if version == null
@@ -60,10 +63,12 @@ let
       <fontconfig>
         <!-- Font directories -->
         ${concatStringsSep "\n" (map (font: "<dir>${font}</dir>") config.fonts.fonts)}
+        ${optionalString (pkgs.stdenv.hostPlatform == pkgs.stdenv.buildPlatform) ''
         <!-- Pre-generated font caches -->
         <cachedir>${cache}</cachedir>
         ${optionalString (pkgs.stdenv.isx86_64 && cfg.cache32Bit) ''
           <cachedir>${cache32}</cachedir>
+        ''}
         ''}
       </fontconfig>
     '';
@@ -273,7 +278,14 @@ in
     (mkRemovedOptionModule [ "fonts" "fontconfig" "hinting" "style" ] "")
     (mkRemovedOptionModule [ "fonts" "fontconfig" "forceAutohint" ] "")
     (mkRemovedOptionModule [ "fonts" "fontconfig" "renderMonoTTFAsBitmap" ] "")
-  ];
+  ] ++ lib.forEach [ "enable" "substitutions" "preset" ]
+     (opt: lib.mkRemovedOptionModule [ "fonts" "fontconfig" "ultimate" "${opt}" ] ''
+       The fonts.fontconfig.ultimate module and configuration is obsolete.
+       The repository has since been archived and activity has ceased.
+       https://github.com/bohoomil/fontconfig-ultimate/issues/171.
+       No action should be needed for font configuration, as the fonts.fontconfig
+       module is already used by default.
+     '');
 
   options = {
 

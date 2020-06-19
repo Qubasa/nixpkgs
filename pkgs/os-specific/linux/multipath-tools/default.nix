@@ -17,8 +17,8 @@ stdenv.mkDerivation rec {
     ' libmultipath/defaults.h
     sed -i -e 's,\$(DESTDIR)/\(usr/\)\?,$(prefix)/,g' \
       kpartx/Makefile libmpathpersist/Makefile
-    sed -i -e "s,GZIP = .*, GZIP = gzip -9n -c," \
-      Makefile.inc
+    sed -i -e "s,GZIP,GZ," \
+      $(find * -name Makefile\*)
   '';
 
   nativeBuildInputs = [ gzip pkgconfig perl ];
@@ -35,7 +35,7 @@ stdenv.mkDerivation rec {
 
   meta = with stdenv.lib; {
     description = "Tools for the Linux multipathing driver";
-    homepage = http://christophe.varoqui.free.fr/;
+    homepage = "http://christophe.varoqui.free.fr/";
     license = licenses.gpl2;
     platforms = platforms.linux;
   };

@@ -12,11 +12,11 @@ let
 
 in stdenv.mkDerivation rec {
   pname = "riot-web";
-  version = "1.5.12";
+  version = "1.6.5";
 
   src = fetchurl {
     url = "https://github.com/vector-im/riot-web/releases/download/v${version}/riot-v${version}.tar.gz";
-    sha256 = "064zghrsl348ydzngwxhwjn0d0gkkf3nkzq03v5gad2f11qwnwb6";
+    sha256 = "0mx7ql76cbivc0d9gzix51bc1rdp9yg9vjx05mbf5r9sxrwmihz5";
   };
 
   installPhase = ''
@@ -31,8 +31,8 @@ in stdenv.mkDerivation rec {
 
   meta = {
     description = "A glossy Matrix collaboration client for the web";
-    homepage = http://riot.im/;
-    maintainers = with stdenv.lib.maintainers; [ bachp pacien ma27 ];
+    homepage = "http://riot.im/";
+    maintainers = stdenv.lib.teams.matrix.members;
     license = stdenv.lib.licenses.asl20;
     platforms = stdenv.lib.platforms.all;
     hydraPlatforms = [];

@@ -42,6 +42,20 @@ import ./make-test-python.nix ({ pkgs, ... }: {
             "docker rmi ${examples.nix.imageName}",
         )
 
+    with subtest("The nix binary symlinks are intact"):
+        docker.succeed(
+            "docker load --input='${examples.nix}'",
+            "docker run --rm ${examples.nix.imageName} ${pkgs.bash}/bin/bash -c 'test nix == $(readlink ${pkgs.nix}/bin/nix-daemon)'",
+            "docker rmi ${examples.nix.imageName}",
+        )
+
+    with subtest("The nix binary symlinks are intact when the image is layered"):
+        docker.succeed(
+            "docker load --input='${examples.nixLayered}'",
+            "docker run --rm ${examples.nixLayered.imageName} ${pkgs.bash}/bin/bash -c 'test nix == $(readlink ${pkgs.nix}/bin/nix-daemon)'",
+            "docker rmi ${examples.nixLayered.imageName}",
+        )
+
     with subtest("The pullImage tool works"):
         docker.succeed(
             "docker load --input='${examples.nixFromDockerHub}'",
@@ -123,6 +137,16 @@ import ./make-test-python.nix ({ pkgs, ... }: {
             assert f"layer{index}" in docker.succeed(
                 f"docker run --rm  ${examples.layersOrder.imageName} cat /tmp/layer{index}"
             )
+
+    with subtest("Ensure environment variables are correctly inherited"):
+        docker.succeed(
+            "docker load --input='${examples.environmentVariables}'"
+        )
+        out = docker.succeed("docker run --rm ${examples.environmentVariables.imageName} env")
+        env = out.splitlines()
+        assert "FROM_PARENT=true" in env, "envvars from the parent should be preserved"
+        assert "FROM_CHILD=true" in env, "envvars from the child should be preserved"
+        assert "LAST_LAYER=child" in env, "envvars from the child should take priority"
 
     with subtest("Ensure image with only 2 layers can be loaded"):
         docker.succeed(

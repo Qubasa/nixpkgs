@@ -1,4 +1,5 @@
 { stdenv, buildPythonApplication, fetchPypi, pythonOlder
+, installShellFiles
 , mock, pytest, nose
 , pyyaml, backports_ssl_match_hostname, colorama, docopt
 , dockerpty, docker, ipaddress, jsonschema, requests
@@ -7,16 +8,17 @@
 }:
 
 buildPythonApplication rec {
-  version = "1.25.4";
+  version = "1.25.5";
   pname = "docker-compose";
 
   src = fetchPypi {
     inherit pname version;
-    sha256 = "1ww8ckpj3n5jdg63qvmiqx3gk0fsrnynnnqj17fppymbwjzf5fps";
+    sha256 = "1ijhg93zs3lswkljnm0rhww7gdy0g94psvsya2741prz2zcbcbks";
   };
 
   # lots of networking and other fails
   doCheck = false;
+  nativeBuildInputs = [ installShellFiles ];
   checkInputs = [ mock pytest nose ];
   propagatedBuildInputs = [
     pyyaml backports_ssl_match_hostname colorama dockerpty docker
@@ -33,15 +35,12 @@ buildPythonApplication rec {
   '';
 
   postInstall = ''
-    install -D -m 0444 contrib/completion/bash/docker-compose \
-      $out/share/bash-completion/completions/docker-compose
-
-    install -D -m 0444 contrib/completion/zsh/_docker-compose \
-      $out/share/zsh-completion/zsh/site-functions/_docker-compose
+    installShellCompletion --bash contrib/completion/bash/docker-compose
+    installShellCompletion --zsh contrib/completion/zsh/_docker-compose
   '';
 
   meta = with stdenv.lib; {
-    homepage = https://docs.docker.com/compose/;
+    homepage = "https://docs.docker.com/compose/";
     description = "Multi-container orchestration for Docker";
     license = licenses.asl20;
     maintainers = with maintainers; [ Frostman ];

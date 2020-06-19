@@ -8,20 +8,20 @@
 , gtk3
 , granite
 , networkmanager
-, networkmanagerapplet
+, libnma
 , wingpanel
 , libgee
 }:
 
 stdenv.mkDerivation rec {
   pname = "wingpanel-indicator-network";
-  version = "2.2.2";
+  version = "2.2.4";
 
   src = fetchFromGitHub {
     owner = "elementary";
     repo = pname;
     rev = version;
-    sha256 = "0fch27imk5x4nfx49cwcylkxd7m289rl9niy1vx5kjplhbhyhdq2";
+    sha256 = "1ja789m4d3akm3i9fl3kazfcny376xl4apv445mrwkwlvcfyylf1";
   };
 
   passthru = {
@@ -42,15 +42,13 @@ stdenv.mkDerivation rec {
     gtk3
     libgee
     networkmanager
-    networkmanagerapplet
+    libnma
     wingpanel
   ];
 
-  PKG_CONFIG_WINGPANEL_2_0_INDICATORSDIR = "${placeholder "out"}/lib/wingpanel";
-
   meta = with stdenv.lib; {
     description = "Network Indicator for Wingpanel";
-    homepage = https://github.com/elementary/wingpanel-indicator-network;
+    homepage = "https://github.com/elementary/wingpanel-indicator-network";
     license = licenses.lgpl21Plus;
     platforms = platforms.linux;
     maintainers = pantheon.maintainers;

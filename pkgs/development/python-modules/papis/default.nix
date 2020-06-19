@@ -19,7 +19,7 @@ buildPythonPackage rec {
     owner = "papis";
     repo = pname;
     rev = "v${version}";
-    sha256 = "kzA8nlglbjHDPEB7HRAY2dza1Umn/OYUu+ydbA1OJ5Y=";
+    sha256 = "15i79q6nr7gcpcafdz5797axmp6r3081sys07k1k2vi5b2g3qc4k";
   };
 
   propagatedBuildInputs = [
@@ -59,7 +59,7 @@ buildPythonPackage rec {
 
   meta = {
     description = "Powerful command-line document and bibliography manager";
-    homepage = https://papis.readthedocs.io/en/latest/;
+    homepage = "https://papis.readthedocs.io/en/latest/";
     license = lib.licenses.gpl3;
     maintainers = with lib.maintainers; [ nico202 teto ];
   };

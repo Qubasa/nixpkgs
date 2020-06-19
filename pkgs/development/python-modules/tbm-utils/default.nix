@@ -10,28 +10,23 @@
 
 buildPythonPackage rec {
   pname = "tbm-utils";
-  version = "1.0.0";
+  version = "2.6.0";
+  disabled = pythonOlder "3.6";
 
   src = fetchPypi {
     inherit pname version;
-    sha256 = "08fb86b5ab469bafdbef19751abb6dc1e08a3043c373ea915e1b6e20d023b529";
+    sha256 = "235748cceeb22c042e32d2fdfd4d710021bac9b938c4f2c35e1fce1cfd58f7ec";
   };
 
-  postPatch = ''
-    substituteInPlace setup.py --replace ",<19.3" ""
-  '';
+  propagatedBuildInputs = [ attrs pendulum pprintpp wrapt ];
 
   # No tests in archive.
   doCheck = false;
 
-  disabled = pythonOlder "3.6";
-
-  propagatedBuildInputs = [ attrs pendulum pprintpp wrapt ];
-
   meta = {
-    homepage = https://github.com/thebigmunch/tbm-utils;
-    license = with lib.licenses; [ mit ];
     description = "A commonly-used set of utilities";
+    homepage = "https://github.com/thebigmunch/tbm-utils";
+    license = with lib.licenses; [ mit ];
   };
 
 }

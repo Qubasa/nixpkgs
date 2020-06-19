@@ -14,13 +14,13 @@
 
 stdenv.mkDerivation rec {
   pname = "switchboard-plug-bluetooth";
-  version = "2.3.1";
+  version = "2.3.2";
 
   src = fetchFromGitHub {
     owner = "elementary";
     repo = pname;
     rev = version;
-    sha256 = "06ws1swl2jg6a1b3m4b1v1rawgzs5k7rq4dcnd5v0czda110yhg0";
+    sha256 = "0ksxx45mm0cvnb5jphyxsf843rn2rgb0yxv9j0ydh2xp4qgvvyva";
   };
 
   passthru = {
@@ -46,7 +46,7 @@ stdenv.mkDerivation rec {
 
   meta = with stdenv.lib; {
     description = "Switchboard Bluetooth Plug";
-    homepage = https://github.com/elementary/switchboard-plug-bluetooth;
+    homepage = "https://github.com/elementary/switchboard-plug-bluetooth";
     license = licenses.gpl3Plus;
     platforms = platforms.linux;
     maintainers = pantheon.maintainers;

@@ -15,11 +15,11 @@
 
 buildPythonPackage rec {
   pname = "pyicloud";
-  version = "0.9.4";
+  version = "0.9.7";
 
   src = fetchPypi {
     inherit pname version;
-    sha256 = "0r171wnq2g5bw7gd59vh6flm0104ix1a6s2vhdrf8s74hipw57si";
+    sha256 = "dcebb32e474bc28aa77b944a0a64949ef3b5b852cbef6256fbc95347a04e777c";
   };
 
   propagatedBuildInputs = [
@@ -46,7 +46,7 @@ buildPythonPackage rec {
 
   meta = with lib; {
     description = "PyiCloud is a module which allows pythonistas to interact with iCloud webservices";
-    homepage = https://github.com/picklepete/pyicloud;
+    homepage = "https://github.com/picklepete/pyicloud";
     license = licenses.mit;
     maintainers = [ maintainers.mic92 ];
   };

@@ -24,6 +24,7 @@ with lib;
     (mkRemovedOptionModule [ "environment" "blcr" "enable" ] "The BLCR module has been removed")
     (mkRemovedOptionModule [ "services" "beegfsEnable" ] "The BeeGFS module has been removed")
     (mkRemovedOptionModule [ "services" "beegfs" ] "The BeeGFS module has been removed")
+    (mkRemovedOptionModule ["services" "cgmanager" "enable"] "cgmanager was deprecated by lxc and therefore removed from nixpkgs.")
     (mkRemovedOptionModule [ "services" "osquery" ] "The osquery module has been removed")
     (mkRemovedOptionModule [ "services" "fourStore" ] "The fourStore module has been removed")
     (mkRemovedOptionModule [ "services" "fourStoreEndpoint" ] "The fourStoreEndpoint module has been removed")
@@ -47,6 +48,17 @@ with lib;
       brightnessctl don't require the udev rules anymore (they can use the
       systemd-logind API). Instead of using the module you can now
       simply add the brightnessctl package to environment.systemPackages.
+    '')
+    (mkRemovedOptionModule [ "virtualisation" "rkt" ] "The rkt module has been removed, it was archived by upstream")
+
+    (mkRemovedOptionModule ["services" "prey" ] ''
+      prey-bash-client is deprecated upstream
+    '')
+
+    (mkRemovedOptionModule ["hardware" "u2f" ] ''
+      The U2F modules module was removed, as all it did was adding the
+      udev rules from libu2f-host to the system. Udev gained native support
+      to handle FIDO security tokens, so this isn't necessary anymore.
     '')
 
     # Do NOT add any option renames here, see top of the file

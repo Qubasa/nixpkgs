@@ -1,6 +1,6 @@
 { stdenv, fetchFromGitHub, mkDerivation
 , pkgconfig, qtbase, qttools, qmake, qtmultimedia, qtx11extras, alsaLib, libv4l, libXrandr
-, ffmpeg
+, ffmpeg_3
 }:
 
 mkDerivation rec {
@@ -35,12 +35,12 @@ mkDerivation rec {
   '';
 
   postConfigure = ''
-    substituteInPlace settings/QvkSettings.cpp --subst-var-by ffmpeg ${ffmpeg}
+    substituteInPlace settings/QvkSettings.cpp --subst-var-by ffmpeg ${ffmpeg_3}
   '';
 
   meta = with stdenv.lib; {
     description = "Simple GUI screencast recorder, using ffmpeg";
-    homepage = "http://linuxecke.volkoh.de/vokoscreen/vokoscreen.html";
+    homepage = "https://linuxecke.volkoh.de/vokoscreen/vokoscreen.html";
     longDescription = ''
       vokoscreen is an easy to use screencast creator to record
       educational videos, live recordings of browser, installation,

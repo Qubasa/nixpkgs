@@ -68,6 +68,8 @@ let
   # support for bugzilla
   git-bz = callPackage ./git-bz { };
 
+  git-cinnabar = callPackage ./git-cinnabar { };
+
   git-codeowners = callPackage ./git-codeowners { };
 
   git-codereview = callPackage ./git-codereview { };
@@ -79,6 +81,14 @@ let
   git-dit = callPackage ./git-dit {
     inherit (darwin.apple_sdk.frameworks) CoreFoundation Security;
   };
+
+  git-doc = lib.addMetaAttrs {
+    description = "Additional documentation for Git";
+    longDescription = ''
+      This package contains additional documentation (HTML and text files) that
+      is referenced in the man pages of Git.
+    '';
+  } gitFull.doc;
 
   git-extras = callPackage ./git-extras { };
 
@@ -134,6 +144,10 @@ let
 
   git-subrepo = callPackage ./git-subrepo { };
 
+  git-subset = callPackage ./git-subset {
+    inherit (darwin.apple_sdk.frameworks) Security;
+  };
+
   git-subtrac = callPackage ./git-subtrac { };
 
   git-sync = callPackage ./git-sync { };
@@ -165,25 +179,35 @@ let
 
   gita = python3Packages.callPackage ./gita {};
 
+  gitbatch = callPackage ./gitbatch { };
+
   gitflow = callPackage ./gitflow { };
+
+  gitin = callPackage ./gitin { };
 
   gitstatus = callPackage ./gitstatus { };
 
+  gitui = callPackage ./gitui {
+    inherit (darwin.apple_sdk.frameworks) Security;
+  };
+
   grv = callPackage ./grv { };
 
-  hub = callPackage ./hub {
-    inherit (darwin) Security;
-  };
+  hub = callPackage ./hub { };
 
   lab = callPackage ./lab { };
 
   lefthook = callPackage ./lefthook { };
+
+  legit = callPackage ./legit { };
 
   pass-git-helper = python3Packages.callPackage ./pass-git-helper { };
 
   pre-commit = pkgs.python3Packages.toPythonApplication pkgs.python3Packages.pre-commit;
 
   qgit = qt5.callPackage ./qgit { };
+
+  scmpuff = callPackage ./scmpuff { };
 
   stgit = callPackage ./stgit { };
 

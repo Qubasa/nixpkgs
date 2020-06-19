@@ -4,18 +4,16 @@ with python3.pkgs;
 
 buildPythonPackage rec {
   pname = "mautrix-telegram";
-  version = "0.7.1";
+  version = "0.8.1";
   disabled = pythonOlder "3.6";
 
   src = fetchPypi {
     inherit pname version;
-    sha256 = "1yi4h37lhlpa095hzd0gwn1ifbycq8878kj5n2sjhw8kk6nblda9";
+    sha256 = "1gz6d28dq3ykvr3wp85wkc05lbppdzf5j9i62pgx0blmx3jh0yrk";
   };
 
   postPatch = ''
-    sed -i -e '/alembic>/d' setup.py
-    substituteInPlace setup.py \
-      --replace "telethon>=1.9,<1.10" "telethon~=1.9"
+    sed -i -e '/alembic>/d' requirements.txt
   '';
 
   propagatedBuildInputs = [
@@ -54,7 +52,7 @@ buildPythonPackage rec {
   ];
 
   meta = with lib; {
-    homepage = https://github.com/tulir/mautrix-telegram;
+    homepage = "https://github.com/tulir/mautrix-telegram";
     description = "A Matrix-Telegram hybrid puppeting/relaybot bridge";
     license = licenses.agpl3Plus;
     platforms = platforms.linux;

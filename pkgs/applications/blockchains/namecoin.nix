@@ -3,14 +3,14 @@
 
 with stdenv.lib;
 stdenv.mkDerivation rec {
-  version = "nc0.15.99-name-tab-beta2";
+  version = "nc0.20.0";
   name = "namecoin" + toString (optional (!withGui) "d") + "-" + version;
 
   src = fetchFromGitHub {
     owner = "namecoin";
     repo = "namecoin-core";
     rev = version;
-    sha256 = "1r0v0yvlazmidxp6xhapbdawqb8fhzrdp11d4an5vgxa208s6wdf";
+    sha256 = "115nlsq5g169mj4qjmkhxx1bnx740871zqyng9zbm2y4i0xf71c4";
   };
 
   nativeBuildInputs = [
@@ -40,7 +40,7 @@ stdenv.mkDerivation rec {
 
   meta = {
     description = "Decentralized open source information registration and transfer system based on the Bitcoin cryptocurrency";
-    homepage = https://namecoin.org;
+    homepage = "https://namecoin.org";
     license = licenses.mit;
     maintainers = with maintainers; [ doublec AndersonTorres infinisil ];
     platforms = platforms.linux;

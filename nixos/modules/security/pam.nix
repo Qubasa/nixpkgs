@@ -54,7 +54,7 @@ let
         description = ''
           If set, users listed in
           <filename>~/.yubico/authorized_yubikeys</filename>
-          are able to log in with the asociated Yubikey tokens.
+          are able to log in with the associated Yubikey tokens.
         '';
       };
 
@@ -219,6 +219,14 @@ let
         '';
       };
 
+      nodelay = mkOption {
+        default = false;
+        type = types.bool;
+        description = ''
+          Wheather the delay after typing a wrong password should be disabled.
+        '';
+      };
+
       requireWheel = mkOption {
         default = false;
         type = types.bool;
@@ -366,7 +374,7 @@ let
             || cfg.enableGnomeKeyring
             || cfg.googleAuthenticator.enable
             || cfg.duoSecurity.enable)) ''
-              auth required pam_unix.so ${optionalString cfg.allowNullPassword "nullok"} likeauth
+              auth required pam_unix.so ${optionalString cfg.allowNullPassword "nullok"} ${optionalString cfg.nodelay "nodelay"} likeauth
               ${optionalString config.security.pam.enableEcryptfs
                 "auth optional ${pkgs.ecryptfs}/lib/security/pam_ecryptfs.so unwrap"}
               ${optionalString cfg.pamMount
@@ -382,7 +390,7 @@ let
                 "auth required ${pkgs.duo-unix}/lib/security/pam_duo.so"}
             '') + ''
           ${optionalString cfg.unixAuth
-              "auth sufficient pam_unix.so ${optionalString cfg.allowNullPassword "nullok"} likeauth try_first_pass"}
+              "auth sufficient pam_unix.so ${optionalString cfg.allowNullPassword "nullok"} ${optionalString cfg.nodelay "nodelay"} likeauth try_first_pass"}
           ${optionalString cfg.otpwAuth
               "auth sufficient ${pkgs.otpw}/lib/security/pam_otpw.so"}
           ${optionalString use_ldap
@@ -428,6 +436,8 @@ let
               "session required ${pkgs.pam}/lib/security/pam_lastlog.so silent"}
           ${optionalString config.security.pam.enableEcryptfs
               "session optional ${pkgs.ecryptfs}/lib/security/pam_ecryptfs.so"}
+          ${optionalString cfg.pamMount
+              "session optional ${pkgs.pam_mount}/lib/security/pam_mount.so"}
           ${optionalString use_ldap
               "session optional ${pam_ldap}/lib/security/pam_ldap.so"}
           ${optionalString config.services.sssd.enable
@@ -444,8 +454,6 @@ let
               "session required ${pkgs.pam}/lib/security/pam_limits.so conf=${makeLimitsConf cfg.limits}"}
           ${optionalString (cfg.showMotd && config.users.motd != null)
               "session optional ${pkgs.pam}/lib/security/pam_motd.so motd=${motd}"}
-          ${optionalString cfg.pamMount
-              "session optional ${pkgs.pam_mount}/lib/security/pam_mount.so"}
           ${optionalString (cfg.enableAppArmor && config.security.apparmor.enable)
               "session optional ${pkgs.apparmor-pam}/lib/security/pam_apparmor.so order=user,group,default debug"}
           ${optionalString (cfg.enableKwallet)
@@ -545,6 +553,7 @@ in
     };
 
     security.pam.enableSSHAgentAuth = mkOption {
+      type = types.bool;
       default = false;
       description =
         ''
@@ -555,12 +564,7 @@ in
         '';
     };
 
-    security.pam.enableOTPW = mkOption {
-      default = false;
-      description = ''
-        Enable the OTPW (one-time password) PAM module.
-      '';
-    };
+    security.pam.enableOTPW = mkEnableOption "the OTPW (one-time password) PAM module";
 
     security.pam.u2f = {
       enable = mkOption {
@@ -719,12 +723,7 @@ in
       };
     };
 
-    security.pam.enableEcryptfs = mkOption {
-      default = false;
-      description = ''
-        Enable eCryptfs PAM module (mounting ecryptfs home directory on login).
-      '';
-    };
+    security.pam.enableEcryptfs = mkEnableOption "eCryptfs PAM module (mounting ecryptfs home directory on login)";
 
     users.motd = mkOption {
       default = null;

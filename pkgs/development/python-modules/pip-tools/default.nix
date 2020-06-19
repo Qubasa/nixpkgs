@@ -3,11 +3,11 @@
 
 buildPythonPackage rec {
   pname = "pip-tools";
-  version = "4.3.0";
+  version = "5.2.0";
 
   src = fetchPypi {
     inherit pname version;
-    sha256 = "0x36mp3a3f3wandfc0g8d53gg2jkc14nhisbryzspcl9f05sbvq6";
+    sha256 = "be6190405e4206526607aa4813bd6d7a949e4fdc180d0db4f3221f3778846cf7";
   };
 
   LC_ALL = "en_US.UTF-8";
@@ -27,6 +27,7 @@ buildPythonPackage rec {
     "test_generate_hashes_with_editable"
     "test_generate_hashes_with_url"
     "test_generate_hashes_without_interfering_with_each_other"
+    "test_get_file_hash_without_interfering_with_each_other"
     "test_get_hashes_local_repository_cache_miss"
     "test_realistic_complex_sub_dependencies"
     "test_stdin"
@@ -43,7 +44,7 @@ buildPythonPackage rec {
 
   meta = with stdenv.lib; {
     description = "Keeps your pinned dependencies fresh";
-    homepage = https://github.com/jazzband/pip-tools/;
+    homepage = "https://github.com/jazzband/pip-tools/";
     license = licenses.bsd3;
     maintainers = with maintainers; [ zimbatm ];
   };

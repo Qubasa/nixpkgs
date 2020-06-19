@@ -6,6 +6,7 @@
 
 # now defaults to false because some tests can be flaky (clipboard etc)
 , doCheck ? false
+, nodejs ? null, fish ? null, python ? null
 }:
 
 with stdenv.lib;
@@ -17,6 +18,8 @@ let
         nvim-client luv coxpcall busted luafilesystem penlight inspect
       ]
     ));
+
+  pyEnv = python.withPackages(ps: [ ps.pynvim ps.msgpack ]);
 in
   stdenv.mkDerivation rec {
     pname = "neovim-unwrapped";
@@ -67,6 +70,13 @@ in
       pkgconfig
     ];
 
+    # extra programs test via `make functionaltest`
+    checkInputs = [
+      fish
+      nodejs
+      pyEnv      # for src/clint.py
+    ];
+
 
     # nvim --version output retains compilation flags and references to build tools
     postPatch = ''
@@ -112,7 +122,7 @@ in
           modifications to the core source
         - Improve extensibility with a new plugin architecture
       '';
-      homepage    = https://www.neovim.io;
+      homepage    = "https://www.neovim.io";
       # "Contributions committed before b17d96 by authors who did not sign the
       # Contributor License Agreement (CLA) remain under the Vim license.
       # Contributions committed after b17d96 are licensed under Apache 2.0 unless

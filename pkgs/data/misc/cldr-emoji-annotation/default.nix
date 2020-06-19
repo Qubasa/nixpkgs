@@ -5,13 +5,13 @@
 
 stdenv.mkDerivation rec {
   pname = "cldr-emoji-annotation";
-  version = "36.12.120191002_0";
+  version = "36.12.120200305_0";
 
   src = fetchFromGitHub {
     owner = "fujiwarat";
     repo = "cldr-emoji-annotation";
     rev = version;
-    sha256 = "0nxigzs3mxjgi7c8mmdaxsy5sfl7ihsc2nysaj0db198b33w9clw";
+    sha256 = "1zg4czaqnfjkd4hx06h8q56z8iiw22crwqr69w94s4hy9zcanfrs";
   };
 
   nativeBuildInputs = [
@@ -21,7 +21,7 @@ stdenv.mkDerivation rec {
   meta = with stdenv.lib; {
     description = "Emoji annotation files in CLDR";
     homepage = "https://www.unicode.org/";
-    license = licenses.free; # https://www.unicode.org/license.html
+    license = licenses.unicode-dfs-2016;
     platforms = platforms.all;
   };
 }

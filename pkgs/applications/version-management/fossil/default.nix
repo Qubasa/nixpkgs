@@ -5,7 +5,7 @@
 
 stdenv.mkDerivation rec {
   pname = "fossil";
-  version = "2.10";
+  version = "2.11.1";
 
   src = fetchurl {
     urls =
@@ -13,7 +13,7 @@ stdenv.mkDerivation rec {
         "https://www.fossil-scm.org/index.html/uv/fossil-src-${version}.tar.gz"
       ];
     name = "${pname}-${version}.tar.gz";
-    sha256 = "041bs4fgk52fw58p7s084pxk9d9vs5v2f2pjbznqawz75inpg8yq";
+    sha256 = "1sxq1hn87fdikhbg9y3v4sjy4gxaifnx4dig8nx6xwd5mm7z74dk";
   };
 
   buildInputs = [ zlib openssl readline sqlite which ed ]
@@ -44,7 +44,7 @@ stdenv.mkDerivation rec {
       many such systems in use today. Fossil strives to distinguish itself
       from the others by being extremely simple to setup and operate.
     '';
-    homepage = http://www.fossil-scm.org/;
+    homepage = "http://www.fossil-scm.org/";
     license = stdenv.lib.licenses.bsd2;
     platforms = with stdenv.lib.platforms; all;
     maintainers = [ #Add your name here!

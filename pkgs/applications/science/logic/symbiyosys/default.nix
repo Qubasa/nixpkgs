@@ -1,17 +1,17 @@
 { stdenv, fetchFromGitHub
 , bash, python3, yosys
-, yices, boolector, aiger, abc-verifier
+, yices, boolector, aiger
 }:
 
 stdenv.mkDerivation {
   pname = "symbiyosys";
-  version = "2020.02.08";
+  version = "2020.05.18";
 
   src = fetchFromGitHub {
     owner  = "YosysHQ";
     repo   = "SymbiYosys";
-    rev    = "500b526131f434b9679732fc89515dbed67c8d7d";
-    sha256 = "1pwbirszc80r288x81nx032snniqgmc80i09bbha2i3zd0c3pj5h";
+    rev    = "13fef4a710d0e2cf0f109ca75a94fb7253ba6838";
+    sha256 = "152nyxddiqbxvbd06cmwavvgi931v6i35zj9sh3z04m737grvb3d";
   };
 
   buildInputs = [ python3 ];
@@ -29,8 +29,8 @@ stdenv.mkDerivation {
       --replace ': "btormc"'       ': "${boolector}/bin/btormc"' \
       --replace ': "yosys"'        ': "${yosys}/bin/yosys"' \
       --replace ': "yosys-smtbmc"' ': "${yosys}/bin/yosys-smtbmc"' \
-      --replace ': "yosys-abc"' ': "${abc-verifier}/bin/abc"' \
-      --replace ': "aigbmc"' ': "${aiger}/bin/aigbmc"' \
+      --replace ': "yosys-abc"'    ': "${yosys}/bin/yosys-abc"' \
+      --replace ': "aigbmc"'       ': "${aiger}/bin/aigbmc"' \
   '';
 
   buildPhase = "true";
