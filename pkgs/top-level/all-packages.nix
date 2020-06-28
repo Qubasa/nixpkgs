@@ -2895,6 +2895,8 @@ in
 
   ddccontrol-db = callPackage ../data/misc/ddccontrol-db { };
 
+  ddcui = libsForQt5.callPackage ../applications/misc/ddcui { };
+
   ddcutil = callPackage ../tools/misc/ddcutil { };
 
   ddclient = callPackage ../tools/networking/ddclient { };
@@ -4324,6 +4326,8 @@ in
   inboxer = callPackage ../applications/networking/mailreaders/inboxer { };
 
   incron = callPackage ../tools/system/incron { };
+
+  industrializer = callPackage ../applications/audio/industrializer { };
 
   inetutils = callPackage ../tools/networking/inetutils { };
 
@@ -7701,6 +7705,8 @@ in
 
   whsniff = callPackage ../applications/networking/sniffers/whsniff { };
 
+  wiiuse = callPackage ../development/libraries/wiiuse { };
+
   woeusb = callPackage ../tools/misc/woeusb { };
 
   chase = callPackage ../tools/system/chase { };
@@ -8754,6 +8760,13 @@ in
   });
 
   go_1_14 = callPackage ../development/compilers/go/1.14.nix ({
+    inherit (darwin.apple_sdk.frameworks) Security Foundation;
+  } // lib.optionalAttrs stdenv.isAarch64 {
+    stdenv = gcc8Stdenv;
+    buildPackages = buildPackages // { stdenv = gcc8Stdenv; };
+  });
+
+  go_1_15 = callPackage ../development/compilers/go/1.15.nix ({
     inherit (darwin.apple_sdk.frameworks) Security Foundation;
   } // lib.optionalAttrs stdenv.isAarch64 {
     stdenv = gcc8Stdenv;
@@ -15480,6 +15493,9 @@ in
   buildGo114Package = callPackage ../development/go-packages/generic {
     go = buildPackages.go_1_14;
   };
+  buildGo115Package = callPackage ../development/go-packages/generic {
+    go = buildPackages.go_1_15;
+  };
 
   buildGoPackage = buildGo114Package;
 
@@ -15488,6 +15504,9 @@ in
   };
   buildGo114Module = callPackage ../development/go-modules/generic {
     go = buildPackages.go_1_14;
+  };
+  buildGo115Module = callPackage ../development/go-modules/generic {
+    go = buildPackages.go_1_15;
   };
 
   buildGoModule = buildGo114Module;
@@ -16329,9 +16348,10 @@ in
   };
 
   radicale1 = callPackage ../servers/radicale/1.x.nix { };
-  radicale2 = callPackage ../servers/radicale { };
+  radicale2 = callPackage ../servers/radicale/2.x.nix { };
+  radicale3 = callPackage ../servers/radicale/3.x.nix { };
 
-  radicale = radicale2;
+  radicale = radicale3;
 
   rake = callPackage ../development/tools/build-managers/rake { };
 
@@ -20575,6 +20595,8 @@ in
 
   okteta = libsForQt5.callPackage ../applications/editors/okteta { };
 
+  k4dirstat = libsForQt5.callPackage ../applications/misc/k4dirstat { };
+
   kdeconnect = libsForQt5.callPackage ../applications/misc/kdeconnect { };
 
   kdecoration-viewer = libsForQt5.callPackage ../tools/misc/kdecoration-viewer { };
@@ -21481,6 +21503,8 @@ in
   obs-v4l2sink = libsForQt5.callPackage ../applications/video/obs-studio/v4l2sink.nix { };
 
   obs-ndi = callPackage ../applications/video/obs-studio/obs-ndi.nix { };
+
+  obsidian = callPackage ../applications/misc/obsidian { };
 
   octoprint = callPackage ../applications/misc/octoprint { };
 
