@@ -1,27 +1,23 @@
-{ stdenv, mkDerivation, fetchFromGitHub, qmake, qttools, qttranslations }:
+{ stdenv, mkDerivation, fetchFromGitHub, qmake, qttools, qttranslations, substituteAll }:
 
 mkDerivation rec {
   pname = "gpxsee";
-  version = "7.30";
+  version = "7.32";
 
   src = fetchFromGitHub {
     owner = "tumic0";
     repo = "GPXSee";
     rev = version;
-    sha256 = "09gajwqc30r9a2sn972qdx3gx0gki9n0zafq986hn6zsr3z43mfs";
+    sha256 = "0mcd6zv71laykg1208vkqmaxv1v12mqq47156gb78a5ww8paa0ka";
   };
 
-  patches = [
+  patches = (substituteAll {
     # See https://github.com/NixOS/nixpkgs/issues/86054
-    ./fix-qttranslations-path.diff
-  ];
+    src = ./fix-qttranslations-path.diff;
+    inherit qttranslations;
+  });
 
   nativeBuildInputs = [ qmake qttools ];
-
-  postPatch = ''
-    substituteInPlace src/GUI/app.cpp \
-      --subst-var-by qttranslations ${qttranslations}
-  '';
 
   preConfigure = ''
     lrelease gpxsee.pro

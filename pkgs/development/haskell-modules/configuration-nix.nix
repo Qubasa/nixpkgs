@@ -571,9 +571,20 @@ self: super: builtins.intersectAttrs super {
   }));
 
   # Expects z3 to be on path so we replace it with a hard
+  #
+  # The tests expect additional solvers on the path, replace the
+  # available ones also with hard coded paths, and remove the missing
+  # ones from the test.
   sbv = overrideCabal super.sbv (drv: {
     postPatch = ''
-      sed -i -e 's|"z3"|"${pkgs.z3}/bin/z3"|' Data/SBV/Provers/Z3.hs'';
+      sed -i -e 's|"abc"|"${pkgs.abc-verifier}/bin/abc"|' Data/SBV/Provers/ABC.hs
+      sed -i -e 's|"boolector"|"${pkgs.boolector}/bin/boolector"|' Data/SBV/Provers/Boolector.hs
+      sed -i -e 's|"cvc4"|"${pkgs.cvc4}/bin/cvc4"|' Data/SBV/Provers/CVC4.hs
+      sed -i -e 's|"yices-smt2"|"${pkgs.yices}/bin/yices-smt2"|' Data/SBV/Provers/Yices.hs
+      sed -i -e 's|"z3"|"${pkgs.z3}/bin/z3"|' Data/SBV/Provers/Z3.hs
+
+      sed -i -e 's|\[abc, boolector, cvc4, mathSAT, yices, z3, dReal\]|[abc, boolector, cvc4, yices, z3]|' SBVTestSuite/SBVConnectionTest.hs
+   '';
   });
 
   # The test-suite requires a running PostgreSQL server.
@@ -655,16 +666,16 @@ self: super: builtins.intersectAttrs super {
 
       # This defines the version of the purescript-docs-search release we are using.
       # This is defined in the src/Spago/Prelude.hs file in the spago source.
-      docsSearchVersion = "v0.0.8";
+      docsSearchVersion = "v0.0.10";
 
       docsSearchAppJsFile = pkgs.fetchurl {
         url = "https://github.com/spacchetti/purescript-docs-search/releases/download/${docsSearchVersion}/docs-search-app.js";
-        sha256 = "00pzi7pgjicpa0mg0al80gh2q1q2lqiyb3kjarpydlmn8dfjny7v";
+        sha256 = "0m5ah29x290r0zk19hx2wix2djy7bs4plh9kvjz6bs9r45x25pa5";
       };
 
       purescriptDocsSearchFile = pkgs.fetchurl {
         url = "https://github.com/spacchetti/purescript-docs-search/releases/download/${docsSearchVersion}/purescript-docs-search";
-        sha256 = "1hsi1hc4p1z2xbw82w2jxmmczw6mravli1r89vrkivb72sqdjya7";
+        sha256 = "0wc1zyhli4m2yykc6i0crm048gyizxh7b81n8xc4yb7ibjqwhyj3";
       };
 
       spagoFixHpack = overrideCabal spagoWithOverrides (drv: {
@@ -719,11 +730,6 @@ self: super: builtins.intersectAttrs super {
   # break infinite recursion with base-orphans
   primitive = dontCheck super.primitive;
 
-  # dhall's tests access the network.
-  dhall_1_29_0 = dontCheck super.dhall_1_29_0;
-  dhall_1_31_1 = dontCheck super.dhall_1_31_1;
-  dhall_1_32_0 = dontCheck super.dhall_1_32_0;
-
   cut-the-crap =
     let path = pkgs.stdenv.lib.makeBinPath [ pkgs.ffmpeg_3 ];
     in overrideCabal (addBuildTool super.cut-the-crap pkgs.makeWrapper) (_drv: {
@@ -772,4 +778,18 @@ self: super: builtins.intersectAttrs super {
   postgresql-libpq-notify = dontCheck super.postgresql-libpq-notify;
   postgresql-pure = dontCheck super.postgresql-pure;
 
+  retrie = overrideCabal super.retrie (drv: {
+    testToolDepends = [ pkgs.git pkgs.mercurial ];
+  });
+
+  haskell-language-server = overrideCabal super.haskell-language-server (drv: {
+    postInstall = let
+      inherit (pkgs.lib) concatStringsSep take splitString;
+      ghc_version = self.ghc.version;
+      ghc_major_version = concatStringsSep "." (take 2 (splitString "." ghc_version));
+    in ''
+        ln -s $out/bin/haskell-language-server $out/bin/haskell-language-server-${ghc_version}
+        ln -s $out/bin/haskell-language-server $out/bin/haskell-language-server-${ghc_major_version}
+       '';
+  });
 }

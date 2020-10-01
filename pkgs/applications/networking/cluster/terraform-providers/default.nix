@@ -17,7 +17,7 @@ let
       };
       # Terraform allow checking the provider versions, but this breaks
       # if the versions are not provided via file paths.
-      postBuild = "mv go/bin/${repo}{,_v${version}}";
+      postBuild = "mv $NIX_BUILD_TOP/go/bin/${repo}{,_v${version}}";
     };
 
   # Google is now using the vendored go modules, which works a bit differently
@@ -39,6 +39,8 @@ let
       # just build and install into $GOPATH/bin
       buildPhase = ''
         go install -mod=vendor -v -p 16 .
+
+        runHook postBuild
       '';
 
       # don't run the tests, they are broken in this setup
@@ -140,10 +142,12 @@ let
 
     # Packages that don't fit the default model
     ansible = callPackage ./ansible {};
-    gandi = callPackage ./gandi {};
     elasticsearch = callPackage ./elasticsearch {};
+    gandi = callPackage ./gandi {};
+    keycloak = callPackage ./keycloak {};
     libvirt = callPackage ./libvirt {};
     lxd = callPackage ./lxd {};
+    shell = callPackage ./shell {};
     vpsadmin = callPackage ./vpsadmin {};
   };
 in

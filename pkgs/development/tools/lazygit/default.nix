@@ -1,19 +1,20 @@
-{ stdenv, buildGoPackage, fetchFromGitHub }:
+{ stdenv, buildGoModule, fetchFromGitHub }:
 
-buildGoPackage rec {
+buildGoModule rec {
   pname = "lazygit";
-  version = "0.20.4";
-
-  goPackagePath = "github.com/jesseduffield/lazygit";
-
-  subPackages = [ "." ];
+  version = "0.22.8";
 
   src = fetchFromGitHub {
     owner = "jesseduffield";
     repo = pname;
     rev = "v${version}";
-    sha256 = "134f04ybzgghm7ghyxair111aflmkjrbfj0bkxfp1w0a3jm6sfsk";
+    sha256 = "1jq093nsfh7xqvsjvaad9wvqd3rjrpyp5fl8qxwbhaj3sxx19v7g";
   };
+
+  vendorSha256 = null;
+  subPackages = [ "." ];
+
+  buildFlagsArray = [ "-ldflags=-X main.version=${version} -X main.buildSource=nix" ];
 
   meta = with stdenv.lib; {
     description = "Simple terminal UI for git commands";

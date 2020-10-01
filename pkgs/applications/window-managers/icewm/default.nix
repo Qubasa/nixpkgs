@@ -9,13 +9,13 @@
 with stdenv.lib;
 stdenv.mkDerivation rec {
   pname = "icewm";
-  version = "1.6.6";
+  version = "1.8.1";
 
   src = fetchFromGitHub {
     owner  = "bbidulock";
     repo   = "icewm";
     rev    = version;
-    sha256 = "05jg2gs5cdxn2kfm2y6yrqxpza5s1zsgb52168psmzhb4nakpv42";
+    sha256 = "0qd3cakhhjc7h6xr9q3ia9f8wln6q23dlqvw19khia26c0dgyd7b";
   };
 
   nativeBuildInputs = [ cmake pkgconfig perl asciidoc ];

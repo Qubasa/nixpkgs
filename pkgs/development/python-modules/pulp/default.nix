@@ -2,18 +2,19 @@
 , fetchPypi
 , buildPythonPackage
 , pyparsing
+, amply
 }:
 
 buildPythonPackage rec {
   pname = "PuLP";
-  version = "2.1";
+  version = "2.3";
 
   src = fetchPypi {
     inherit pname version;
-    sha256 = "06swbi7wygh7y0kxc85q1pdhzk662375d9a5jnahgr76hkwwkybn";
+    sha256 = "9d8ecf532868cc31fa9ff59ee5d5b2049600c5c902c18c794a2bad677c1f92e5";
   };
 
-  propagatedBuildInputs = [ pyparsing ];
+  propagatedBuildInputs = [ pyparsing amply ];
 
   # only one test that requires an extra
   doCheck = false;

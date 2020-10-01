@@ -59,7 +59,6 @@ let
     freetype
     gdk-pixbuf
     glib
-    gnome2.GConf
     gnome2.pango
     gtk3-x11
     gtk2-x11
@@ -87,11 +86,11 @@ in
 stdenv.mkDerivation rec {
   pname = "minecraft-launcher";
 
-  version = "2.1.14947";
+  version = "2.1.17627";
 
   src = fetchurl {
     url = "https://launcher.mojang.com/download/linux/x86_64/minecraft-launcher_${version}.tar.gz";
-    sha256 = "1lsc39n1kq08sssnpr6kf4lfpy01a7i7rgvi298mmxsprjmc7a9q";
+    sha256 = "04zjjyy0psfxfibzbac9w0kkgqwfpf1qmbj5gspyvhaib7k8may0";
   };
 
   icon = fetchurl {
@@ -134,6 +133,7 @@ stdenv.mkDerivation rec {
     makeWrapper $out/opt/minecraft-launcher/minecraft-launcher $out/bin/minecraft-launcher \
       --prefix LD_LIBRARY_PATH : ${envLibPath} \
       --prefix PATH : ${stdenv.lib.makeBinPath [ jre ]} \
+      --set JAVA_HOME ${stdenv.lib.makeBinPath [ jre ]} \
       --run "cd /tmp" \
       "''${gappsWrapperArgs[@]}"
   '';

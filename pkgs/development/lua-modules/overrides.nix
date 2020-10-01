@@ -204,6 +204,9 @@ with super;
     externalDeps = [
       { name = "EXPAT"; dep = pkgs.expat; }
     ];
+    patches = [
+      ./luaexpat.patch
+    ];
   });
 
   # TODO Somehow automatically amend buildInputs for things that need luaffi
@@ -328,12 +331,20 @@ with super;
     '';
   });
 
-  pulseaudio = super.pulseaudio.override({
-    buildInputs = [
-      pkgs.libpulseaudio
-    ];
-    nativeBuildInputs = [
-      pkgs.pulseaudio pkgs.pkgconfig
-    ];
+  readline = (super.readline.override ({
+    unpackCmd = ''
+      unzip "$curSrc"
+      tar xf *.tar.gz
+    '';
+    propagatedBuildInputs = super.readline.propagatedBuildInputs ++ [ pkgs.readline ];
+    extraVariables = rec {
+      READLINE_INCDIR = "${pkgs.readline.dev}/include";
+      HISTORY_INCDIR = READLINE_INCDIR;
+    };
+  })).overrideAttrs (old: {
+    # Without this, source root is wrongly set to ./readline-2.6/doc
+    setSourceRoot = ''
+      sourceRoot=./readline-2.6
+    '';
   });
 }

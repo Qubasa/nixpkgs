@@ -32,7 +32,7 @@ in {
     };
     meta = {
       homepage = "https://github.com/cvtienhoven/graylog-plugin-aggregates";
-      description = "SSO support for Graylog through trusted HTTP headers set by load balancers or authentication proxies";
+      description = "A plugin that enables users to execute term searches and get notified when the given criteria are met";
     };
   };
   auth_sso = glPlugin rec {
@@ -64,10 +64,10 @@ in {
   enterprise-integrations = glPlugin rec {
     name = "graylog-enterprise-integrations-${version}";
     pluginName = "graylog-plugin-enterprise-integrations";
-    version = "3.3.1";
+    version = "3.3.6";
     src = fetchurl {
       url = "https://downloads.graylog.org/releases/graylog-enterprise-integrations/graylog-enterprise-integrations-plugins-${version}.tgz";
-      sha256 = "0la91f5hfakrp5d37q3r1z15zzya9vmwgp8gf5ifkh6fasa811ll";
+      sha256 = "15sx53ikc49d7a7qlcac9jyx9amrcqqqpk8hwj5lc8iv7d1wnxf9";
     };
     installPhase = ''
       mkdir -p $out/bin
@@ -96,10 +96,10 @@ in {
   integrations = glPlugin rec {
     name = "graylog-integrations-${version}";
     pluginName = "graylog-plugin-integrations";
-    version = "3.3.1";
+    version = "3.3.6";
     src = fetchurl {
       url = "https://downloads.graylog.org/releases/graylog-integrations/graylog-integrations-plugins-${version}.tgz";
-      sha256 = "1k90q50p4ly9d8fj0riyb1xw0bd6f8wm2xmkr71908j2v0jaskpq";
+      sha256 = "11cg0rn10sc1gzip88pm2yzyxighiaafw1vznr3ips307ia0c7hm";
     };
     installPhase = ''
       mkdir -p $out/bin

@@ -36,6 +36,17 @@ let
         '';
       };
 
+      p11Auth = mkOption {
+        default = config.security.pam.p11.enable;
+        type = types.bool;
+        description = ''
+          If set, keys listed in
+          <filename>~/.ssh/authorized_keys</filename> and
+          <filename>~/.eid/authorized_certificates</filename>
+          can be used to log in with the associated PKCS#11 tokens.
+        '';
+      };
+
       u2fAuth = mkOption {
         default = config.security.pam.u2f.enable;
         type = types.bool;
@@ -352,6 +363,8 @@ let
               "auth sufficient ${pkgs.pam_ssh_agent_auth}/libexec/pam_ssh_agent_auth.so file=~/.ssh/authorized_keys:~/.ssh/authorized_keys2:/etc/ssh/authorized_keys.d/%u"}
           ${optionalString cfg.fprintAuth
               "auth sufficient ${pkgs.fprintd}/lib/security/pam_fprintd.so"}
+          ${let p11 = config.security.pam.p11; in optionalString cfg.p11Auth
+              "auth ${p11.control} ${pkgs.pam_p11}/lib/security/pam_p11.so ${pkgs.opensc}/lib/opensc-pkcs11.so"}
           ${let u2f = config.security.pam.u2f; in optionalString cfg.u2fAuth
               "auth ${u2f.control} ${pkgs.pam_u2f}/lib/security/pam_u2f.so ${optionalString u2f.debug "debug"} ${optionalString (u2f.authFile != null) "authfile=${u2f.authFile}"} ${optionalString u2f.interactive "interactive"} ${optionalString u2f.cue "cue"}"}
           ${optionalString cfg.usbAuth
@@ -381,7 +394,7 @@ let
                 "auth optional ${pkgs.pam_mount}/lib/security/pam_mount.so"}
               ${optionalString cfg.enableKwallet
                 ("auth optional ${pkgs.plasma5.kwallet-pam}/lib/security/pam_kwallet5.so" +
-                 " kwalletd=${pkgs.libsForQt5.kwallet.bin}/bin/kwalletd5")}
+                 " kwalletd=${pkgs.kdeFrameworks.kwallet.bin}/bin/kwalletd5")}
               ${optionalString cfg.enableGnomeKeyring
                 "auth optional ${pkgs.gnome3.gnome-keyring}/lib/security/pam_gnome_keyring.so"}
               ${optionalString cfg.googleAuthenticator.enable
@@ -458,7 +471,7 @@ let
               "session optional ${pkgs.apparmor-pam}/lib/security/pam_apparmor.so order=user,group,default debug"}
           ${optionalString (cfg.enableKwallet)
               ("session optional ${pkgs.plasma5.kwallet-pam}/lib/security/pam_kwallet5.so" +
-               " kwalletd=${pkgs.libsForQt5.kwallet.bin}/bin/kwalletd5")}
+               " kwalletd=${pkgs.kdeFrameworks.kwallet.bin}/bin/kwalletd5")}
           ${optionalString (cfg.enableGnomeKeyring)
               "session optional ${pkgs.gnome3.gnome-keyring}/lib/security/pam_gnome_keyring.so auto_start"}
           ${optionalString (config.virtualisation.lxc.lxcfs.enable)
@@ -531,7 +544,7 @@ in
 
     security.pam.services = mkOption {
       default = [];
-      type = with types; loaOf (submodule pamOpts);
+      type = with types; attrsOf (submodule pamOpts);
       description =
         ''
           This option defines the PAM services.  A service typically
@@ -565,6 +578,39 @@ in
     };
 
     security.pam.enableOTPW = mkEnableOption "the OTPW (one-time password) PAM module";
+
+    security.pam.p11 = {
+      enable = mkOption {
+        default = false;
+        type = types.bool;
+        description = ''
+          Enables P11 PAM (<literal>pam_p11</literal>) module.
+
+          If set, users can log in with SSH keys and PKCS#11 tokens.
+
+          More information can be found <link
+          xlink:href="https://github.com/OpenSC/pam_p11">here</link>.
+        '';
+      };
+
+      control = mkOption {
+        default = "sufficient";
+        type = types.enum [ "required" "requisite" "sufficient" "optional" ];
+        description = ''
+          This option sets pam "control".
+          If you want to have multi factor authentication, use "required".
+          If you want to use the PKCS#11 device instead of the regular password,
+          use "sufficient".
+
+          Read
+          <citerefentry>
+            <refentrytitle>pam.conf</refentrytitle>
+            <manvolnum>5</manvolnum>
+          </citerefentry>
+          for better understanding of this option.
+        '';
+      };
+    };
 
     security.pam.u2f = {
       enable = mkOption {
@@ -747,6 +793,7 @@ in
       ++ optionals config.krb5.enable [pam_krb5 pam_ccreds]
       ++ optionals config.security.pam.enableOTPW [ pkgs.otpw ]
       ++ optionals config.security.pam.oath.enable [ pkgs.oathToolkit ]
+      ++ optionals config.security.pam.p11.enable [ pkgs.pam_p11 ]
       ++ optionals config.security.pam.u2f.enable [ pkgs.pam_u2f ];
 
     boot.supportedFilesystems = optionals config.security.pam.enableEcryptfs [ "ecryptfs" ];
@@ -788,6 +835,63 @@ in
            session". */
         runuser-l = { rootOK = true; unixAuth = false; };
       };
+
+    security.apparmor.includes."abstractions/pam" = let
+      isEnabled = test: fold or false (map test (attrValues config.security.pam.services));
+      in ''
+      ${lib.concatMapStringsSep "\n"
+         (name: "r ${config.environment.etc."pam.d/${name}".source},")
+         (attrNames config.security.pam.services)}
+      mr ${getLib pkgs.pam}/lib/security/pam_filter/*,
+      mr ${getLib pkgs.pam}/lib/security/pam_*.so,
+      r ${getLib pkgs.pam}/lib/security/,
+      ${optionalString use_ldap
+        "mr ${pam_ldap}/lib/security/pam_ldap.so,"}
+      ${optionalString config.services.sssd.enable
+        "mr ${pkgs.sssd}/lib/security/pam_sss.so,"}
+      ${optionalString config.krb5.enable ''
+        mr ${pam_krb5}/lib/security/pam_krb5.so,
+        mr ${pam_ccreds}/lib/security/pam_ccreds.so,
+      ''}
+      ${optionalString (isEnabled (cfg: cfg.googleOsLoginAccountVerification)) ''
+        mr ${pkgs.google-compute-engine-oslogin}/lib/pam_oslogin_login.so,
+        mr ${pkgs.google-compute-engine-oslogin}/lib/pam_oslogin_admin.so,
+      ''}
+      ${optionalString (isEnabled (cfg: cfg.googleOsLoginAuthentication))
+        "mr ${pkgs.google-compute-engine-oslogin}/lib/pam_oslogin_login.so,"}
+      ${optionalString (config.security.pam.enableSSHAgentAuth && isEnabled (cfg: cfg.sshAgentAuth))
+        "mr ${pkgs.pam_ssh_agent_auth}/libexec/pam_ssh_agent_auth.so,"}
+      ${optionalString (isEnabled (cfg: cfg.fprintAuth))
+        "mr ${pkgs.fprintd}/lib/security/pam_fprintd.so,"}
+      ${optionalString (isEnabled (cfg: cfg.u2fAuth))
+        "mr ${pkgs.pam_u2f}/lib/security/pam_u2f.so,"}
+      ${optionalString (isEnabled (cfg: cfg.usbAuth))
+        "mr ${pkgs.pam_usb}/lib/security/pam_usb.so,"}
+      ${optionalString (isEnabled (cfg: cfg.oathAuth))
+        "mr ${pkgs.oathToolkit}/lib/security/pam_oath.so,"}
+      ${optionalString (isEnabled (cfg: cfg.yubicoAuth))
+        "mr ${pkgs.yubico-pam}/lib/security/pam_yubico.so,"}
+      ${optionalString (isEnabled (cfg: cfg.duoSecurity.enable))
+        "mr ${pkgs.duo-unix}/lib/security/pam_duo.so,"}
+      ${optionalString (isEnabled (cfg: cfg.otpwAuth))
+        "mr ${pkgs.otpw}/lib/security/pam_otpw.so,"}
+      ${optionalString config.security.pam.enableEcryptfs
+        "mr ${pkgs.ecryptfs}/lib/security/pam_ecryptfs.so,"}
+      ${optionalString (isEnabled (cfg: cfg.pamMount))
+        "mr ${pkgs.pam_mount}/lib/security/pam_mount.so,"}
+      ${optionalString config.services.samba.syncPasswordsByPam
+        "mr ${pkgs.samba}/lib/security/pam_smbpass.so,"}
+      ${optionalString (isEnabled (cfg: cfg.enableGnomeKeyring))
+        "mr ${pkgs.gnome3.gnome-keyring}/lib/security/pam_gnome_keyring.so,"}
+      ${optionalString (isEnabled (cfg: cfg.startSession))
+        "mr ${pkgs.systemd}/lib/security/pam_systemd.so,"}
+      ${optionalString (isEnabled (cfg: cfg.enableAppArmor) && config.security.apparmor.enable)
+        "mr ${pkgs.apparmor-pam}/lib/security/pam_apparmor.so,"}
+      ${optionalString (isEnabled (cfg: cfg.enableKwallet))
+        "mr ${pkgs.plasma5.kwallet-pam}/lib/security/pam_kwallet5.so,"}
+      ${optionalString config.virtualisation.lxc.lxcfs.enable
+        "mr ${pkgs.lxc}/lib/security/pam_cgfs.so"}
+    '';
 
   };
 
