@@ -1,13 +1,11 @@
-{ stdenv, mkDerivation, fetchFromGitHub, fetchpatch, makeDesktopItem, makeWrapper
-, python, pkgconfig, SDL2, SDL2_ttf, alsaLib, which, qtbase, libXinerama
+{ lib, stdenv, mkDerivation, fetchFromGitHub, makeDesktopItem, makeWrapper
+, python, pkg-config, SDL2, SDL2_ttf, alsa-lib, which, qtbase, libXinerama
 , libpcap, CoreAudioKit, ForceFeedback
 , installShellFiles }:
 
-with stdenv;
-
 let
   majorVersion = "0";
-  minorVersion = "224";
+  minorVersion = "226";
 
   desktopItem = makeDesktopItem {
     name = "MAME";
@@ -26,7 +24,7 @@ in mkDerivation {
     owner = "mamedev";
     repo = "mame";
     rev = "mame${majorVersion}${minorVersion}";
-    sha256 = "1z012fk7nlvxxixxcavmzc9443xli6i7xzz7fdf755g7v1cys7im";
+    sha256 = "0pnsvz4vkjkqb1ac5wzwz31vx0iknyg5ffly90nhl13kcr656jrj";
   };
 
   hardeningDisable = [ "fortify" ];
@@ -43,22 +41,16 @@ in mkDerivation {
 
   buildInputs =
     [ SDL2 SDL2_ttf qtbase libXinerama ]
-    ++ lib.optional stdenv.isLinux alsaLib
+    ++ lib.optional stdenv.isLinux alsa-lib
     ++ lib.optionals stdenv.isDarwin [ libpcap CoreAudioKit ForceFeedback ]
     ;
-  nativeBuildInputs = [ python pkgconfig which makeWrapper installShellFiles ];
+  nativeBuildInputs = [ python pkg-config which makeWrapper installShellFiles ];
 
   # by default MAME assumes that paths with stock resources
   # are relative and that you run MAME changing to
   # install directory, so we add absolute paths here
   patches = [
     ./emuopts.patch
-    # Make the parallel build reliable -- see https://github.com/mamedev/mame/pull/7279
-    (fetchpatch {
-      name = "fix-mame-parallel-build.patch";
-      url = "https://github.com/mamedev/mame/commit/13a54fd4e8b8b1a4aad77671562b2d9ef3d82e1f.patch";
-      sha256 = "1p4bszir9hcdjx6am58p48zh17rhjzlhx2baiacas7fnig61i02n";
-    })
   ];
 
   postPatch = ''
@@ -67,7 +59,7 @@ in mkDerivation {
   '';
 
   installPhase = ''
-    make -f dist.mak PTR64=${stdenv.lib.optionalString stdenv.is64bit "1"}
+    make -f dist.mak PTR64=${lib.optionalString stdenv.is64bit "1"}
     mkdir -p ${dest}
     mv build/release/*/Release/mame/* ${dest}
 
@@ -90,6 +82,6 @@ in mkDerivation {
     platforms = platforms.unix;
     # makefile needs fixes for install target
     badPlatforms = [ "aarch64-linux" ];
-    maintainers = with maintainers; [ gnidorah ];
+    maintainers = with maintainers; [ ];
   };
 }

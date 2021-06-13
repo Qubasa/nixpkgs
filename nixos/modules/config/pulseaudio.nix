@@ -17,9 +17,9 @@ let
   binary = "${getBin overriddenPackage}/bin/pulseaudio";
   binaryNoDaemon = "${binary} --daemonize=no";
 
-  # Forces 32bit pulseaudio and alsaPlugins to be built/supported for apps
+  # Forces 32bit pulseaudio and alsa-plugins to be built/supported for apps
   # using 32bit alsa on 64bit linux.
-  enable32BitAlsaPlugins = cfg.support32Bit && stdenv.isx86_64 && (pkgs.pkgsi686Linux.alsaLib != null && pkgs.pkgsi686Linux.libpulseaudio != null);
+  enable32BitAlsaPlugins = cfg.support32Bit && stdenv.isx86_64 && (pkgs.pkgsi686Linux.alsa-lib != null && pkgs.pkgsi686Linux.libpulseaudio != null);
 
 
   myConfigFile =
@@ -36,6 +36,8 @@ let
         ${addModuleIf cfg.zeroconf.discovery.enable "module-zeroconf-discover"}
         ${addModuleIf cfg.tcp.enable (concatStringsSep " "
            ([ "module-native-protocol-tcp" ] ++ allAnon ++ ipAnon))}
+        ${addModuleIf config.services.jack.jackd.enable "module-jack-sink"}
+        ${addModuleIf config.services.jack.jackd.enable "module-jack-source"}
         ${cfg.extraConfig}
       '';
     };
@@ -60,18 +62,18 @@ let
   # plugin.
   alsaConf = writeText "asound.conf" (''
     pcm_type.pulse {
-      libs.native = ${pkgs.alsaPlugins}/lib/alsa-lib/libasound_module_pcm_pulse.so ;
+      libs.native = ${pkgs.alsa-plugins}/lib/alsa-lib/libasound_module_pcm_pulse.so ;
       ${lib.optionalString enable32BitAlsaPlugins
-     "libs.32Bit = ${pkgs.pkgsi686Linux.alsaPlugins}/lib/alsa-lib/libasound_module_pcm_pulse.so ;"}
+     "libs.32Bit = ${pkgs.pkgsi686Linux.alsa-plugins}/lib/alsa-lib/libasound_module_pcm_pulse.so ;"}
     }
     pcm.!default {
       type pulse
       hint.description "Default Audio Device (via PulseAudio)"
     }
     ctl_type.pulse {
-      libs.native = ${pkgs.alsaPlugins}/lib/alsa-lib/libasound_module_ctl_pulse.so ;
+      libs.native = ${pkgs.alsa-plugins}/lib/alsa-lib/libasound_module_ctl_pulse.so ;
       ${lib.optionalString enable32BitAlsaPlugins
-     "libs.32Bit = ${pkgs.pkgsi686Linux.alsaPlugins}/lib/alsa-lib/libasound_module_ctl_pulse.so ;"}
+     "libs.32Bit = ${pkgs.pkgsi686Linux.alsa-plugins}/lib/alsa-lib/libasound_module_ctl_pulse.so ;"}
     }
     ctl.!default {
       type pulse
@@ -144,7 +146,9 @@ in {
 
       package = mkOption {
         type = types.package;
-        default = pkgs.pulseaudio;
+        default = if config.services.jack.jackd.enable
+                  then pkgs.pulseaudioFull
+                  else pkgs.pulseaudio;
         defaultText = "pkgs.pulseaudio";
         example = literalExample "pkgs.pulseaudioFull";
         description = ''
@@ -179,7 +183,7 @@ in {
         config = mkOption {
           type = types.attrsOf types.unspecified;
           default = {};
-          description = ''Config of the pulse daemon. See <literal>man pulse-daemon.conf</literal>.'';
+          description = "Config of the pulse daemon. See <literal>man pulse-daemon.conf</literal>.";
           example = literalExample ''{ realtime-scheduling = "yes"; }'';
         };
       };
@@ -259,7 +263,7 @@ in {
           (drv: drv.override { pulseaudio = overriddenPackage; })
           cfg.extraModules;
         modulePaths = builtins.map
-          (drv: "${drv}/lib/pulse-${overriddenPackage.version}/modules")
+          (drv: "${drv}/${overriddenPackage.pulseDir}/modules")
           # User-provided extra modules take precedence
           (overriddenModules ++ [ overriddenPackage ]);
       in lib.concatStringsSep ":" modulePaths;
@@ -284,6 +288,8 @@ in {
             RestartSec = "500ms";
             PassEnvironment = "DISPLAY";
           };
+        } // optionalAttrs config.services.jack.jackd.enable {
+          environment.JACK_PROMISCUOUS_SERVER = "jackaudio";
         };
         sockets.pulseaudio = {
           wantedBy = [ "sockets.target" ];
@@ -300,6 +306,7 @@ in {
         description = "PulseAudio system service user";
         home = stateDir;
         createHome = true;
+        isSystemUser = true;
       };
 
       users.groups.pulse.gid = gid;

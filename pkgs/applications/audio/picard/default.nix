@@ -1,4 +1,9 @@
-{ stdenv, python3Packages, fetchFromGitHub, gettext, chromaprint, qt5
+{ lib
+, python3Packages
+, fetchFromGitHub
+, gettext
+, chromaprint
+, qt5
 , enablePlayback ? true
 , gst_all_1
 }:
@@ -10,55 +15,52 @@ let
   else
     pythonPackages.pyqt5
   ;
-in pythonPackages.buildPythonApplication rec {
+in
+pythonPackages.buildPythonApplication rec {
   pname = "picard";
-  version = "2.4.4";
+  version = "2.6.3";
 
   src = fetchFromGitHub {
     owner = "metabrainz";
     repo = pname;
     rev = "release-${version}";
-    sha256 = "0iw2v37j70881v0a2rjp2miq97nscq04x1ysk1dqmi1b9hi0y17q";
+    sha256 = "sha256-bSqGgRXqHGjT+OYCEafsT/btVe+n91+L0kB8fnrywss=";
   };
 
   nativeBuildInputs = [ gettext qt5.wrapQtAppsHook qt5.qtbase ]
-    ++ stdenv.lib.optionals (pyqt5.multimediaEnabled) [
-      qt5.qtmultimedia.bin
-      gst_all_1.gstreamer
-      gst_all_1.gst-vaapi
-      gst_all_1.gst-libav
-      gst_all_1.gst-plugins-base
-      gst_all_1.gst-plugins-good
-    ]
+  ++ lib.optionals (pyqt5.multimediaEnabled) [
+    qt5.qtmultimedia.bin
+    gst_all_1.gst-libav
+    gst_all_1.gst-plugins-base
+    gst_all_1.gst-plugins-good
+    gst_all_1.gst-vaapi
+    gst_all_1.gstreamer
+  ]
   ;
 
   propagatedBuildInputs = with pythonPackages; [
-    pyqt5
-    mutagen
     chromaprint
-    discid
     dateutil
+    discid
+    fasteners
+    mutagen
+    pyqt5
   ];
-
-  prePatch = ''
-    # Pesky unicode punctuation.
-    substituteInPlace setup.cfg --replace "‘" "'"
-  '';
 
   # In order to spare double wrapping, we use:
   preFixup = ''
     makeWrapperArgs+=("''${qtWrapperArgs[@]}")
   ''
-    + stdenv.lib.optionalString (pyqt5.multimediaEnabled) ''
-      makeWrapperArgs+=(--prefix GST_PLUGIN_SYSTEM_PATH_1_0 : "$GST_PLUGIN_SYSTEM_PATH_1_0")
-    ''
+  + lib.optionalString (pyqt5.multimediaEnabled) ''
+    makeWrapperArgs+=(--prefix GST_PLUGIN_SYSTEM_PATH_1_0 : "$GST_PLUGIN_SYSTEM_PATH_1_0")
+  ''
   ;
 
-  meta = with stdenv.lib; {
+  meta = with lib; {
     homepage = "https://picard.musicbrainz.org/";
     description = "The official MusicBrainz tagger";
     maintainers = with maintainers; [ ehmry ];
-    license = licenses.gpl2;
+    license = licenses.gpl2Plus;
     platforms = platforms.all;
   };
 }

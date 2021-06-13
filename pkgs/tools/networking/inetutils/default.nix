@@ -46,12 +46,13 @@ stdenv.mkDerivation rec {
   installFlags = [ "SUIDMODE=" ];
 
   postInstall = ''
-    install -D /dev/stdin $apparmor/bin.ping <<EOF
+    mkdir $apparmor
+    cat >$apparmor/bin.ping <<EOF
     $out/bin/ping {
       include <abstractions/base>
       include <abstractions/consoles>
       include <abstractions/nameservice>
-      include "${apparmorRulesFromClosure {} [stdenv.cc.libc]}"
+      include "${apparmorRulesFromClosure { name = "ping"; } [stdenv.cc.libc]}"
       include <local/bin.ping>
       capability net_raw,
       network inet raw,

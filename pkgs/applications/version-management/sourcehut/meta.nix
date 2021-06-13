@@ -1,27 +1,42 @@
-{ stdenv, fetchgit, buildPythonPackage
-, python
+{ lib
+, fetchFromSourcehut
+, buildPythonPackage
 , buildGoModule
-, pgpy, srht, redis, bcrypt, qrcode, stripe, zxcvbn, alembic, pystache
-, sshpubkeys, weasyprint }:
-
+, pgpy
+, srht
+, redis
+, bcrypt
+, qrcode
+, stripe
+, zxcvbn
+, alembic
+, pystache
+, dnspython
+, sshpubkeys
+, weasyprint
+, prometheus_client
+, python
+}:
 let
-  version = "0.50.2";
+  version = "0.53.14";
 
-  buildAPI = src: buildGoModule {
+  src = fetchFromSourcehut {
+    owner = "~sircmpwn";
+    repo = "meta.sr.ht";
+    rev = version;
+    sha256 = "sha256-/+r/XLDkcSTW647xPMh5bcJmR2xZNNH74AJ5jemna2k=";
+  };
+
+  buildApi = src: buildGoModule {
     inherit src version;
     pname = "metasrht-api";
-
-    vendorSha256 = "0k7i7j604wqvzjavmcsw7g2x059jkkgrgz1qyvzlqc0y4ws59xkq";
+    vendorSha256 = "sha256-eZyDrr2VcNMxI++18qUy7LA1Q1YDlWCoRtl00L8lfR4=";
   };
-in buildPythonPackage rec {
+
+in
+buildPythonPackage rec {
   pname = "metasrht";
-  inherit version;
-
-  src = fetchgit {
-    url = "https://git.sr.ht/~sircmpwn/meta.sr.ht";
-    rev = version;
-    sha256 = "utS/HMFtHPAP1QRYd4WAFApyBPRY5UD72ANmC/SU93c=";
-  };
+  inherit version src;
 
   nativeBuildInputs = srht.nativeBuildInputs;
 
@@ -37,18 +52,21 @@ in buildPythonPackage rec {
     pystache
     sshpubkeys
     weasyprint
+    prometheus_client
+    dnspython
   ];
 
   preBuild = ''
     export PKGVER=${version}
+    export SRHT_PATH=${srht}/${python.sitePackages}/srht
   '';
 
   postInstall = ''
     mkdir -p $out/bin
-    cp ${buildAPI "${src}/api"}/bin/api $out/bin/metasrht-api
+    cp ${buildApi "${src}/api/"}/bin/api $out/bin/metasrht-api
   '';
 
-  meta = with stdenv.lib; {
+  meta = with lib; {
     homepage = "https://git.sr.ht/~sircmpwn/meta.sr.ht";
     description = "Account management service for the sr.ht network";
     license = licenses.agpl3;

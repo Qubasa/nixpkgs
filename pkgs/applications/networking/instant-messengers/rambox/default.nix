@@ -1,52 +1,31 @@
-{ stdenv, lib, fetchurl, xdg_utils, dpkg, makeWrapper, autoPatchelfHook
-, libXtst, libXScrnSaver, gtk3, nss, alsaLib, udev, libnotify, wrapGAppsHook
-}:
+{ stdenv, callPackage, fetchurl, lib }:
 
 let
-  version = "0.7.6";
-in stdenv.mkDerivation rec {
+  mkRambox = opts: callPackage (import ./rambox.nix opts) { };
+in mkRambox rec {
   pname = "rambox";
-  inherit version;
+  version = "0.7.7";
+
   src = {
     x86_64-linux = fetchurl {
-      url = "https://github.com/ramboxapp/community-edition/releases/download/${version}/Rambox-${version}-linux-amd64.deb";
-      sha256 = "1v9l5nfd25mq448457hg0mj5bzylh0krk411kbr73s7lbaaww1jl";
+      url = "https://github.com/ramboxapp/community-edition/releases/download/${version}/Rambox-${version}-linux-x86_64.AppImage";
+      sha256 = "0f82hq0dzcjicdz6lkzj8889y100yqciqrwh8wjjy9pxkhjcdini";
     };
     i686-linux = fetchurl {
-      url = "https://github.com/ramboxapp/community-edition/releases/download/${version}/Rambox-${version}-linux-i386.deb";
-      sha256 = "0zhn5hnpl6fpgshp1vwghq6f1hz3f7gds7rjnhky1352cb6cr89i";
+      url = "https://github.com/ramboxapp/community-edition/releases/download/${version}/Rambox-${version}-linux-i386.AppImage";
+      sha256 = "1nhgqjha10jvyf9nsghvlkibg7byj8qz140639ygag9qlpd52rfs";
     };
   }.${stdenv.system} or (throw "Unsupported system: ${stdenv.system}");
 
-  nativeBuildInputs = [ dpkg makeWrapper autoPatchelfHook wrapGAppsHook ];
-  buildInputs = [ libXtst libXScrnSaver gtk3 nss alsaLib ];
-  runtimeDependencies = [ (lib.getLib udev) libnotify ];
-
-  unpackPhase = "dpkg-deb -x $src .";
-
-  installPhase = ''
-    mkdir -p $out/bin
-    cp -r opt $out
-    ln -s $out/opt/Rambox/rambox $out/bin
-
-    # provide resources
-    cp -r usr/share $out
-    substituteInPlace $out/share/applications/rambox.desktop \
-      --replace Exec=/opt/Rambox/rambox Exec=rambox
-  '';
-
-  preFixup = ''
-    gappsWrapperArgs+=(
-      --prefix PATH : ${xdg_utils}/bin
-    )
-  '';
-
-  meta = with stdenv.lib; {
+  meta = with lib; {
     description = "Free and Open Source messaging and emailing app that combines common web applications into one";
     homepage = "https://rambox.pro";
     license = licenses.mit;
-    maintainers = with maintainers; [ gnidorah ma27 ];
+    maintainers = with maintainers; [ ];
     platforms = ["i686-linux" "x86_64-linux"];
     hydraPlatforms = [];
+    knownVulnerabilities = [
+      "Electron 7.2.4 is EOL and contains at least the following vulnerabilities: CVE-2020-6458, CVE-2020-6460 and more (https://www.electronjs.org/releases/stable?version=7). Consider using an alternative such as `ferdi'."
+    ];
   };
 }

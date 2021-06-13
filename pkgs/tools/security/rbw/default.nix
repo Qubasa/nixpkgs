@@ -1,11 +1,13 @@
 { lib
+, stdenv
 , rustPlatform
 , fetchCrate
-, pinentry
 , openssl
-, pkgconfig
+, pkg-config
 , makeWrapper
-, cargo
+, installShellFiles
+, Security
+, libiconv
 
 # rbw-fzf
 , withFzf ? false, fzf, perl
@@ -19,25 +21,25 @@
 
 rustPlatform.buildRustPackage rec {
   pname = "rbw";
-  version = "0.4.6";
+  version = "1.2.0";
 
   src = fetchCrate {
     inherit version;
-    crateName = "${pname}";
-    sha256 = "0vq7cwk3i57fvn54q2rgln74j4p9vqm5zyhap94s73swjywicwk0";
+    crateName = pname;
+    sha256 = "14cnqc5cf6qm2g9ypv2pbqbvymawyrqn3fc778labgqg24khqcyq";
   };
 
-  cargoSha256 = "1h253ncick2v9aki5rf1bdrg5rj3h4nrvx5q01gw03cgwnqvyiiy";
+  cargoSha256 = "0izn5bcvk1rx69sjwyfc49nmvw7k0jysqb0bpdpwdliaa06ggl86";
 
   nativeBuildInputs = [
-    pkgconfig
+    pkg-config
     makeWrapper
+    installShellFiles
   ];
 
-  postPatch = ''
-    substituteInPlace src/pinentry.rs \
-        --replace "Command::new(\"pinentry\")" "Command::new(\"${pinentry}/bin/pinentry\")"
-  '' + lib.optionalString withFzf ''
+  buildInputs = lib.optionals stdenv.isDarwin [ Security libiconv ];
+
+  postPatch = lib.optionalString withFzf ''
     patchShebangs bin/rbw-fzf
     substituteInPlace bin/rbw-fzf \
         --replace fzf ${fzf}/bin/fzf \
@@ -58,7 +60,12 @@ rustPlatform.buildRustPackage rec {
     export OPENSSL_LIB_DIR="${openssl.out}/lib"
   '';
 
-  postInstall = lib.optionalString withFzf ''
+  postInstall = ''
+    for shell in bash zsh fish; do
+      $out/bin/rbw gen-completions $shell > rbw.$shell
+      installShellCompletion rbw.$shell
+    done
+  '' + lib.optionalString withFzf ''
     cp bin/rbw-fzf $out/bin
   '' + lib.optionalString withRofi ''
     cp bin/rbw-rofi $out/bin
@@ -69,8 +76,8 @@ rustPlatform.buildRustPackage rec {
   meta = with lib; {
     description = "Unofficial command line client for Bitwarden";
     homepage = "https://crates.io/crates/rbw";
+    changelog = "https://git.tozt.net/rbw/plain/CHANGELOG.md?id=${version}";
     license = licenses.mit;
-    maintainers = with maintainers; [ albakham luc65r ];
-    platforms = platforms.all;
+    maintainers = with maintainers; [ albakham luc65r marsam ];
   };
 }

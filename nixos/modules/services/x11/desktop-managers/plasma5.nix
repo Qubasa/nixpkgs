@@ -7,9 +7,8 @@ let
   xcfg = config.services.xserver;
   cfg = xcfg.desktopManager.plasma5;
 
-  inherit (pkgs) kdeApplications kdeFrameworks plasma5;
-  libsForQt5 = pkgs.libsForQt514;
-  qt5 = pkgs.qt514;
+  libsForQt5 = pkgs.plasma5Packages;
+  inherit (libsForQt5) kdeGear kdeFrameworks plasma5;
   inherit (pkgs) writeText;
 
   pulseaudio = config.hardware.pulseaudio;
@@ -184,6 +183,13 @@ in
 
   config = mkMerge [
     (mkIf cfg.enable {
+      # Seed our configuration into nixos-generate-config
+      system.nixos-generate-config.desktopConfiguration = [''
+        # Enable the Plasma 5 Desktop Environment.
+        services.xserver.displayManager.sddm.enable = true;
+        services.xserver.desktopManager.plasma5.enable = true;
+      ''];
+
       services.xserver.desktopManager.session = singleton {
         name = "plasma5";
         bgSupport = true;
@@ -191,8 +197,8 @@ in
       };
 
       security.wrappers = {
-        kcheckpass.source = "${lib.getBin plasma5.kscreenlocker}/libexec/kcheckpass";
-        start_kdeinit.source = "${lib.getBin pkgs.kinit}/libexec/kf5/start_kdeinit";
+        kcheckpass.source = "${lib.getBin libsForQt5.kscreenlocker}/libexec/kcheckpass";
+        start_kdeinit.source = "${lib.getBin libsForQt5.kinit}/libexec/kf5/start_kdeinit";
         kwin_wayland = {
           source = "${lib.getBin plasma5.kwin}/bin/kwin_wayland";
           capabilities = "cap_sys_nice+ep";
@@ -206,8 +212,8 @@ in
       '';
 
       environment.systemPackages =
-        with qt5; with libsForQt5;
-        with plasma5; with kdeApplications; with kdeFrameworks;
+        with libsForQt5;
+        with plasma5; with kdeGear; with kdeFrameworks;
         [
           frameworkintegration
           kactivities
@@ -230,6 +236,7 @@ in
           kidletime
           kimageformats
           kinit
+          kirigami2  # In system profile for SDDM theme. TODO: wrapper.
           kio
           kjobwidgets
           knewstuff
@@ -274,6 +281,7 @@ in
           plasma-browser-integration
           plasma-integration
           polkit-kde-agent
+          spectacle
           systemsettings
 
           plasma-desktop
@@ -308,6 +316,7 @@ in
         ++ lib.optionals config.hardware.bluetooth.enable [ bluedevil bluez-qt pkgs.openobex pkgs.obexftp ]
         ++ lib.optional config.networking.networkmanager.enable plasma-nm
         ++ lib.optional config.hardware.pulseaudio.enable plasma-pa
+        ++ lib.optional config.services.pipewire.pulse.enable plasma-pa
         ++ lib.optional config.powerManagement.enable powerdevil
         ++ lib.optional config.services.colord.enable pkgs.colord-kde
         ++ lib.optionals config.services.samba.enable [ kdenetwork-filesharing pkgs.samba ]
@@ -358,10 +367,12 @@ in
       security.pam.services.sddm.enableKwallet = true;
 
       xdg.portal.enable = true;
-      xdg.portal.extraPortals = [ pkgs.xdg-desktop-portal-kde ];
+      xdg.portal.extraPortals = [ plasma5.xdg-desktop-portal-kde ];
 
       # Update the start menu for each user that is currently logged in
       system.userActivationScripts.plasmaSetup = activationScript;
+
+      nixpkgs.config.firefox.enablePlasmaBrowserIntegration = true;
     })
   ];
 

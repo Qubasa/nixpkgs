@@ -3,47 +3,48 @@
 
 python3Packages.buildPythonApplication rec {
   pname = "electron-cash";
-  version = "4.1.0";
+  version = "4.2.4";
 
   src = fetchFromGitHub {
     owner = "Electron-Cash";
     repo = "Electron-Cash";
     rev = version;
-    sha256 = "1ccfm6kkmbkvykfdzrisxvr0lx9kgq4l43ixk6v3xnvhnbfwz4s2";
+    sha256 = "sha256-hiOS0cTaPqllb31p+6nU4GYvw/E1Hdn8yd3sppzGkqg=";
   };
 
   propagatedBuildInputs = with python3Packages; [
-    dnspython
-    ecdsa
-    jsonrpclib-pelix
-    matplotlib
-    pbkdf2
+    # requirements
     pyaes
-    pycrypto
-    pyqt5
-    pysocks
-    qrcode
+    ecdsa
     requests
-    tlslite-ng
+    qrcode
+    protobuf
+    jsonrpclib-pelix
+    pysocks
     qdarkstyle
+    python-dateutil
     stem
+    certifi
+    pathvalidate
+    dnspython
 
-    # plugins
-    keepkey
+    # requirements-binaries
+    pyqt5
+    psutil
+    pycryptodomex
+    cryptography
+
+    # requirements-hw
+    cython
     trezor
+    keepkey
     btchip
+    hidapi
+    pyscard
+    pysatochip
   ];
 
   nativeBuildInputs = [ wrapQtAppsHook ];
-
-  patches = [
-    # Patch a failed test, this can be removed in next version
-    (fetchpatch {
-      url =
-        "https://github.com/Electron-Cash/Electron-Cash/commit/1a9122d59be0c351b14c174a60880c2e927e6168.patch";
-      sha256 = "0zw629ypn9jxb1y124s3dkbbf2q3wj1i97j16lzdxpjy3sk0p5hk";
-    })
-  ];
 
   postPatch = ''
     substituteInPlace contrib/requirements/requirements.txt \
@@ -57,7 +58,7 @@ python3Packages.buildPythonApplication rec {
 
   checkPhase = ''
     unset HOME
-    pytest lib/tests
+    pytest electroncash/tests
   '';
 
   postInstall = ''
@@ -70,9 +71,11 @@ python3Packages.buildPythonApplication rec {
   #   Electron Cash was unable to find the secp256k1 library on this system.
   #   Elliptic curve cryptography operations will be performed in slow
   #   Python-only mode.
-  postFixup = ''
-    wrapQtApp $out/bin/electron-cash \
-      --prefix LD_LIBRARY_PATH : ${secp256k1}/lib
+  preFixup = ''
+    makeWrapperArgs+=("''${qtWrapperArgs[@]}")
+    makeWrapperArgs+=(
+      "--prefix" "LD_LIBRARY_PATH" ":" "${secp256k1}/lib"
+    )
   '';
 
   doInstallCheck = true;
@@ -90,7 +93,7 @@ python3Packages.buildPythonApplication rec {
     '';
     homepage = "https://www.electroncash.org/";
     platforms = platforms.linux;
-    maintainers = with maintainers; [ lassulus nyanloutre ];
+    maintainers = with maintainers; [ lassulus nyanloutre oxalica ];
     license = licenses.mit;
   };
 }

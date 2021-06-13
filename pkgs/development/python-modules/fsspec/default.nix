@@ -1,35 +1,51 @@
 { lib
+, stdenv
 , buildPythonPackage
 , fetchFromGitHub
 , pythonOlder
 , pytestCheckHook
 , numpy
-, stdenv
+, aiohttp
+, pytest-vcr
+, requests
+, paramiko
+, smbprotocol
 }:
 
 buildPythonPackage rec {
   pname = "fsspec";
-  version = "0.8.3";
-  disabled = pythonOlder "3.5";
+  version = "2021.05.0";
+  disabled = pythonOlder "3.6";
 
   src = fetchFromGitHub {
     owner = "intake";
     repo = "filesystem_spec";
     rev = version;
-    sha256 = "0mfy0wxjfwwnp5q2afhhfbampf0fk71wsv512pi9yvrkzzfi1hga";
+    sha256 = "sha256-MQjUBLmx3Lb3nZNU/AgBKUQ/qNOd+XH+2YI51wV8AO0=";
   };
 
-  checkInputs = [
-    pytestCheckHook
-    numpy
+  propagatedBuildInputs = [
+    aiohttp
+    paramiko
+    requests
+    smbprotocol
   ];
 
-  pytestFlagsArray = [ "--rootdir=$(mktemp -d)" ];
+  checkInputs = [
+    numpy
+    pytest-vcr
+    pytestCheckHook
+  ];
+
+  __darwinAllowLocalNetworking = true;
 
   disabledTests = [
     # Test assumes user name is part of $HOME
     # AssertionError: assert 'nixbld' in '/homeless-shelter/foo/bar'
     "test_strip_protocol_expanduser"
+    # test accesses this remote ftp server:
+    # https://ftp.fau.de/debian-cd/current/amd64/log/success
+    "test_find"
   ] ++ lib.optionals (stdenv.isDarwin) [
     # works locally on APFS, fails on hydra with AssertionError comparing timestamps
     # darwin hydra builder uses HFS+ and has only one second timestamp resolution
@@ -38,8 +54,10 @@ buildPythonPackage rec {
     "test_touch"
   ];
 
+  pythonImportsCheck = [ "fsspec" ];
+
   meta = with lib; {
-    description = "A specification that python filesystems should adhere to";
+    description = "A specification that Python filesystems should adhere to";
     homepage = "https://github.com/intake/filesystem_spec";
     license = licenses.bsd3;
     maintainers = [ maintainers.costrouc ];

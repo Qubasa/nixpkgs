@@ -7,26 +7,27 @@
 , pytest-mock
 , pytestCheckHook
 , tomlkit
-, typing
+, typing ? null
 , virtualenv
 }:
 
 buildPythonPackage rec {
   pname = "poetry-core";
-  version = "1.0.0a9";
+  version = "1.0.3";
   format = "pyproject";
 
   src = fetchFromGitHub {
     owner = "python-poetry";
     repo = pname;
     rev = version;
-    sha256 = "1ln47x1bc1yvhdfwfnkqx4d2j7988a59v8vmcriw14whfgzfki75";
+    sha256 = "07x0zagf9cfr7g3132jjd5byywkbnzpfbxjfjzpzpj70fqw70qrc";
   };
 
-  # avoid mass-rebuild of python packages
-  postPatch = ''
+  postPatch = lib.optionalString (pythonOlder "3.8") ''
+    # remove >1.0.3
     substituteInPlace pyproject.toml \
-      --replace "^1.7.0" "^1.6.0"
+      --replace 'importlib-metadata = {version = "^1.7.0", python = "~2.7 || >=3.5, <3.8"}' \
+        'importlib-metadata = {version = ">=1.7.0", python = "~2.7 || >=3.5, <3.8"}'
   '';
 
   nativeBuildInputs = [
@@ -41,7 +42,6 @@ buildPythonPackage rec {
   ];
 
   checkInputs = [
-    isort
     pep517
     pytest-mock
     pytestCheckHook
@@ -50,7 +50,7 @@ buildPythonPackage rec {
   ];
 
   # requires git history to work correctly
-  disabledTests = [ "default_with_excluded_data" ];
+  disabledTests = [ "default_with_excluded_data" "default_src_with_excluded_data" ];
 
   pythonImportsCheck = [ "poetry.core" ];
 

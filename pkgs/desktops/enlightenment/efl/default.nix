@@ -1,10 +1,10 @@
-{ stdenv
+{ lib, stdenv
 , fetchurl
 , meson
 , ninja
-, pkgconfig
+, pkg-config
 , SDL2
-, alsaLib
+, alsa-lib
 , bullet
 , check
 , curl
@@ -46,7 +46,9 @@
 , python3Packages
 , systemd
 , udev
-, utillinux
+, util-linux
+, wayland
+, wayland-protocols
 , writeText
 , xorg
 , zlib
@@ -54,18 +56,18 @@
 
 stdenv.mkDerivation rec {
   pname = "efl";
-  version = "1.25.0";
+  version = "1.25.1";
 
   src = fetchurl {
     url = "http://download.enlightenment.org/rel/libs/${pname}/${pname}-${version}.tar.xz";
-    sha256 = "0vlmf0rp2qxdl06pdmrd1xdfa10sdz30vnxzc98inpdg1n8iz52k";
+    sha256 = "0svybbrvpf6q955y6fclxh3md64z0dgmh0x54x2j60503hhs071m";
   };
 
   nativeBuildInputs = [
     meson
     ninja
     gtk3
-    pkgconfig
+    pkg-config
     check
   ];
 
@@ -89,6 +91,7 @@ stdenv.mkDerivation rec {
     openssl
     systemd
     udev
+    wayland-protocols
     xorg.libX11
     xorg.libXcursor
     xorg.xorgproto
@@ -98,7 +101,7 @@ stdenv.mkDerivation rec {
 
   propagatedBuildInputs = [
     SDL2
-    alsaLib
+    alsa-lib
     bullet
     curl
     dbus
@@ -122,7 +125,8 @@ stdenv.mkDerivation rec {
     mint-x-icons # Mint-X is a parent icon theme of Enlightenment-X
     openjpeg
     poppler
-    utillinux
+    util-linux
+    wayland
     xorg.libXScrnSaver
     xorg.libXcomposite
     xorg.libXdamage
@@ -141,7 +145,6 @@ stdenv.mkDerivation rec {
   mesonFlags = [
     "--buildtype=release"
     "-D build-tests=false" # disable build tests, which are not working
-    "-D drm=true"
     "-D ecore-imf-loaders-disabler=ibus,scim" # ibus is disabled by default, scim is not availabe in nixpkgs
     "-D embedded-lz4=false"
     "-D fb=true"
@@ -149,6 +152,9 @@ stdenv.mkDerivation rec {
     "-D sdl=true"
     "-D elua=true"
     "-D bindings=lua,cxx"
+    # for wayland client support
+    "-D wl=true"
+    "-D drm=true"
   ];
 
   patches = [
@@ -197,11 +203,11 @@ stdenv.mkDerivation rec {
     patchelf --add-needed ${libsndfile.out}/lib/libsndfile.so $out/lib/libecore_audio.so
   '';
 
-  meta = {
+  meta = with lib; {
     description = "Enlightenment foundation libraries";
     homepage = "https://enlightenment.org/";
-    license = stdenv.lib.licenses.lgpl3;
-    platforms = stdenv.lib.platforms.linux;
-    maintainers = with stdenv.lib.maintainers; [ matejc tstrobel ftrvxmtrx romildo ];
+    license = with licenses; [ bsd2 lgpl2Only licenses.zlib ];
+    platforms = platforms.linux;
+    maintainers = with maintainers; [ matejc tstrobel ftrvxmtrx romildo ];
   };
 }

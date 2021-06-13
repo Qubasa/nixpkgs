@@ -12,11 +12,11 @@
 
 buildPythonPackage rec {
   pname = "eventlet";
-  version = "0.28.0";
+  version = "0.30.2";
 
   src = fetchPypi {
     inherit pname version;
-    sha256 = "9c7c63e8a80c7d02d692b2cf308312402fa4777335fd3de5da45097383301ff3";
+    sha256 = "1811b122d9a45eb5bafba092d36911bca825f835cb648a862bbf984030acff9d";
   };
 
   propagatedBuildInputs = [ dnspython greenlet monotonic six ]

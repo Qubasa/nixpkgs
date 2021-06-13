@@ -1,21 +1,21 @@
-{ stdenv, fetchFromGitHub, rustPlatform, cmake, pkg-config, openssl, oniguruma, CoreServices }:
+{ lib, stdenv, fetchFromGitHub, rustPlatform, cmake, pkg-config, openssl, oniguruma, CoreServices }:
 
 rustPlatform.buildRustPackage rec {
   pname = "zola";
-  version = "0.12.1";
+  version = "0.13.0";
 
   src = fetchFromGitHub {
     owner = "getzola";
     repo = pname;
     rev = "v${version}";
-    sha256 = "00fkcrr40v93z23h3q2wqlfx0120g59j6j9szk8nx9x85i40j3if";
+    sha256 = "sha256-yTvFQWmNxoB+CNZLHGmzJq7mKuOUxUqV4g8PWlOlRbM=";
   };
 
-  cargoSha256 = "1wdypyy787dzdq5q64a9mjfygg0kli49yjzw7xh66sjd7263w9fs";
+  cargoSha256 = "sha256:19vijhcs1i02jhz68acil7psv3pcn0jzi1i4y2l05i4m3ayxivjf";
 
   nativeBuildInputs = [ cmake pkg-config ];
   buildInputs = [ openssl oniguruma ]
-    ++ stdenv.lib.optional stdenv.isDarwin CoreServices;
+    ++ lib.optional stdenv.isDarwin CoreServices;
 
   RUSTONIG_SYSTEM_LIBONIG = true;
 
@@ -28,10 +28,10 @@ rustPlatform.buildRustPackage rec {
       -t $out/share/fish/vendor_completions.d
   '';
 
-  meta = with stdenv.lib; {
+  meta = with lib; {
     description = "A fast static site generator with everything built-in";
     homepage = "https://www.getzola.org/";
     license = licenses.mit;
-    maintainers = with maintainers; [ dywedir ];
+    maintainers = with maintainers; [ dywedir _0x4A6F ];
   };
 }

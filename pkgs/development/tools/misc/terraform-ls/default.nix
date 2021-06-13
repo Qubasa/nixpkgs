@@ -1,24 +1,31 @@
-{ lib, buildGoPackage, fetchFromGitHub }:
+{ lib, buildGoModule, fetchFromGitHub }:
 
-buildGoPackage rec {
+buildGoModule rec {
   pname = "terraform-ls";
-  version = "0.7.0";
+  version = "0.18.0";
 
   src = fetchFromGitHub {
     owner = "hashicorp";
     repo = pname;
     rev = "v${version}";
-    sha256 = "1afdd1zs242nh1cync5ip1fbah34wc3gbsx3hwwiisc8yziwiq18";
+    sha256 = "sha256-JctiWJ2HeFtrrOwCe1MCzxTkE2855FsgFocaAgK4fMk=";
   };
+  vendorSha256 = "sha256-r4/WTzI1unvmjKOSJsaHVkws2/qWLuRrHLlzwckrm2Q=";
 
-  goPackagePath = "github.com/hashicorp/terraform-ls";
+  preBuild = ''
+    buildFlagsArray+=("-ldflags" "-s -w -X main.version=v${version} -X main.prerelease=")
+  '';
 
-  buildFlagsArray = [ "-ldflags=-s -w -X main.version=${version}" ];
+  preCheck = ''
+    # Remove test that requires networking
+    rm internal/terraform/exec/exec_test.go
+  '';
 
   meta = with lib; {
     description = "Terraform Language Server (official)";
     homepage = "https://github.com/hashicorp/terraform-ls";
+    changelog = "https://github.com/hashicorp/terraform-ls/blob/v${version}/CHANGELOG.md";
     license = licenses.mpl20;
-    maintainers = with maintainers; [ mbaillie ];
+    maintainers = with maintainers; [ mbaillie jk ];
   };
 }

@@ -1,29 +1,28 @@
-{ stdenv, buildGoModule, fetchFromGitHub }:
+{ lib, buildGoModule, fetchFromGitHub }:
 
 buildGoModule rec {
   pname = "popeye";
-  version = "0.8.10";
+  version = "0.9.2";
 
   src = fetchFromGitHub {
     rev = "v${version}";
     owner = "derailed";
     repo = "popeye";
-    sha256 = "1cx39xipvvhb12nhvg7kfssnqafajni662b070ynlw8p870bj0sn";
+    sha256 = "sha256-GSH9q0hnyuGiJAdbFWKbaaYoHKl4e0SNmBkOvpn5a6s=";
   };
 
   buildFlagsArray = ''
     -ldflags=
       -s -w
       -X github.com/derailed/popeye/cmd.version=${version}
-      -X github.com/derailed/popeye/cmd.commit=b7a876eafd4f7ec5683808d8d6880c41c805056a
-      -X github.com/derailed/popeye/cmd.date=2020-08-25T23:02:30Z
+      -X github.com/derailed/popeye/cmd.commit=${version}
   '';
 
-  vendorSha256 = "0b2bawc9wnqwgvrv614rq5y4ns9di65zqcbb199y2ijpsaw5d9a7";
+  vendorSha256 = "sha256-pK04vGL9Izv1aK8UA+/3lSt/SjLyckjnfSCrOalRj3c=";
 
-  doCheck = false;
+  doCheck = true;
 
-  meta = with stdenv.lib; {
+  meta = with lib; {
     description = "A Kubernetes cluster resource sanitizer";
     homepage = "https://github.com/derailed/popeye";
     changelog = "https://github.com/derailed/popeye/releases/tag/v${version}";

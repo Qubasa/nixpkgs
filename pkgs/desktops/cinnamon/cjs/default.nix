@@ -1,12 +1,13 @@
 { dbus-glib
 , fetchFromGitHub
 , gobject-introspection
-, pkgconfig
+, pkg-config
+, lib
 , stdenv
 , wrapGAppsHook
 , python3
 , cairo
-, gnome3
+, gnome
 , xapps
 , keybinder3
 , upower
@@ -19,7 +20,7 @@
 , meson
 , sysprof
 , dbus
-, xvfb_run
+, xvfb-run
 , ninja
 , makeWrapper
 , which
@@ -28,13 +29,13 @@
 
 stdenv.mkDerivation rec {
   pname = "cjs";
-  version = "4.6.0-gjs-1.66.0";
+  version = "4.8.2";
 
   src = fetchFromGitHub {
-    owner = "leigh123linux";
-    repo = pname;
-    rev = "gjs-1.66.0";
-    sha256 = "1pccz7h8mwljziflhn04gmfnbl99pvcj1byz1c6zn947v5gqskj1";
+    owner = "linuxmint";
+    repo = "cjs";
+    rev = version;
+    hash = "sha256-6+zlWL0DmyP+RFp1ECA4XGbgYUlsMqqyTd6z46w99Ug=";
   };
 
   outputs = [ "out" "dev" ];
@@ -42,7 +43,7 @@ stdenv.mkDerivation rec {
   nativeBuildInputs = [
     meson # ADDING cmake breaks the build, ignore meson warning
     ninja
-    pkgconfig
+    pkg-config
     makeWrapper
     which # for locale detection
     libxml2 # for xml-stripblanks
@@ -57,14 +58,14 @@ stdenv.mkDerivation rec {
   ];
 
   checkInputs = [
-    xvfb_run
+    xvfb-run
   ];
 
   propagatedBuildInputs = [
     glib
 
     # bindings
-    gnome3.caribou
+    gnome.caribou
     keybinder3
     upower
     xapps
@@ -74,7 +75,7 @@ stdenv.mkDerivation rec {
     "-Dprofiler=disabled"
   ];
 
-  meta = with stdenv.lib; {
+  meta = with lib; {
     homepage = "https://github.com/linuxmint/cjs";
     description = "JavaScript bindings for Cinnamon";
 

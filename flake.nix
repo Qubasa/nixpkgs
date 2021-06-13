@@ -18,6 +18,7 @@
         "aarch64-linux"
         "armv6l-linux"
         "armv7l-linux"
+        "aarch64-darwin"
       ];
 
       forAllSystems = f: lib.genAttrs systems (system: f system);
@@ -39,13 +40,18 @@
                     modules = modules ++ [
                       ./nixos/modules/virtualisation/qemu-vm.nix
                       { virtualisation.useBootLoader = true; }
+                      ({ config, ... }: {
+                        virtualisation.useEFIBoot =
+                          config.boot.loader.systemd-boot.enable ||
+                          config.boot.loader.efi.canTouchEfiVariables;
+                      })
                     ];
                   })).config;
               in
               modules ++ [
                 {
                   system.nixos.versionSuffix =
-                    ".${final.substring 0 8 (self.lastModifiedDate or self.lastModified)}.${self.shortRev or "dirty"}";
+                    ".${final.substring 0 8 (self.lastModifiedDate or self.lastModified or "19700101")}.${self.shortRev or "dirty"}";
                   system.nixos.revision = final.mkIf (self ? rev) self.rev;
 
                   system.build = {

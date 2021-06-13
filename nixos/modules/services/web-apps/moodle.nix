@@ -57,7 +57,7 @@ let
   pgsqlLocal = cfg.database.createLocally && cfg.database.type == "pgsql";
 
   phpExt = pkgs.php.withExtensions
-        ({ enabled, all }: with all; [ iconv mbstring curl openssl tokenizer xmlrpc soap ctype zip gd simplexml dom  intl json sqlite3 pgsql pdo_sqlite pdo_pgsql pdo_odbc pdo_mysql pdo mysqli session zlib xmlreader fileinfo ]);
+        ({ enabled, all }: with all; [ iconv mbstring curl openssl tokenizer xmlrpc soap ctype zip gd simplexml dom  intl json sqlite3 pgsql pdo_sqlite pdo_pgsql pdo_odbc pdo_mysql pdo mysqli session zlib xmlreader fileinfo filter ]);
 in
 {
   # interface
@@ -84,7 +84,7 @@ in
       type = mkOption {
         type = types.enum [ "mysql" "pgsql" ];
         default = "mysql";
-        description = ''Database engine to use.'';
+        description = "Database engine to use.";
       };
 
       host = mkOption {

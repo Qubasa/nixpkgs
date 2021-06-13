@@ -70,7 +70,7 @@ let
 in
 {
   meta = {
-    maintainers = with maintainers; [ worldofpeace ];
+    maintainers = with maintainers; [ ];
   };
 
   # Note: the order in which lightdm greeter modules are imported
@@ -308,6 +308,7 @@ in
       home = "/var/lib/lightdm";
       group = "lightdm";
       uid = config.ids.uids.lightdm;
+      shell = pkgs.bash;
     };
 
     systemd.tmpfiles.rules = [

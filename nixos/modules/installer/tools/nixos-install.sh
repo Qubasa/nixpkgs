@@ -64,7 +64,7 @@ while [ "$#" -gt 0 ]; do
         --no-bootloader)
             noBootLoader=1
             ;;
-        --show-trace)
+        --show-trace|--impure|--keep-going)
             extraBuildFlags+=("$i")
             ;;
         --help)
@@ -125,7 +125,7 @@ fi
 
 # Resolve the flake.
 if [[ -n $flake ]]; then
-    flake=$(nix "${flakeFlags[@]}" flake info --json "${extraBuildFlags[@]}" "${lockFlags[@]}" -- "$flake" | jq -r .url)
+    flake=$(nix "${flakeFlags[@]}" flake metadata --json "${extraBuildFlags[@]}" "${lockFlags[@]}" -- "$flake" | jq -r .url)
 fi
 
 if [[ ! -e $NIXOS_CONFIG && -z $system && -z $flake ]]; then
@@ -153,7 +153,7 @@ if [[ -z $system ]]; then
     else
         echo "building the flake in $flake..."
         nix "${flakeFlags[@]}" build "$flake#$flakeAttr.config.system.build.toplevel" \
-            --extra-substituters "$sub" "${verbosity[@]}" \
+            --store "$mountPoint" --extra-substituters "$sub" "${verbosity[@]}" \
             "${extraBuildFlags[@]}" "${lockFlags[@]}" --out-link "$outLink"
     fi
     system=$(readlink -f "$outLink")

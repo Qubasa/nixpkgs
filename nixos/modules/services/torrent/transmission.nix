@@ -197,7 +197,7 @@ in
           install -D -m 600 -o '${cfg.user}' -g '${cfg.group}' /dev/stdin \
            '${cfg.home}/${settingsDir}/settings.json'
         '')];
-        ExecStart="${pkgs.transmission}/bin/transmission-daemon -f";
+        ExecStart="${pkgs.transmission}/bin/transmission-daemon -f -g ${cfg.home}/${settingsDir}";
         ExecReload = "${pkgs.coreutils}/bin/kill -HUP $MAINPID";
         User = cfg.user;
         Group = cfg.group;
@@ -236,6 +236,7 @@ in
           # an AppArmor profile is provided to get a confinement based upon paths and rights.
           builtins.storeDir
           "/etc"
+          "/run"
           ] ++
           optional (cfg.settings.script-torrent-done-enabled &&
                     cfg.settings.script-torrent-done-filename != "")
@@ -358,50 +359,38 @@ in
     ];
 
     security.apparmor.policies."bin.transmission-daemon".profile = ''
-        include <tunables/global>
-        ${pkgs.transmission}/bin/transmission-daemon {
-          include <abstractions/base>
-          include <abstractions/nameservice>
-          include <abstractions/ssl_certs>
-          include "${pkgs.apparmorRulesFromClosure {} [pkgs.transmission]}"
-          include <local/bin.transmission-daemon>
-
-          r @{PROC}/sys/kernel/random/uuid,
-          r @{PROC}/sys/vm/overcommit_memory,
-          r @{PROC}/@{pid}/environ,
-          r @{PROC}/@{pid}/mounts,
-          rwk /tmp/tr_session_id_*,
-          r ${config.systemd.services.transmission.environment.CURL_CA_BUNDLE},
-
-          owner rw ${cfg.home}/${settingsDir}/**,
-          rw ${cfg.settings.download-dir}/**,
-          ${optionalString cfg.settings.incomplete-dir-enabled ''
-            rw ${cfg.settings.incomplete-dir}/**,
-          ''}
-          ${optionalString cfg.settings.watch-dir-enabled ''
-            rw ${cfg.settings.watch-dir}/**,
-          ''}
-          profile dirs {
-            rw ${cfg.settings.download-dir}/**,
-            ${optionalString cfg.settings.incomplete-dir-enabled ''
-              rw ${cfg.settings.incomplete-dir}/**,
-            ''}
-            ${optionalString cfg.settings.watch-dir-enabled ''
-              rw ${cfg.settings.watch-dir}/**,
-            ''}
-          }
-
-          ${optionalString (cfg.settings.script-torrent-done-enabled &&
-                            cfg.settings.script-torrent-done-filename != "") ''
-            # Stack transmission_directories profile on top of
-            # any existing profile for script-torrent-done-filename
-            # FIXME: to be tested as I'm not sure it works well with NoNewPrivileges=
-            # https://gitlab.com/apparmor/apparmor/-/wikis/AppArmorStacking#seccomp-and-no_new_privs
-            px ${cfg.settings.script-torrent-done-filename} -> &@{dirs},
-          ''}
-        }
+      include "${pkgs.transmission.apparmor}/bin.transmission-daemon"
     '';
-    security.apparmor.includes."local/bin.transmission-daemon" = "";
+    security.apparmor.includes."local/bin.transmission-daemon" = ''
+      r ${config.systemd.services.transmission.environment.CURL_CA_BUNDLE},
+
+      owner rw ${cfg.home}/${settingsDir}/**,
+      rw ${cfg.settings.download-dir}/**,
+      ${optionalString cfg.settings.incomplete-dir-enabled ''
+        rw ${cfg.settings.incomplete-dir}/**,
+      ''}
+      ${optionalString cfg.settings.watch-dir-enabled ''
+        rw ${cfg.settings.watch-dir}/**,
+      ''}
+      profile dirs {
+        rw ${cfg.settings.download-dir}/**,
+        ${optionalString cfg.settings.incomplete-dir-enabled ''
+          rw ${cfg.settings.incomplete-dir}/**,
+        ''}
+        ${optionalString cfg.settings.watch-dir-enabled ''
+          rw ${cfg.settings.watch-dir}/**,
+        ''}
+      }
+
+      ${optionalString (cfg.settings.script-torrent-done-enabled &&
+                        cfg.settings.script-torrent-done-filename != "") ''
+        # Stack transmission_directories profile on top of
+        # any existing profile for script-torrent-done-filename
+        # FIXME: to be tested as I'm not sure it works well with NoNewPrivileges=
+        # https://gitlab.com/apparmor/apparmor/-/wikis/AppArmorStacking#seccomp-and-no_new_privs
+        px ${cfg.settings.script-torrent-done-filename} -> &@{dirs},
+      ''}
+    '';
   };
 
   meta.maintainers = with lib.maintainers; [ julm ];

@@ -8,12 +8,6 @@
 , cargo, jq }:
 
 let
-    # This doesn't appear to be officially documented anywhere yet.
-    # See https://github.com/rust-lang-nursery/rust-forge/issues/101.
-    target_os = if stdenv.hostPlatform.isDarwin
-      then "macos"
-      else stdenv.hostPlatform.parsed.kernel.name;
-
     # Create rustc arguments to link against the given list of dependencies
     # and renames.
     #
@@ -52,7 +46,7 @@ let
    inherit (import ./log.nix { inherit lib; }) noisily echo_colored;
 
    configureCrate = import ./configure-crate.nix {
-     inherit lib stdenv echo_colored noisily mkRustcDepArgs mkRustcFeatureArgs;
+     inherit lib stdenv rust echo_colored noisily mkRustcDepArgs mkRustcFeatureArgs;
    };
 
    buildCrate = import ./build-crate.nix {
@@ -60,6 +54,10 @@ let
    };
 
    installCrate = import ./install-crate.nix { inherit stdenv; };
+
+   # Allow access to the rust attribute set from inside buildRustCrate, which
+   # has a parameter that shadows the name.
+   rustAttrs = rust;
 in
 
 /* The overridable pkgs.buildRustCrate function.
@@ -256,7 +254,7 @@ stdenv.mkDerivation (rec {
       depsMetadata = lib.foldl' (str: dep: str + dep.metadata) "" (dependencies ++ buildDependencies);
       hashedMetadata = builtins.hashString "sha256"
         (crateName + "-" + crateVersion + "___" + toString (mkRustcFeatureArgs crateFeatures) +
-          "___" + depsMetadata);
+          "___" + depsMetadata + "___" + rustAttrs.toRustTarget stdenv.hostPlatform);
       in lib.substring 0 10 hashedMetadata;
 
     build = crate.build or "";
@@ -284,7 +282,7 @@ stdenv.mkDerivation (rec {
       inherit crateName buildDependencies completeDeps completeBuildDeps crateDescription
               crateFeatures crateRenames libName build workspace_member release libPath crateVersion
               extraLinkFlags extraRustcOpts
-              crateAuthors crateHomepage verbose colors target_os;
+              crateAuthors crateHomepage verbose colors;
     };
     buildPhase = buildCrate {
       inherit crateName dependencies
