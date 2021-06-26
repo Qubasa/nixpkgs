@@ -139,7 +139,7 @@ buildHostCmd() {
     if [ -z "$buildHost" ]; then
         "$@"
     elif [ -n "$remoteNix" ]; then
-        ssh $SSHOPTS "$buildHost" env PATH="$remoteNix":'$PATH' "${maybeSudo[@]}" "$@"
+        ssh $SSHOPTS "$buildHost" "${maybeSudo[@]}" env PATH="$remoteNix":'$PATH' "$@"
     else
         ssh $SSHOPTS "$buildHost" "${maybeSudo[@]}" "$@"
     fi
@@ -210,7 +210,12 @@ nixBuild() {
 }
 
 nixFlakeBuild() {
-    if [ -z "$buildHost" ]; then
+    if [[ -z "$buildHost" && -z "$targetHost" ]] &&
+       ! [ "$action" = switch -o "$action" = boot ]
+    then
+        nix "${flakeFlags[@]}" build "$@"
+        readlink -f ./result
+    elif [ -z "$buildHost" ]; then
         nix "${flakeFlags[@]}" build "$@" --out-link "${tmpDir}/result"
         readlink -f "${tmpDir}/result"
     else

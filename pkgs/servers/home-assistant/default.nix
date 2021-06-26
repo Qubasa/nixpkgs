@@ -3,7 +3,6 @@
 , fetchFromGitHub
 , python3
 , inetutils
-, tzdata
 , nixosTests
 
 # Look up dependencies of specified components in component-packages.nix
@@ -52,12 +51,12 @@ let
     # https://github.com/home-assistant/core/pull/48137 was merged
     (self: super: {
       iaqualink = super.iaqualink.overridePythonAttrs (oldAttrs: rec {
-        version = "0.3.4";
+        version = "0.3.90";
         src = fetchFromGitHub {
           owner = "flz";
           repo = "iaqualink-py";
           rev = "v${version}";
-          sha256 = "16mn6nd9x3hm6j6da99qhwbqs95hh8wx21r1h1m9csl76z77n9lh";
+          sha256 = "0c8ckbbr1n8gx5k63ymgyfkbz3d0rbdvghg8fqdvbg4nrigrs5v0";
         };
         checkInputs = oldAttrs.checkInputs ++ [ python3.pkgs.asynctest ];
       });
@@ -135,22 +134,22 @@ let
       });
     })
 
-    # Remove after https://github.com/NixOS/nixpkgs/pull/121854 has passed staging-next
+    # Pinned due to API changes in eebrightbox>=0.0.5
     (self: super: {
-      sqlalchemy = super.sqlalchemy.overridePythonAttrs (oldAttrs: rec {
-        version = "1.4.13";
-        src = oldAttrs.src.override {
-          inherit version;
-          sha256 = "0npsg38d11skv04zvsi90j93f6jdgm8666ds2ri7shr1pz1732hx";
+      eebrightbox = super.eebrightbox.overridePythonAttrs (oldAttrs: rec {
+        version = "0.0.4";
+        src = fetchFromGitHub {
+          owner = "krygal";
+          repo = "eebrightbox";
+          rev = version;
+          sha256 = "0d8mmpwgrd7gymw5263r1v2wjv6dx6w6pq13d62fkfm4h2hya4a4";
         };
-        patches = [];
-        propagatedBuildInputs = [ python3.pkgs.greenlet ];
       });
     })
 
-    # hass-frontend does not exist in python3.pkgs
+    # home-assistant-frontend does not exist in python3.pkgs
     (self: super: {
-      hass-frontend = self.callPackage ./frontend.nix { };
+      home-assistant-frontend = self.callPackage ./frontend.nix { };
     })
   ];
 
@@ -181,7 +180,7 @@ let
   extraBuildInputs = extraPackages py.pkgs;
 
   # Don't forget to run parse-requirements.py after updating
-  hassVersion = "2021.6.4";
+  hassVersion = "2021.6.6";
 
 in with py.pkgs; buildPythonApplication rec {
   pname = "homeassistant";
@@ -193,14 +192,12 @@ in with py.pkgs; buildPythonApplication rec {
   # don't try and fail to strip 6600+ python files, it takes minutes!
   dontStrip = true;
 
-  inherit availableComponents;
-
   # PyPI tarball is missing tests/ directory
   src = fetchFromGitHub {
     owner = "home-assistant";
     repo = "core";
     rev = version;
-    sha256 = "058dx5hg0a3zvd85sxglbadigfzajmzx8i5jxvw0ww9yp8002qj1";
+    sha256 = "0r8l2qya9pdl65kq3xrnb1vhmbnxm3bj12hn1wyxmw56l8m9l5d5";
   };
 
   # leave this in, so users don't have to constantly update their downstream patch handling
@@ -219,7 +216,7 @@ in with py.pkgs; buildPythonApplication rec {
   '';
 
   propagatedBuildInputs = [
-    # Only packages required in setup.py + hass-frontend
+    # Only packages required in setup.py
     aiohttp
     astral
     async-timeout
@@ -229,7 +226,6 @@ in with py.pkgs; buildPythonApplication rec {
     certifi
     ciso8601
     cryptography
-    hass-frontend
     httpx
     jinja2
     pip
@@ -274,6 +270,7 @@ in with py.pkgs; buildPythonApplication rec {
     "acmeda"
     "adguard"
     "advantage_air"
+    "aemet"
     "agent_dvr"
     "air_quality"
     "airly"
@@ -292,8 +289,11 @@ in with py.pkgs; buildPythonApplication rec {
     "api"
     "apple_tv"
     "apprise"
+    "aprs"
+    "arcam_fmj"
     "arlo"
     "asuswrt"
+    "atag"
     "august"
     "aurora"
     "auth"
@@ -301,16 +301,23 @@ in with py.pkgs; buildPythonApplication rec {
     "awair"
     "aws"
     "axis"
+    "azure_devops"
+    "azure_event_hub"
     "bayesian"
     "binary_sensor"
     "blackbird"
+    "blebox"
+    "blink"
     "blueprint"
     "bluetooth_le_tracker"
+    "bmw_connected_drive"
+    "bond"
     "bosch_shc"
     "braviatv"
     "broadlink"
     "brother"
     "bsblan"
+    "buienradar"
     "caldav"
     "calendar"
     "camera"
@@ -321,12 +328,15 @@ in with py.pkgs; buildPythonApplication rec {
     "climate"
     "cloud"
     "cloudflare"
+    "color_extractor"
     "comfoconnect"
     "command_line"
     "compensation"
     "config"
     "configurator"
+    "control4"
     "conversation"
+    "coolmaster"
     "coronavirus"
     "counter"
     "cover"
@@ -345,17 +355,27 @@ in with py.pkgs; buildPythonApplication rec {
     "dexcom"
     "dhcp"
     "dialogflow"
+    "directv"
     "discovery"
+    "doorbird"
     "dsmr"
     "dte_energy_bridge"
     "duckdns"
+    "dunehd"
     "dyson"
     "eafm"
+    "ecobee"
     "econet"
+    "ee_brightbox"
     "efergy"
+    "elgato"
     "emonitor"
     "emulated_hue"
+    "emulated_kasa"
+    "emulated_roku"
+    "enocean"
     "enphase_envoy"
+    "epson"
     "esphome"
     "everlights"
     "ezviz"
@@ -370,26 +390,37 @@ in with py.pkgs; buildPythonApplication rec {
     "file"
     "filesize"
     "filter"
+    "fireservicerota"
     "firmata"
+    "flick_electric"
     "flo"
     "flume"
     "flunearyou"
     "flux"
     "folder"
     "folder_watcher"
+    "foobot"
+    "foscam"
     "freebox"
     "freedns"
     "fritz"
     "fritzbox"
     "fritzbox_callmonitor"
     "frontend"
+    "garages_amsterdam"
+    "garmin_connect"
+    "gdacs"
     "generic"
     "generic_thermostat"
     "geo_json_events"
     "geo_location"
+    "geo_rss_events"
     "geofency"
-    "glances"
+    "geonetnz_quakes"
+    "geonetnz_volcano"
     "gios"
+    "glances"
+    "goalzero"
     "gogogate2"
     "google"
     "google_assistant"
@@ -400,14 +431,22 @@ in with py.pkgs; buildPythonApplication rec {
     "google_wifi"
     "gpslogger"
     "graphite"
+    "gree"
     "group"
     "growatt_server"
     "guardian"
+    "habitica"
+    "hangouts"
     "harmony"
     "hassio"
     "hddtemp"
+    "heos"
+    "here_travel_time"
+    "hisense_aehw4a1"
     "history"
     "history_stats"
+    "hive"
+    "hlk_sw16"
     "home_connect"
     "home_plus_control"
     "homeassistant"
@@ -415,15 +454,20 @@ in with py.pkgs; buildPythonApplication rec {
     "homekit_controller"
     "homematic"
     "homematicip_cloud"
+    "honeywell"
     "html5"
     "http"
+    "huawei_lte"
     "hue"
+    "huisbaasje"
     "humidifier"
+    "hvv_departures"
     "hyperion"
     "ialarm"
     "iaqualink"
     "icloud"
     "ifttt"
+    "ign_sismologia"
     "image"
     "image_processing"
     "imap_email_content"
@@ -438,14 +482,21 @@ in with py.pkgs; buildPythonApplication rec {
     "intent"
     "intent_script"
     "ios"
+    "ipma"
     "ipp"
     "iqvia"
     "islamic_prayer_times"
+    "isy994"
+    "izone"
     "jewish_calendar"
+    "keenetic_ndms2"
     "kira"
     "kmtronic"
     "knx"
     "kodi"
+    "konnected"
+    "kraken"
+    "kulersky"
     "lastfm"
     "lcn"
     "light"
@@ -472,10 +523,12 @@ in with py.pkgs; buildPythonApplication rec {
     "met"
     "met_eireann"
     "meteoclimatic"
+    "mhz19"
     "microsoft_face"
     "microsoft_face_detect"
     "microsoft_face_identify"
     "mikrotik"
+    "mill"
     "min_max"
     "minecraft_server"
     "minio"
@@ -494,6 +547,7 @@ in with py.pkgs; buildPythonApplication rec {
     "my"
     "myq"
     "mysensors"
+    "nam"
     "namecheapdns"
     "neato"
     "netatmo"
@@ -501,6 +555,7 @@ in with py.pkgs; buildPythonApplication rec {
     "no_ip"
     "notify"
     "notion"
+    "nsw_rural_fire_service_feed"
     "nuki"
     "number"
     "nws"
@@ -549,6 +604,7 @@ in with py.pkgs; buildPythonApplication rec {
     "remote"
     "rest"
     "rest_command"
+    "rflink"
     "ring"
     "risco"
     "rituals_perfume_genie"
@@ -565,12 +621,14 @@ in with py.pkgs; buildPythonApplication rec {
     "script"
     "search"
     "season"
+    "sense"
     "sensor"
     "sentry"
     "sharkiq"
     "shell_command"
     "shelly"
     "shopping_list"
+    "sia"
     "sigfox"
     "sighthound"
     "simplisafe"
@@ -591,6 +649,7 @@ in with py.pkgs; buildPythonApplication rec {
     "soundtouch"
     "spaceapi"
     "speedtestdotnet"
+    "spider"
     "spotify"
     "sql"
     "squeezebox"
@@ -605,6 +664,7 @@ in with py.pkgs; buildPythonApplication rec {
     "surepetcare"
     "switch"
     "switcher_kis"
+    "syncthing"
     "system_health"
     "system_log"
     "tado"
@@ -616,6 +676,7 @@ in with py.pkgs; buildPythonApplication rec {
     "template"
     "tesla"
     "threshold"
+    "tibber"
     "tile"
     "time_date"
     "timer"
@@ -649,11 +710,13 @@ in with py.pkgs; buildPythonApplication rec {
     "verisure"
     "version"
     "vesync"
+    "vilfo"
     "vizio"
     "voicerss"
     "volumio"
     "vultr"
     "wake_on_lan"
+    "wallbox"
     "water_heater"
     "waze_travel_time"
     "weather"
@@ -668,6 +731,7 @@ in with py.pkgs; buildPythonApplication rec {
     "worldclock"
     "wsdot"
     "wunderground"
+    "xbox"
     "xiaomi"
     "xiaomi_aqara"
     "xiaomi_miio"
@@ -696,8 +760,12 @@ in with py.pkgs; buildPythonApplication rec {
     "--only-rerun RuntimeError"
     # enable full variable printing on error
     "--showlocals"
+    # here_travel_time/test_sensor.py: Tries to access HERE API: herepy.error.HEREError: Error occured on __get
+    "--deselect tests/components/here_travel_time/test_sensor.py::test_invalid_credentials"
     # screenlogic/test_config_flow.py: Tries to send out UDP broadcasts
     "--deselect tests/components/screenlogic/test_config_flow.py::test_form_cannot_connect"
+    # abode/test_camera.py: Race condition in pickle file creationg
+    "--deselect tests/components/abode/test_camera.py::test_camera_off"
     # asuswrt/test_config_flow.py: Sandbox network limitations, fails with unexpected error
     "--deselect tests/components/asuswrt/test_config_flow.py::test_on_connect_failed"
     # shelly/test_config_flow.py: Tries to join multicast group
@@ -718,6 +786,9 @@ in with py.pkgs; buildPythonApplication rec {
     "--deselect tests/components/prometheus/test_init.py::test_view"
     # smhi/test_init.py: Tries to fetch data from the network: socket.gaierror: [Errno -2] Name or service not known
     "--deselect tests/components/smhi/test_init.py::test_remove_entry"
+    # wallbox/test_config_flow.py: Tries to connect to api.wall-box.cim: Failed to establish a new connection: [Errno -2] Name or service not known
+    "--deselect tests/components/wallbox/test_config_flow.py::test_form_invalid_auth"
+    "--deselect tests/components/wallbox/test_config_flow.py::test_form_cannot_connect"
     # tests are located in tests/
     "tests"
     # dynamically add packages required for component tests
@@ -751,6 +822,8 @@ in with py.pkgs; buildPythonApplication rec {
     # onboarding tests rpi_power component, for which we are lacking rpi_bad_power library
     "test_onboarding_core_sets_up_rpi_power"
     "test_onboarding_core_no_rpi_power"
+    # hue/test_sensor_base.py: Race condition when counting events
+    "test_hue_events"
   ];
 
   preCheck = ''
@@ -762,9 +835,6 @@ in with py.pkgs; buildPythonApplication rec {
     # put ping binary into PATH, e.g. for wake_on_lan tests
     export PATH=${inetutils}/bin:$PATH
 
-    # set up zoneinfo data for backports-zoneinfo in pvpc_hourly_pricing tests
-    export PYTHONTZPATH="${tzdata}/share/zoneinfo"
-
     # error out when component test directory is missing, otherwise hidden by xdist execution :(
     for component in ${lib.concatStringsSep " " (map lib.escapeShellArg componentTests)}; do
       test -d "tests/components/$component" || {
@@ -775,7 +845,8 @@ in with py.pkgs; buildPythonApplication rec {
   '';
 
   passthru = {
-    inherit (py.pkgs) hass-frontend;
+    inherit availableComponents;
+    python = py;
     tests = {
       inherit (nixosTests) home-assistant;
     };

@@ -20,7 +20,7 @@ AndrewRadev/sideways.vim@main
 AndrewRadev/splitjoin.vim@main
 andsild/peskcolor.vim
 andviro/flake8-vim
-andweeb/presence.nvim
+andweeb/presence.nvim@main
 andymass/vim-matchup
 andys8/vim-elm-syntax
 antoinemadec/coc-fzf
@@ -47,6 +47,7 @@ bronson/vim-trailing-whitespace
 brooth/far.vim
 buoto/gotests-vim
 camspiers/lens.vim
+camspiers/snap@main
 carlitux/deoplete-ternjs
 ccarpita/rtorrent-syntax-file
 cespare/vim-toml
@@ -158,6 +159,7 @@ gennaro-tedesco/nvim-peekup
 gentoo/gentoo-syntax
 GEverding/vim-hocon
 gfanto/fzf-lsp.nvim@main
+ggandor/lightspeed.nvim@main
 gibiansky/vim-textobj-haskell
 gioele/vim-autoswap
 gleam-lang/gleam.vim
@@ -299,6 +301,7 @@ kevinhwang91/rnvimr@main
 kien/rainbow_parentheses.vim
 knubie/vim-kitty-navigator
 konfekt/fastfold
+Konfekt/vim-alias
 konfekt/vim-DetectSpellLang
 kosayoda/nvim-lightbulb
 kristijanhusak/defx-git
@@ -311,6 +314,7 @@ kristijanhusak/vim-hybrid-material
 kshenoy/vim-signature
 kyazdani42/nvim-tree.lua
 kyazdani42/nvim-web-devicons
+l3mon4d3/luasnip
 lambdalisue/fern.vim
 lambdalisue/gina.vim
 lambdalisue/suda.vim
@@ -390,6 +394,7 @@ mfussenegger/nvim-dap
 mfussenegger/nvim-jdtls
 mg979/vim-visual-multi
 mg979/vim-xtabline
+mhartington/formatter.nvim
 mhartington/oceanic-next
 mhinz/vim-crates
 mhinz/vim-grepper

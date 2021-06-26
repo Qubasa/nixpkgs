@@ -1,27 +1,24 @@
 { lib, stdenv, buildLinux, fetchFromGitHub, ... } @ args:
 
 let
-  version = "5.12.8";
+  version = "5.12.13";
   suffix = "xanmod1-cacule";
 in
 buildLinux (args // rec {
-  modDirVersion = "${version}-${suffix}";
   inherit version;
+  modDirVersion = "${version}-${suffix}";
 
   src = fetchFromGitHub {
     owner = "xanmod";
     repo = "linux";
     rev = modDirVersion;
-    sha256 = "sha256-i3exBrEKyTHM2Iq8AJEIHwaw6KJarfcahlm/pPxAhmo=";
-    extraPostFetch = ''
-      rm $out/.config
-    '';
+    sha256 = "sha256-eFIWlguU1hnkAgTbRxSMTStq0X7XW4IT1/9XlQSgdMQ=";
   };
 
   extraMeta = {
     branch = "5.12-cacule";
     maintainers = with lib.maintainers; [ fortuneteller2k ];
     description = "Built with custom settings and new features built to provide a stable, responsive and smooth desktop experience";
-    broken = stdenv.hostPlatform.isAarch64;
+    broken = stdenv.isAarch64;
   };
 } // (args.argsOverride or { }))
