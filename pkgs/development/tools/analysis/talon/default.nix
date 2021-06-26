@@ -1,82 +1,144 @@
 { stdenv
-, fetchurl
-, autoPatchelfHook
 , lib
-, wrapQtAppsHook
-, libglvnd
-, python39Full
-, libsForQt513
-, gcc-unwrapped
-, libusb1
-, libudev
-, zlib 
+, requireFile
+, makeWrapper
+, dbus
 , fontconfig
-, glib
 , freetype
+, glib
+, libGL
+, libxkbcommon_7
+, sqlite
+, udev
+, xorg
+, zlib
+, fetchurl
+, libpulseaudio
 , xlibs
-, libffi
+, bzip2
+, ncurses5
+, gdk_pixbuf
+, libuuid
+, libdrm
+, gtk3-x11
+, cairo
+, gdbm
+, gnome2
+, atk
+, libsForQt5
+, wayland
+, wayland-protocols
+, wlroots
+, xwayland
+, libinput
+, libxml2
+, gnome
 }:
 stdenv.mkDerivation rec {
   pname = "talon";
-  version = "0.1.5";
-  rev = "v${lib.versions.major version}";
-
-  src = fetchurl {
-    url = "https://talonvoice.com/dl/latest/talon-linux.tar.xz";
-    sha256 = "08ssgq5j3lyb5q6nmpi5rsf30fr46grqjs1pdxsakf8m26fgysyr";
-  };
-
-  sourceRoot = ".";
+  version = "108-0.1.5-456";
+  src = ./talon-linux-108-0.1.5-457-g0fa8.tar.xz;
+  preferLocalBuild = true;
 
   nativeBuildInputs = [
-    wrapQtAppsHook
-    autoPatchelfHook
+    makeWrapper
   ];
 
   buildInputs = [
-    libglvnd.out 
-    python39Full.out
-    libsForQt513.full.out
-    gcc-unwrapped.lib
-    libusb1.out
-    libudev.out
-    zlib.out 
-    stdenv.cc.cc 
-    fontconfig.lib 
-    glib.out 
-    freetype.out 
-    xlibs.libX11.out
+    stdenv.cc.cc
+    stdenv.cc.libc
+    dbus
+    fontconfig
+    freetype
+    glib
+    libGL
+    libxkbcommon_7
+    sqlite
+    zlib
+    libpulseaudio
+    udev
+    xorg.libX11
+    xorg.libSM
+    xorg.libXcursor
+    xorg.libICE
+    xorg.libXrender
+    xorg.libxcb
+    xlibs.libXext
+    xlibs.libXcomposite
+    bzip2
+    ncurses5
+    libuuid
+    gtk3-x11
+    gdk_pixbuf
+    cairo
+    libdrm
+    gnome2.pango
+    gdbm
+    atk
+    wayland
+    wayland-protocols
+    wlroots
+    xwayland
+    libinput
+    libxml2
   ];
 
-  installPhase = ''
+
+  phases = [ "unpackPhase" "installPhase" ];
+
+  installPhase = let
+    libPath = lib.makeLibraryPath buildInputs;
+     binPath = lib.makeBinPath [ gnome.gnome-terminal ];
+  in ''
     runHook preInstall
 
-    mkdir -p $out/bin
-    mkdir -p $out/lib
-    mkdir -p $out/share
+    # Copy Talon to the Nix store
+    mkdir -p "$out"
+    mkdir "$out/bin"
+    mkdir -p "$out/etc/udev/rules.d"
 
-    cp $sourceRoot/talon/talon $out/bin/talon
-    cp \
-      --archive \
-      $sourceRoot/talon/lib/libicudata.so* \
-      $sourceRoot/talon/lib/libicui18n.so* \
-      $sourceRoot/talon/lib/libicuuc.so* \
-      $sourceRoot/talon/lib/libSkiaSharp.so* \
-      $sourceRoot/talon/lib/libusb-1.0.so* \
-      $sourceRoot/talon/lib/libw2l.so* \
-      $out/lib
-      #$sourceRoot/talon/lib/libQt5Core.so* \
-      #$sourceRoot/talon/lib/libQt5DBus.so* \
-      #$sourceRoot/talon/lib/libQt5Gui.so* \
-      #$sourceRoot/talon/lib/libQt5WaylandClient.so* \
-      #$sourceRoot/talon/lib/libQt5Widgets.so* \
-      #$sourceRoot/talon/lib/libQt5XcbQpa.so* \
+    mkdir -p $out/share/applications
+
+    cat << EOF > $out/share/applications/talon.desktop
+      [Desktop Entry]
+      Categories=Utility;
+      Exec=talon
+      Name=Talon
+      Terminal=false
+      Type=Application
+    EOF
+
+    cp 10-talon.rules $out/etc/udev/rules.d
+    cp -r lib $out/lib
+    cp talon $out/bin
+    cp -r resources $out/bin/resources
+
+    # Delete because messes up ldd missing deps detection
+    rm $out/bin/resources/python/lib/python3.9/site-packages/torch/bin/test_tensorexpr
 
 
-    # we already ship libffi.so.7
-    ln -s ${lib.getLib libffi}/lib/libffi.so $out/lib/libffi.so.7
+    # Tell talon where to find glibc
+    patchelf \
+      --interpreter "$(cat $NIX_CC/nix-support/dynamic-linker)" \
+      $out/bin/talon
 
-    #cp -r $sourceRoot/talon/resources $out/bin
+    # Replicate 'run.sh' and add library path
+    wrapProgram "$out/bin/talon" \
+      --unset QT_AUTO_SCREEN_SCALE_FACTOR \
+      --unset QT_SCALE_FACTOR \
+      --set   LC_NUMERIC C \
+      --set   QT_PLUGIN_PATH "$out/lib/plugins" \
+      --set   LD_LIBRARY_PATH "$out/lib:$out/bin/resources/python/lib:$out/bin/resources/pypy/lib:${libPath}" \
+      --set   QT_DEBUG_PLUGINS 1 \
+      --prefix PATH : "${binPath}"
+
+    # The libbz2 derivation in Nix doesn't provide the right .so filename, so
+    # we fake it by adding a link in the lib/ directory
+    (
+      cd "$out/lib"
+      ln -s ${bzip2.out}/lib/libbz2.so.1 libbz2.so.1.0
+      ln -s ${gdbm}/lib/libgdbm.so libgdbm.so.5
+    )
 
     runHook postInstall
   '';

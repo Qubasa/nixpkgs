@@ -3797,6 +3797,8 @@ in {
 
   lark-parser = callPackage ../development/python-modules/lark-parser { };
 
+  lark-parser-08 = callPackage ../development/python-modules/lark-parser-08 { };
+
   latexcodec = callPackage ../development/python-modules/latexcodec { };
 
   launchpadlib = callPackage ../development/python-modules/launchpadlib { };
@@ -6116,6 +6118,8 @@ in {
   pyparser = callPackage ../development/python-modules/pyparser { };
 
   pyparsing = callPackage ../development/python-modules/pyparsing { };
+
+  dragonfly2 = callPackage ../development/python-modules/dragonfly2 { };
 
   pyparted = callPackage ../development/python-modules/pyparted { };
 

@@ -1,3 +1,5 @@
+pkgs/development/tools/analysis/talon/*.xz
+pkgs/development/tools/analysis/talon/*.txt
 *~
 ,*
 .*.swp
