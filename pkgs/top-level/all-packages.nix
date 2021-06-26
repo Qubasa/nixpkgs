@@ -1726,6 +1726,8 @@ in
 
   titaniumenv = callPackage ../development/mobile/titaniumenv { };
 
+  talon = qt5.callPackage ../development/tools/analysis/talon { };
+
   abootimg = callPackage ../development/mobile/abootimg {};
 
   adbfs-rootless = callPackage ../development/mobile/adbfs-rootless {
@@ -17860,6 +17862,21 @@ in
       inherit llvmPackages_5;
     });
 
+  qt513 = recurseIntoAttrs (makeOverridable
+    (import ../development/libraries/qt-5/5.13) {
+      inherit newScope;
+      inherit lib stdenv fetchurl fetchpatch fetchFromGitHub makeSetupHook makeWrapper;
+      inherit bison;
+      inherit cups;
+      inherit dconf;
+      inherit harfbuzz;
+      inherit libGL;
+      inherit perl;
+      inherit gtk3;
+      inherit (gst_all_1) gstreamer gst-plugins-base;
+      inherit llvmPackages_5;
+    });
+
   qt514 = recurseIntoAttrs (makeOverridable
     (import ../development/libraries/qt-5/5.14) {
       inherit newScope;
@@ -17894,6 +17911,12 @@ in
     inherit lib pkgs;
     qt5 = qt512;
   });
+
+  libsForQt513 = recurseIntoAttrs (import ./qt5-packages.nix {
+    inherit lib pkgs;
+    qt5 = qt513;
+  });
+
 
   libsForQt514 = recurseIntoAttrs (import ./qt5-packages.nix {
     inherit lib pkgs;
