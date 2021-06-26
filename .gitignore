@@ -1,3 +1,7 @@
+.direnv/
+.envrc
+pkgs/development/tools/analysis/talon
+
 *~
 ,*
 .*.swp
