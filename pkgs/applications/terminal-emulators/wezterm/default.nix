@@ -87,16 +87,16 @@ rustPlatform.buildRustPackage rec {
   buildInputs = runtimeDeps;
 
   postInstall = ''
-    mkdir -p $out/share/applications
-    mkdir -p $out/share/icons
-    cp assets/wezterm.desktop  $out/share/applications
-    cp -r assets/icon/wezterm-icon.svg $out/share/icons/
     mkdir -p $terminfo/share/terminfo/w $out/nix-support
     tic -x -o $terminfo/share/terminfo termwiz/data/wezterm.terminfo
     echo "$terminfo" >> $out/nix-support/propagated-user-env-packages
   '';
 
   preFixup = lib.optionalString stdenv.isLinux ''
+    mkdir -p $out/share/applications
+    mkdir -p $out/share/icons
+    cp assets/wezterm.desktop  $out/share/applications
+    cp -r assets/icon/wezterm-icon.svg $out/share/icons/org.wezfurlong.wezterm.svg
     for artifact in wezterm wezterm-gui wezterm-mux-server strip-ansi-escapes; do
       patchelf --set-rpath "${lib.makeLibraryPath runtimeDeps}" $out/bin/$artifact
     done
