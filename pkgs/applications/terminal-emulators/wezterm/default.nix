@@ -87,6 +87,10 @@ rustPlatform.buildRustPackage rec {
   buildInputs = runtimeDeps;
 
   postInstall = ''
+    mkdir -p $out/share/applications
+    mkdir -p $out/share/icons
+    cp assets/wezterm.desktop  $out/share/applications
+    cp -r assets/icon/wezterm-icon.svg $out/share/icons/
     mkdir -p $terminfo/share/terminfo/w $out/nix-support
     tic -x -o $terminfo/share/terminfo termwiz/data/wezterm.terminfo
     echo "$terminfo" >> $out/nix-support/propagated-user-env-packages
