@@ -8,7 +8,7 @@
 
 Several versions of the Python interpreter are available on Nix, as well as a
 high amount of packages. The attribute `python3` refers to the default
-interpreter, which is currently CPython 3.8. The attribute `python` refers to
+interpreter, which is currently CPython 3.9. The attribute `python` refers to
 CPython 2.7 for backwards-compatibility. It is also possible to refer to
 specific versions, e.g. `python38` refers to CPython 3.8, and `pypy` refers to
 the default PyPy interpreter.
@@ -439,7 +439,7 @@ The following example shows which arguments are given to `buildPythonPackage` in
 order to build [`datashape`](https://github.com/blaze/datashape).
 
 ```nix
-{ lib, buildPythonPackage, fetchPypi, numpy, multipledispatch, dateutil, pytest }:
+{ lib, buildPythonPackage, fetchPypi, numpy, multipledispatch, python-dateutil, pytest }:
 
 buildPythonPackage rec {
   pname = "datashape";
@@ -451,7 +451,7 @@ buildPythonPackage rec {
   };
 
   checkInputs = [ pytest ];
-  propagatedBuildInputs = [ numpy multipledispatch dateutil ];
+  propagatedBuildInputs = [ numpy multipledispatch python-dateutil ];
 
   meta = with lib; {
     homepage = "https://github.com/ContinuumIO/datashape";
@@ -463,7 +463,7 @@ buildPythonPackage rec {
 ```
 
 We can see several runtime dependencies, `numpy`, `multipledispatch`, and
-`dateutil`. Furthermore, we have one `checkInputs`, i.e. `pytest`. `pytest` is a
+`python-dateutil`. Furthermore, we have one `checkInputs`, i.e. `pytest`. `pytest` is a
 test runner and is only used during the `checkPhase` and is therefore not added
 to `propagatedBuildInputs`.
 
@@ -839,7 +839,7 @@ sets are
 and the aliases
 
 * `pkgs.python2Packages` pointing to `pkgs.python27Packages`
-* `pkgs.python3Packages` pointing to `pkgs.python38Packages`
+* `pkgs.python3Packages` pointing to `pkgs.python39Packages`
 * `pkgs.pythonPackages` pointing to `pkgs.python2Packages`
 
 #### `buildPythonPackage` function {#buildpythonpackage-function}

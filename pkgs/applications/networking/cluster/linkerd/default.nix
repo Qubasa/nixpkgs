@@ -22,8 +22,8 @@ let generic = { channel, version, sha256, vendorSha256 }:
       env GOFLAGS="" go generate ./viz/static
     '';
 
-    buildFlagsArray = [
-      "-tags=prod"
+    tags = [
+      "prod"
     ];
 
     ldflags = [
@@ -64,8 +64,8 @@ in
     };
     edge = generic {
       channel = "edge";
-      version = "21.6.3";
-      sha256 = "sha256-NgfbkeVRl0AGNkZSS2nSAHp4eZ49QNSEYMuFe1G5iBY=";
-      vendorSha256 = "sha256-rq/MHo5MG2EKZ3d937TIDXFCoWnLlQO3C/fo1bhRxCA=";
+      version = "21.7.4";
+      sha256 = "sha256-yorxP4SQVV6MWlx8+8l0f7qOaF7aJ1XiPfnMqKC8m/o=";
+      vendorSha256 = "sha256-2ZDsBiIV9ng8P0cDURbqDqMTxFKUFcBxHsPGWp5WjPo=";
     };
   }

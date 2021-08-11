@@ -78,7 +78,7 @@ in {
 
     port = mkOption {
       default = 8123;
-      type = types.int;
+      type = types.port;
       description = "The port on which to listen.";
     };
 
@@ -313,6 +313,7 @@ in {
           "w800rf32"
           "xbee"
           "zha"
+          "zwave"
         ];
       in {
         ExecStart = "${package}/bin/hass --runner --config '${cfg.configDir}'";

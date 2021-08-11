@@ -6,11 +6,12 @@
 , withMySQL ? false, libmysqlclient
 , withPgSQL ? false, postgresql
 , withSQLite ? true, sqlite
+, withLua ? false, lua5_3
 }:
 
 stdenv.mkDerivation rec {
   pname = "dovecot";
-  version = "2.3.15";
+  version = "2.3.16";
 
   nativeBuildInputs = [ perl pkg-config ];
   buildInputs =
@@ -18,11 +19,12 @@ stdenv.mkDerivation rec {
     ++ lib.optionals (stdenv.isLinux) [ systemd pam libcap inotify-tools ]
     ++ lib.optional withMySQL libmysqlclient
     ++ lib.optional withPgSQL postgresql
-    ++ lib.optional withSQLite sqlite;
+    ++ lib.optional withSQLite sqlite
+    ++ lib.optional withLua lua5_3;
 
   src = fetchurl {
     url = "https://dovecot.org/releases/${lib.versions.majorMinor version}/${pname}-${version}.tar.gz";
-    sha256 = "141manrh54cy8xizr7f8fsa3vdzc2ccfgdz87l9rjylm8mfxvfr1";
+    sha256 = "04ngqv5mml5z0i4p7fkchp4xw2awy7x7mq2mim9frnav0m9iv9q3";
   };
 
   enableParallelBuilding = true;
@@ -90,7 +92,8 @@ stdenv.mkDerivation rec {
     ++ lib.optional stdenv.isDarwin "--enable-static"
     ++ lib.optional withMySQL "--with-mysql"
     ++ lib.optional withPgSQL "--with-pgsql"
-    ++ lib.optional withSQLite "--with-sqlite";
+    ++ lib.optional withSQLite "--with-sqlite"
+    ++ lib.optional withLua "--with-lua";
 
   doCheck = !stdenv.isDarwin;
 

@@ -659,6 +659,7 @@ self: super:
           "--with-xkb-output=$out/share/X11/xkb/compiled"
           "--with-log-dir=/var/log"
           "--enable-glamor"
+          "--with-os-name=Nix" # r13y, embeds the build machine's kernel version otherwise
         ] ++ lib.optionals stdenv.hostPlatform.isMusl [
           "--disable-tls"
         ];
@@ -668,7 +669,7 @@ self: super:
           ( # assert() keeps runtime reference xorgserver-dev in xf86-video-intel and others
             cd "$dev"
             for f in include/xorg/*.h; do
-              sed "1i#line 1 \"${attrs.name}/$f\"" -i "$f"
+              sed "1i#line 1 \"${attrs.pname}-${attrs.version}/$f\"" -i "$f"
             done
           )
         '';
@@ -781,7 +782,7 @@ self: super:
       # don't unset DBUS_SESSION_BUS_ADDRESS in startx
       (fetchpatch {
         name = "dont-unset-DBUS_SESSION_BUS_ADDRESS.patch";
-        url = "https://git.archlinux.org/svntogit/packages.git/plain/repos/extra-x86_64/fs46369.patch?h=packages/xorg-xinit&id=40f3ac0a31336d871c76065270d3f10e922d06f3";
+        url = "https://raw.githubusercontent.com/archlinux/svntogit-packages/40f3ac0a31336d871c76065270d3f10e922d06f3/trunk/fs46369.patch";
         sha256 = "18kb88i3s9nbq2jxl7l2hyj6p56c993hivk8mzxg811iqbbawkp7";
       })
     ];
@@ -841,10 +842,6 @@ self: super:
     # This makes the man pages discoverable by the default man,
     # since it looks for packages in $PATH
     postInstall = "mkdir $out/bin";
-  });
-
-  xwd = super.xwd.overrideAttrs (attrs: {
-    buildInputs = with self; attrs.buildInputs ++ [libXt];
   });
 
   xrdb = super.xrdb.overrideAttrs (attrs: {

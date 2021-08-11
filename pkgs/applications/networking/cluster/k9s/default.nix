@@ -2,13 +2,13 @@
 
 buildGoModule rec {
   pname = "k9s";
-  version = "0.24.10";
+  version = "0.24.15";
 
   src = fetchFromGitHub {
     owner  = "derailed";
     repo   = "k9s";
     rev    = "v${version}";
-    sha256 = "sha256-ImWIR112q59hyKHXBmb9W6eVvu4xr+U4+uh2ZGcXv1g=";
+    sha256 = "sha256-ws5JC2/WkgwxKwYtP9xtFELRhztzL6tNSvopyeC6H0Q=";
   };
 
   buildFlagsArray = ''
@@ -18,7 +18,7 @@ buildGoModule rec {
       -X github.com/derailed/k9s/cmd.commit=${src.rev}
   '';
 
-  vendorSha256 = "sha256-EEN3nKQBtAGG7MAa9h11KFPZ9g7xtNxhFB1i/2QS66g=";
+  vendorSha256 = "sha256-T9khJeg5XPhVyUiu4gEEHZR6RgJF4P8LYFycqJglms8=";
 
   doCheck = false;
 
