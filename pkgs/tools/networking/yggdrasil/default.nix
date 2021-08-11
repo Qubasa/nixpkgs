@@ -1,17 +1,19 @@
-{ lib, buildGoModule, fetchFromGitHub }:
+{ lib, buildGoModule, fetchFromGitHub, nixosTests }:
 
 buildGoModule rec {
   pname = "yggdrasil";
-  version = "0.3.11";
+  version = "0.4.0";
 
   src = fetchFromGitHub {
     owner = "yggdrasil-network";
     repo = "yggdrasil-go";
     rev = "v${version}";
-    sha256 = "0cz9axphqvpqwy591ws9by7khpdw96iwf9vmhif3i52ghp8hpfd1";
+    sha256 = "sha256-sMcbOTLdmAXp3U2XeNM0hrwOTjzr+9B6IvAaVbjhuFY=";
   };
 
-  modSha256 = "1vqk0jyqc1qcryi247r5pbvfjw3m48l028fb2mrq1xqqfkjqrr85";
+  vendorSha256 = "sha256-QQN8ePOQ7DT9KeuY4ohFuPtocuinh3Y3us6QMnCQ4gc=";
+
+  doCheck = false;
 
   # Change the default location of the management socket on Linux
   # systems so that the yggdrasil system service unit does not have to
@@ -27,11 +29,13 @@ buildGoModule rec {
       -s -w
   '';
 
+  passthru.tests.basic = nixosTests.yggdrasil;
+
   meta = with lib; {
-    description = "An experiment in scalable routing as an encrypted IPv6 overlay network";
+    description =
+      "An experiment in scalable routing as an encrypted IPv6 overlay network";
     homepage = "https://yggdrasil-network.github.io/";
     license = licenses.lgpl3;
-    platforms = platforms.all;
-    maintainers = with maintainers; [ gazally lassulus ];
+    maintainers = with maintainers; [ ehmry gazally lassulus ];
   };
 }

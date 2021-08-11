@@ -1,17 +1,19 @@
-{ buildPythonPackage, fetchPypi, setuptools_scm
+{ buildPythonPackage, fetchPypi, setuptools-scm
 , six, jaraco_classes, jaraco_text
 }:
 
 buildPythonPackage rec {
   pname = "jaraco.collections";
-  version = "2.1";
+  version = "3.3.0";
   src = fetchPypi {
     inherit pname version;
-    sha256 = "0z1kmgf8jahx42bmflmj030wl8yrksw5b5ghcpayrqd5221jfk0f";
+    sha256 = "3662267424b55f10bf15b6f5dee6a6e48a2865c0ec50cc7a16040c81c55a98dc";
   };
 
+  pythonNamespaces = [ "jaraco" ];
+
   doCheck = false;
-  buildInputs = [ setuptools_scm ];
+  buildInputs = [ setuptools-scm ];
   propagatedBuildInputs = [ six jaraco_classes jaraco_text ];
 
   # break dependency cycle

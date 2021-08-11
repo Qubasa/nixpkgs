@@ -1,17 +1,21 @@
-{ stdenv, lib, fetchFromGitHub, fetchpatch, autoreconfHook, python2, pkgconfig, libX11, libXext, xorgproto, addOpenGLRunpath }:
+{ stdenv, lib, fetchFromGitLab
+, autoreconfHook, pkg-config, python3, addOpenGLRunpath
+, libX11, libXext, xorgproto
+}:
 
 stdenv.mkDerivation rec {
   pname = "libglvnd";
-  version = "1.2.0";
+  version = "1.3.3";
 
-  src = fetchFromGitHub {
-    owner = "NVIDIA";
+  src = fetchFromGitLab {
+    domain = "gitlab.freedesktop.org";
+    owner = "glvnd";
     repo = "libglvnd";
     rev = "v${version}";
-    sha256 = "1hyywwjsmvsd7di603f7iznjlccqlc7yvz0j59gax7bljm9wb6ni";
+    sha256 = "0gjk6m3gkdm12bmih2jflp0v5s1ibkixk7mrzrk0cj884m3hy1z6";
   };
 
-  nativeBuildInputs = [ autoreconfHook pkgconfig python2 addOpenGLRunpath ];
+  nativeBuildInputs = [ autoreconfHook pkg-config python3 addOpenGLRunpath ];
   buildInputs = [ libX11 libXext xorgproto ];
 
   postPatch = lib.optionalString stdenv.isDarwin ''
@@ -23,16 +27,19 @@ stdenv.mkDerivation rec {
       --replace "-Xlinker --version-script=$(VERSION_SCRIPT)" "-Xlinker"
   '';
 
-  NIX_CFLAGS_COMPILE = [
+  NIX_CFLAGS_COMPILE = toString ([
     "-UDEFAULT_EGL_VENDOR_CONFIG_DIRS"
     # FHS paths are added so that non-NixOS applications can find vendor files.
     "-DDEFAULT_EGL_VENDOR_CONFIG_DIRS=\"${addOpenGLRunpath.driverLink}/share/glvnd/egl_vendor.d:/etc/glvnd/egl_vendor.d:/usr/share/glvnd/egl_vendor.d\""
 
     "-Wno-error=array-bounds"
-  ] ++ lib.optional stdenv.cc.isClang "-Wno-error";
+  ] ++ lib.optional stdenv.cc.isClang "-Wno-error");
 
-  # Indirectly: https://bugs.freedesktop.org/show_bug.cgi?id=35268
-  configureFlags  = stdenv.lib.optional stdenv.hostPlatform.isMusl "--disable-tls";
+  configureFlags  = []
+    # Indirectly: https://bugs.freedesktop.org/show_bug.cgi?id=35268
+    ++ lib.optional stdenv.hostPlatform.isMusl "--disable-tls"
+    # Remove when aarch64-darwin asm support is upstream: https://gitlab.freedesktop.org/glvnd/libglvnd/-/issues/216
+    ++ lib.optional (stdenv.hostPlatform.isDarwin && stdenv.hostPlatform.isAarch64) "--disable-asm";
 
   outputs = [ "out" "dev" ];
 
@@ -45,10 +52,19 @@ stdenv.mkDerivation rec {
 
   passthru = { inherit (addOpenGLRunpath) driverLink; };
 
-  meta = with stdenv.lib; {
+  meta = with lib; {
     description = "The GL Vendor-Neutral Dispatch library";
-    homepage = https://github.com/NVIDIA/libglvnd;
-    license = licenses.bsd2;
+    longDescription = ''
+      libglvnd is a vendor-neutral dispatch layer for arbitrating OpenGL API
+      calls between multiple vendors. It allows multiple drivers from different
+      vendors to coexist on the same filesystem, and determines which vendor to
+      dispatch each API call to at runtime.
+      Both GLX and EGL are supported, in any combination with OpenGL and OpenGL ES.
+    '';
+    inherit (src.meta) homepage;
+    # https://gitlab.freedesktop.org/glvnd/libglvnd#libglvnd:
+    license = with licenses; [ mit bsd1 bsd3 gpl3Only asl20 ];
     platforms = platforms.linux ++ platforms.darwin;
+    maintainers = with maintainers; [ primeos ];
   };
 }

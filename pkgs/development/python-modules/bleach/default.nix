@@ -2,32 +2,28 @@
 , buildPythonPackage
 , fetchPypi
 , pytest
-, pytestrunner
+, pytest-runner
 , six
 , html5lib
 , setuptools
+, packaging
 }:
 
 buildPythonPackage rec {
   pname = "bleach";
-  version = "3.1.0";
+  version = "3.3.0";
 
   src = fetchPypi {
     inherit pname version;
-    sha256 = "3fdf7f77adcf649c9911387df51254b813185e32b2c6619f690b593a617e19fa";
+    sha256 = "sha256-mLMXBznl6D3Z3BljPwdHJ62EjL7bYCZwjIrC07aXpDM=";
   };
 
-  checkInputs = [ pytest pytestrunner ];
-  propagatedBuildInputs = [ six html5lib setuptools ];
+  checkInputs = [ pytest pytest-runner ];
+  propagatedBuildInputs = [ packaging six html5lib setuptools ];
 
-  postPatch = ''
-    substituteInPlace setup.py --replace ",<3dev" ""
-  '';
-
-  # Disable a test
-  # https://github.com/mozilla/bleach/issues/467
+  # Disable network tests
   checkPhase = ''
-    pytest -k "not test_only_text_is_cleaned"
+    pytest -k "not protocols"
   '';
 
   meta = {
@@ -43,8 +39,8 @@ buildPythonPackage rec {
       to do lots of things, you're probably outside the use cases. Either
       trust those users, or don't.
     '';
-    homepage = https://github.com/mozilla/bleach;
-    downloadPage = https://github.com/mozilla/bleach/releases;
+    homepage = "https://github.com/mozilla/bleach";
+    downloadPage = "https://github.com/mozilla/bleach/releases";
     license = lib.licenses.asl20;
     maintainers = with lib.maintainers; [ prikhi ];
   };

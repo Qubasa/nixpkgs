@@ -1,10 +1,11 @@
-{ fetchurl, stdenv, fetchpatch }:
+{ fetchurl, lib, stdenv, fetchpatch }:
 
 stdenv.mkDerivation rec {
-  name = "nss-mdns-0.10";
+  pname = "nss-mdns";
+  version = "0.10";
 
   src = fetchurl {
-    url = "http://0pointer.de/lennart/projects/nss-mdns/${name}.tar.gz";
+    url = "http://0pointer.de/lennart/projects/nss-mdns/nss-mdns-${version}.tar.gz";
     sha256 = "0vgs6j0qsl0mwzh5a0m0bykr7x6bx79vnbyn0r3q289rghp3qs0y";
   };
 
@@ -20,7 +21,7 @@ stdenv.mkDerivation rec {
       "--localstatedir=/var"
     ];
 
-  patches = stdenv.lib.optional stdenv.hostPlatform.isMusl
+  patches = lib.optional stdenv.hostPlatform.isMusl
     (
       fetchpatch
       {
@@ -40,11 +41,11 @@ stdenv.mkDerivation rec {
       domain `.local'.
     '';
 
-    homepage = http://0pointer.de/lennart/projects/nss-mdns/;
-    license = stdenv.lib.licenses.lgpl2Plus;
+    homepage = "http://0pointer.de/lennart/projects/nss-mdns/";
+    license = lib.licenses.lgpl2Plus;
 
     # Supports both the GNU and FreeBSD NSS.
-    platforms = stdenv.lib.platforms.gnu ++ stdenv.lib.platforms.linux ++ stdenv.lib.platforms.freebsd;
+    platforms = lib.platforms.gnu ++ lib.platforms.linux ++ lib.platforms.freebsd;
 
     maintainers = [ ];
   };

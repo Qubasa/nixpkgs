@@ -1,12 +1,14 @@
-{ stdenv, callPackage, openssl, icu, enableNpm ? true }:
+{ callPackage, icu68, python2, lib, stdenv, enableNpm ? true }:
 
 let
-  buildNodejs = callPackage ./nodejs.nix { inherit openssl icu; };
+  buildNodejs = callPackage ./nodejs.nix {
+    icu = icu68;
+    python = python2;
+  };
 in
   buildNodejs {
     inherit enableNpm;
-    version = "12.13.0";
-    sha256 = "1xmy73q3qjmy68glqxmfrk6baqk655py0cic22h1h0v7rx0iaax8";
-
-    patches = stdenv.lib.optionals stdenv.isDarwin [ ./disable-libatomic-darwin-12_x.patch ];
+    version = "12.22.4";
+    sha256 = "0k6dwkhpmjcdb71zd92a5v0l82rsk06p57iyjby84lhy2fmlxka4";
+    patches = lib.optional stdenv.isDarwin ./bypass-xcodebuild.diff;
   }

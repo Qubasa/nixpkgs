@@ -1,25 +1,28 @@
-{ stdenv
+{ lib
 , buildPythonPackage
 , fetchPypi
+, h5py
 , nose
 }:
 
 buildPythonPackage rec {
-  version = "1.16.2";
+  version = "1.17.0";
   pname = "annoy";
 
   src = fetchPypi {
     inherit pname version;
-    sha256 = "41348e813fe7125eda3e2229a075eba3d065173ba6c5f20c545bb9c2932633fa";
+    sha256 = "9891e264041d1dcf3af42f67fbb16cb273c5404bc8c869d0915a3087f71d58dd";
   };
+
+  nativeBuildInputs = [ h5py ];
 
   checkInputs = [
     nose
   ];
 
-  meta = with stdenv.lib; {
+  meta = with lib; {
     description = "Approximate Nearest Neighbors in C++/Python optimized for memory usage and loading/saving to disk";
-    homepage = https://github.com/spotify/annoy;
+    homepage = "https://github.com/spotify/annoy";
     license = licenses.asl20;
     maintainers = with maintainers; [ timokau ];
   };

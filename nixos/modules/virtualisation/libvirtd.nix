@@ -7,15 +7,14 @@ let
   cfg = config.virtualisation.libvirtd;
   vswitch = config.virtualisation.vswitch;
   configFile = pkgs.writeText "libvirtd.conf" ''
-    unix_sock_group = "libvirtd"
-    unix_sock_rw_perms = "0770"
-    auth_unix_ro = "none"
-    auth_unix_rw = "none"
+    auth_unix_ro = "polkit"
+    auth_unix_rw = "polkit"
     ${cfg.extraConfig}
   '';
+  ovmfFilePrefix = if pkgs.stdenv.isAarch64 then "AAVMF" else "OVMF";
   qemuConfigFile = pkgs.writeText "qemu.conf" ''
     ${optionalString cfg.qemuOvmf ''
-      nvram = ["/run/libvirt/nix-ovmf/OVMF_CODE.fd:/run/libvirt/nix-ovmf/OVMF_VARS.fd"]
+      nvram = [ "/run/libvirt/nix-ovmf/${ovmfFilePrefix}_CODE.fd:/run/libvirt/nix-ovmf/${ovmfFilePrefix}_VARS.fd" ]
     ''}
     ${optionalString (!cfg.qemuRunAsRoot) ''
       user = "qemu-libvirtd"
@@ -27,6 +26,11 @@ let
   subDirs = list: [ dirName ] ++ map (e: "${dirName}/${e}") list;
 
 in {
+
+  imports = [
+    (mkRemovedOptionModule [ "virtualisation" "libvirtd" "enableKVM" ]
+      "Set the option `virtualisation.libvirtd.qemuPackage' instead.")
+  ];
 
   ###### interface
 
@@ -40,6 +44,15 @@ in {
         virtual machines. Users in the "libvirtd" group can interact with
         the daemon (e.g. to start or stop VMs) using the
         <command>virsh</command> command line tool, among others.
+      '';
+    };
+
+    package = mkOption {
+      type = types.package;
+      default = pkgs.libvirt;
+      defaultText = "pkgs.libvirt";
+      description = ''
+        libvirt package to use.
       '';
     };
 
@@ -111,7 +124,7 @@ in {
         Specifies the action to be done to / on the guests when the host boots.
         The "start" option starts all guests that were running prior to shutdown
         regardless of their autostart settings. The "ignore" option will not
-        start the formally running guest on boot. However, any guest marked as
+        start the formerly running guest on boot. However, any guest marked as
         autostart will still be automatically started by libvirtd.
       '';
     };
@@ -142,11 +155,19 @@ in {
 
   config = mkIf cfg.enable {
 
+    assertions = [
+      {
+        assertion = config.security.polkit.enable;
+        message = "The libvirtd module currently requires Polkit to be enabled ('security.polkit.enable = true').";
+      }
+    ];
+
     environment = {
       # this file is expected in /etc/qemu and not sysconfdir (/var/lib)
       etc."qemu/bridge.conf".text = lib.concatMapStringsSep "\n" (e:
         "allow ${e}") cfg.allowedBridges;
-      systemPackages = with pkgs; [ libvirt libressl.nc cfg.qemuPackage ];
+      systemPackages = with pkgs; [ libressl.nc iptables cfg.package cfg.qemuPackage ];
+      etc.ethertypes.source = "${pkgs.ebtables}/etc/ethertypes";
     };
 
     boot.kernelModules = [ "tun" ];
@@ -165,26 +186,26 @@ in {
       source = "/run/${dirName}/nix-helpers/qemu-bridge-helper";
     };
 
-    systemd.packages = [ pkgs.libvirt ];
+    systemd.packages = [ cfg.package ];
 
     systemd.services.libvirtd-config = {
       description = "Libvirt Virtual Machine Management Daemon - configuration";
       script = ''
         # Copy default libvirt network config .xml files to /var/lib
         # Files modified by the user will not be overwritten
-        for i in $(cd ${pkgs.libvirt}/var/lib && echo \
+        for i in $(cd ${cfg.package}/var/lib && echo \
             libvirt/qemu/networks/*.xml libvirt/qemu/networks/autostart/*.xml \
             libvirt/nwfilter/*.xml );
         do
             mkdir -p /var/lib/$(dirname $i) -m 755
-            cp -npd ${pkgs.libvirt}/var/lib/$i /var/lib/$i
+            cp -npd ${cfg.package}/var/lib/$i /var/lib/$i
         done
 
         # Copy generated qemu config to libvirt directory
         cp -f ${qemuConfigFile} /var/lib/${dirName}/qemu.conf
 
         # stable (not GC'able as in /nix/store) paths for using in <emulator> section of xml configs
-        for emulator in ${pkgs.libvirt}/libexec/libvirt_lxc ${cfg.qemuPackage}/bin/qemu-kvm ${cfg.qemuPackage}/bin/qemu-system-*; do
+        for emulator in ${cfg.package}/libexec/libvirt_lxc ${cfg.qemuPackage}/bin/qemu-kvm ${cfg.qemuPackage}/bin/qemu-system-*; do
           ln -s --force "$emulator" /run/${dirName}/nix-emulators/
         done
 
@@ -193,8 +214,8 @@ in {
         done
 
         ${optionalString cfg.qemuOvmf ''
-          ln -s --force ${pkgs.OVMF.fd}/FV/OVMF_CODE.fd /run/${dirName}/nix-ovmf/
-          ln -s --force ${pkgs.OVMF.fd}/FV/OVMF_VARS.fd /run/${dirName}/nix-ovmf/
+          ln -s --force ${pkgs.OVMF.fd}/FV/${ovmfFilePrefix}_CODE.fd /run/${dirName}/nix-ovmf/
+          ln -s --force ${pkgs.OVMF.fd}/FV/${ovmfFilePrefix}_VARS.fd /run/${dirName}/nix-ovmf/
         ''}
       '';
 
@@ -208,14 +229,14 @@ in {
     };
 
     systemd.services.libvirtd = {
-      description = "Libvirt Virtual Machine Management Daemon";
-
-      wantedBy = [ "multi-user.target" ];
       requires = [ "libvirtd-config.service" ];
-      after = [ "systemd-udev-settle.service" "libvirtd-config.service" ]
-              ++ optional vswitch.enable "vswitchd.service";
+      after = [ "libvirtd-config.service" ]
+              ++ optional vswitch.enable "ovs-vswitchd.service";
 
-      environment.LIBVIRTD_ARGS = ''--config "${configFile}" ${concatStringsSep " " cfg.extraOptions}'';
+      environment.LIBVIRTD_ARGS = escapeShellArgs (
+        [ "--config" configFile
+          "--timeout" "120"     # from ${libvirt}/var/lib/sysconfig/libvirtd
+        ] ++ cfg.extraOptions);
 
       path = [ cfg.qemuPackage ] # libvirtd requires qemu-img to manage disk images
              ++ optional vswitch.enable vswitch.package;
@@ -230,7 +251,7 @@ in {
 
     systemd.services.libvirt-guests = {
       wantedBy = [ "multi-user.target" ];
-      path = with pkgs; [ coreutils libvirt gawk ];
+      path = with pkgs; [ coreutils gawk cfg.package ];
       restartIfChanged = false;
 
       environment.ON_BOOT = "${cfg.onBoot}";
@@ -245,7 +266,7 @@ in {
 
     systemd.services.virtlogd = {
       description = "Virtual machine log manager";
-      serviceConfig.ExecStart = "@${pkgs.libvirt}/sbin/virtlogd virtlogd";
+      serviceConfig.ExecStart = "@${cfg.package}/sbin/virtlogd virtlogd";
       restartIfChanged = false;
     };
 
@@ -257,8 +278,20 @@ in {
 
     systemd.services.virtlockd = {
       description = "Virtual machine lock manager";
-      serviceConfig.ExecStart = "@${pkgs.libvirt}/sbin/virtlockd virtlockd";
+      serviceConfig.ExecStart = "@${cfg.package}/sbin/virtlockd virtlockd";
       restartIfChanged = false;
     };
+
+    # https://libvirt.org/daemons.html#monolithic-systemd-integration
+    systemd.sockets.libvirtd.wantedBy = [ "sockets.target" ];
+
+    security.polkit.extraConfig = ''
+      polkit.addRule(function(action, subject) {
+        if (action.id == "org.libvirt.unix.manage" &&
+          subject.isInGroup("libvirtd")) {
+          return polkit.Result.YES;
+        }
+      });
+    '';
   };
 }

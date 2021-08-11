@@ -1,26 +1,28 @@
 { lib
 , buildPythonPackage
+, pythonOlder
 , fetchFromGitHub
 , substituteAll
 , graphviz
 , makeFontsConf
 , freefont_ttf
 , mock
-, pytest
+, pytestCheckHook
 , pytest-mock
-, pytestcov
 }:
 
 buildPythonPackage rec {
   pname = "graphviz";
-  version = "0.10.1";
+  version = "0.17";
+
+  disabled = pythonOlder "3.6";
 
   # patch does not apply to PyPI tarball due to different line endings
   src = fetchFromGitHub {
     owner = "xflr6";
     repo = "graphviz";
     rev = version;
-    sha256 = "1vqk4xy45c72la56j24z9jmjp5a0aa2k32fybnlbkzqjvvbl72d8";
+    sha256 = "sha256-K6z2C7hQH2A9bqgRR4MRqxVAH/k2NQBEelb2/6KDUr0=";
   };
 
   patches = [
@@ -30,20 +32,24 @@ buildPythonPackage rec {
     })
   ];
 
-  # Fontconfig error: Cannot load default config file 
-  FONTCONFIG_FILE = makeFontsConf { 
-    fontDirectories = [ freefont_ttf ]; 
+  postPatch = ''
+    sed -i "/--cov/d" setup.cfg
+  '';
+
+  # Fontconfig error: Cannot load default config file
+  FONTCONFIG_FILE = makeFontsConf {
+    fontDirectories = [ freefont_ttf ];
   };
 
-  checkInputs = [ mock pytest pytest-mock pytestcov ];
+  checkInputs = [ mock pytestCheckHook pytest-mock ];
 
-  checkPhase = ''
-    pytest
+  preCheck = ''
+    export HOME=$TMPDIR
   '';
 
   meta = with lib; {
     description = "Simple Python interface for Graphviz";
-    homepage = https://github.com/xflr6/graphviz;
+    homepage = "https://github.com/xflr6/graphviz";
     license = licenses.mit;
     maintainers = with maintainers; [ dotlambda ];
   };

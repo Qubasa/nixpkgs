@@ -1,40 +1,48 @@
-{ lib
+{ stdenv
+, lib
 , buildPythonPackage
-, fetchFromGitHub
-, numpy
-, scipy
-, matplotlib
-, pandas
-, astropy
-, parfive
+, fetchPypi
 , pythonOlder
-, sqlalchemy
-, scikitimage
-, glymur
+, asdf
+, astropy
+, setuptools-scm
+, astropy-helpers
+, astropy-extension-helpers
 , beautifulsoup4
 , drms
-, python-dateutil
-, zeep
-, tqdm
-, asdf
-, astropy-helpers
+, glymur
+, h5netcdf
 , hypothesis
+, matplotlib
+, numpy
+, pandas
+, parfive
 , pytest-astropy
-, pytestcov
 , pytest-mock
+, pytest-cov
+, python-dateutil
+, scikitimage
+, scipy
+, sqlalchemy
+, towncrier
+, tqdm
+, zeep
 }:
 
 buildPythonPackage rec {
   pname = "sunpy";
-  version = "1.0.2";
+  version = "3.0.1";
   disabled = pythonOlder "3.6";
 
-  src = fetchFromGitHub {
-    owner = "sunpy";
-    repo = pname;
-    rev = "v${version}";
-    sha256 = "0dmfzxxsjjax9wf2ljyl4z07pxbshrj828zi5qnsa9rgk4148q9x";
+  src = fetchPypi {
+    inherit pname version;
+    sha256 = "sha256-WpqkCAwDYb6L+W4VTC/1auGVbblnNYwBxbk+tZbAiBw=";
   };
+
+  nativeBuildInputs = [
+    setuptools-scm
+    astropy-extension-helpers
+  ];
 
   propagatedBuildInputs = [
     numpy
@@ -43,9 +51,11 @@ buildPythonPackage rec {
     pandas
     astropy
     astropy-helpers
+    h5netcdf
     parfive
     sqlalchemy
     scikitimage
+    towncrier
     glymur
     beautifulsoup4
     drms
@@ -58,22 +68,25 @@ buildPythonPackage rec {
   checkInputs = [
     hypothesis
     pytest-astropy
-    pytestcov
+    pytest-cov
     pytest-mock
   ];
 
-  preBuild = ''
-    export SETUPTOOLS_SCM_PRETEND_VERSION="${version}"
-    export HOME=$(mktemp -d)
-  '';
+  # darwin has write permission issues
+  doCheck = stdenv.isLinux;
 
+  # ignore documentation tests and ignore tests with schema issues
   checkPhase = ''
-    pytest sunpy -k "not test_rotation"
+    PY_IGNORE_IMPORTMISMATCH=1 HOME=$(mktemp -d) pytest sunpy -k 'not rst' \
+    --deselect=sunpy/tests/tests/test_self_test.py::test_main_nonexisting_module \
+    --deselect=sunpy/tests/tests/test_self_test.py::test_main_stdlib_module \
+    --ignore=sunpy/io/special/asdf/schemas/sunpy.org/sunpy/coordinates/frames/heliocentric-1.0.0.yaml \
+    --ignore=sunpy/io/special/asdf/schemas/sunpy.org/sunpy/coordinates/frames/helioprojective-1.0.0.yaml
   '';
 
   meta = with lib; {
     description = "SunPy: Python for Solar Physics";
-    homepage = https://sunpy.org;
+    homepage = "https://sunpy.org";
     license = licenses.bsd2;
     maintainers = [ maintainers.costrouc ];
   };

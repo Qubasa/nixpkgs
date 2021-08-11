@@ -1,27 +1,27 @@
-{ stdenv, fetchFromGitHub, makeWrapper }:
+{ lib, stdenv, fetchFromGitHub, makeWrapper }:
 let
-  version = "0.8";
+  version = "0.10";
   name = "chibi-scheme-${version}";
 in
 stdenv.mkDerivation {
   inherit name;
 
   meta = {
-    homepage = https://github.com/ashinn/chibi-scheme;
+    homepage = "https://github.com/ashinn/chibi-scheme";
     description = "Small Footprint Scheme for use as a C Extension Language";
-    platforms = stdenv.lib.platforms.all;
-    license = stdenv.lib.licenses.bsd3;
-    maintainers = [ stdenv.lib.maintainers.DerGuteMoritz ];
+    platforms = lib.platforms.all;
+    license = lib.licenses.bsd3;
+    maintainers = [ lib.maintainers.DerGuteMoritz ];
   };
 
   src = fetchFromGitHub {
     owner = "ashinn";
     repo = "chibi-scheme";
     rev = version;
-    sha256 = "0269d5fhaz7nqjb41vh7yz63mp5s4z08fn4sspwc06z32xksigw9";
+    sha256 = "sha256-7vDxcnXhq1wJSLFHGxtwh+H+KWxh6B0JXSMPzSmQFXo=";
   };
 
-  buildInputs = [ makeWrapper ];
+  nativeBuildInputs = [ makeWrapper ];
 
   installPhase = ''
     make install PREFIX="$out"

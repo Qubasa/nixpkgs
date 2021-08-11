@@ -1,6 +1,7 @@
 { lib
 , buildPythonPackage
 , fetchPypi
+, isPy27
 , pytest
 , locket
 , numpy
@@ -11,11 +12,12 @@
 
 buildPythonPackage rec {
   pname = "partd";
-  version = "1.0.0";
+  version = "1.2.0";
+  disabled = isPy27;
 
   src = fetchPypi {
     inherit pname version;
-    sha256 = "54fd91bc3b9c38159c790cd16950dbca6b019a2ead4c51dee4f9efc884f8ce0e";
+    sha256 = "aa67897b84d522dcbc86a98b942afab8c6aa2f7f677d904a616b74ef5ddbc3eb";
   };
 
   checkInputs = [ pytest ];
@@ -30,6 +32,6 @@ buildPythonPackage rec {
   meta = {
     description = "Appendable key-value storage";
     license = with lib.licenses; [ bsd3 ];
-    homepage = https://github.com/dask/partd/;
+    homepage = "https://github.com/dask/partd/";
   };
 }

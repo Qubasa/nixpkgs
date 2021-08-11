@@ -1,4 +1,4 @@
-{ stdenv, fetchFromGitHub
+{ lib, stdenv, fetchFromGitHub
 , gcc-arm-embedded, binutils-arm-embedded, python2
 , skipTargets ? [
   # These targets do not build, for the reasons listed, along with the last version checked.
@@ -9,14 +9,10 @@
   "OMNINXT"    # 3.4.0-rc4: has not specified a valid STM group, must be one of F1, F3, F405, F411 or F7x5. Have you prepared a valid target.mk?
 ]}:
 
-let
-
-  version = "3.4.0-rc4";
-
-in stdenv.mkDerivation rec {
+stdenv.mkDerivation rec {
 
   pname = "betaflight";
-  inherit version;
+  version = "3.4.0-rc4";
 
   src = fetchFromGitHub {
     owner = "betaflight";
@@ -57,9 +53,9 @@ in stdenv.mkDerivation rec {
     runHook postInstall
   '';
 
-  meta = with stdenv.lib; {
+  meta = with lib; {
     description = "Flight controller software (firmware) used to fly multi-rotor craft and fixed wing craft";
-    homepage = https://github.com/betaflight/betaflight;
+    homepage = "https://github.com/betaflight/betaflight";
     license = licenses.gpl3;
     maintainers = with maintainers; [ elitak ];
     broken = true;

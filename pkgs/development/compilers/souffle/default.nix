@@ -1,4 +1,4 @@
-{ stdenv, fetchFromGitHub
+{ lib, stdenv, fetchFromGitHub
 , perl, ncurses, zlib, sqlite, libffi
 , autoreconfHook, mcpp, bison, flex, doxygen, graphviz
 , makeWrapper
@@ -6,17 +6,17 @@
 
 
 let
-  toolsPath = stdenv.lib.makeBinPath [ mcpp ];
+  toolsPath = lib.makeBinPath [ mcpp ];
 in
 stdenv.mkDerivation rec {
   pname = "souffle";
-  version = "1.6.1";
+  version = "2.0.2";
 
   src = fetchFromGitHub {
     owner  = "souffle-lang";
     repo   = "souffle";
     rev    = version;
-    sha256 = "004c5iicjnlzn1yz1k7a28s4xdqx00016rr870drdq2z30mxfgz8";
+    sha256 = "1fa6yssgndrln8qbbw2j7j199glxp63irfrz1c2y424rq82mm2r5";
   };
 
   nativeBuildInputs = [ autoreconfHook bison flex mcpp doxygen graphviz makeWrapper perl ];
@@ -43,9 +43,9 @@ stdenv.mkDerivation rec {
 
   outputs = [ "out" ];
 
-  meta = with stdenv.lib; {
+  meta = with lib; {
     description = "A translator of declarative Datalog programs into the C++ language";
-    homepage    = "http://souffle-lang.github.io/";
+    homepage    = "https://souffle-lang.github.io/";
     platforms   = platforms.unix;
     maintainers = with maintainers; [ thoughtpolice copumpkin wchresta ];
     license     = licenses.upl;

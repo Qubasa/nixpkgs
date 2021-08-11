@@ -1,4 +1,4 @@
-{ stdenv
+{ lib
 , buildPythonPackage
 , fetchPypi
 , python
@@ -8,18 +8,18 @@
 , pyfiglet
 , requests
 , arrow
-, dateutil
+, python-dateutil
 , pysocks
 , pocket
 }:
 
 buildPythonPackage rec {
   pname = "rainbowstream";
-  version = "1.4.0";
+  version = "1.5.2";
 
   src = fetchPypi {
     inherit pname version;
-    sha256 = "16881d8bb15416389eeaf4ceee7a588069060c216b55e7602dbcff5134feb7cc";
+    sha256 = "527d39778c55d88300fe2017913341bfa1b1f0ffdc1fe5eab57a82bf4cd2edb3";
   };
 
   patches = [ ./image.patch ];
@@ -42,9 +42,9 @@ buildPythonPackage rec {
     done
   '';
 
-  buildInputs =  [ pkgs.libjpeg pkgs.freetype pkgs.zlib pkgs.glibcLocales pillow twitter pyfiglet requests arrow dateutil pysocks pocket ];
+  buildInputs =  [ pkgs.libjpeg pkgs.freetype pkgs.zlib pkgs.glibcLocales pillow twitter pyfiglet requests arrow python-dateutil pysocks pocket ];
 
-  meta = with stdenv.lib; {
+  meta = with lib; {
     description = "Streaming command-line twitter client";
     homepage    = "http://www.rainbowstream.org/";
     license     = licenses.mit;

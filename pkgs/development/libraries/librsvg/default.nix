@@ -1,44 +1,79 @@
-{ lib, stdenv, fetchurl, pkgconfig, glib, gdk-pixbuf, pango, cairo, libxml2, libgsf
-, bzip2, libcroco, libintl, darwin, rustc, cargo, gnome3
-, vala, gobject-introspection }:
+{ lib
+, stdenv
+, fetchurl
+, pkg-config
+, glib
+, gdk-pixbuf
+, pango
+, cairo
+, libxml2
+, bzip2
+, libintl
+, ApplicationServices
+, Foundation
+, libobjc
+, rustc
+, cargo
+, gnome
+, vala
+, gobject-introspection
+, nixosTests
+}:
 
-let
-  pname = "librsvg";
-  version = "2.46.1";
-in
 stdenv.mkDerivation rec {
-  name = "${pname}-${version}";
-
-  src = fetchurl {
-    url = "mirror://gnome/sources/${pname}/${stdenv.lib.versions.majorMinor version}/${name}.tar.xz";
-    sha256 = "0hvnqrgfi8c2xh94gxs6xwwg1m2z3l0lblqs2anlx8k3g9ag589d";
-  };
+  pname = "librsvg";
+  version = "2.50.7";
 
   outputs = [ "out" "dev" "installedTests" ];
 
-  buildInputs = [ libxml2 libgsf bzip2 libcroco pango libintl ];
+  src = fetchurl {
+    url = "mirror://gnome/sources/${pname}/${lib.versions.majorMinor version}/${pname}-${version}.tar.xz";
+    sha256 = "//thsIzVKCqq4UegKzBRZqdCb60iqLlCdwjw8vxCbrw=";
+  };
 
-  propagatedBuildInputs = [ glib gdk-pixbuf cairo ];
+  nativeBuildInputs = [
+    pkg-config
+    rustc
+    cargo
+    vala
+    gobject-introspection
+  ] ++ lib.optionals stdenv.isDarwin [
+    ApplicationServices
+    Foundation
+  ];
 
-  nativeBuildInputs = [ pkgconfig rustc cargo vala gobject-introspection ]
-    ++ lib.optionals stdenv.isDarwin (with darwin.apple_sdk.frameworks; [
-      ApplicationServices
-    ]);
+  buildInputs = [
+    libxml2
+    bzip2
+    pango
+    libintl
+  ] ++ lib.optionals stdenv.isDarwin [
+    libobjc
+  ];
+
+  propagatedBuildInputs = [
+    glib
+    gdk-pixbuf
+    cairo
+  ];
 
   configureFlags = [
     "--enable-introspection"
+  ] ++ lib.optionals (!stdenv.isDarwin) [
+    # Vapi does not build on MacOS.
+    # https://github.com/NixOS/nixpkgs/pull/117081#issuecomment-827782004
     "--enable-vala"
+  ] ++ [
     "--enable-installed-tests"
     "--enable-always-build-tests"
-  ] ++ stdenv.lib.optional stdenv.isDarwin "--disable-Bsymbolic";
+  ] ++ lib.optional stdenv.isDarwin "--disable-Bsymbolic";
 
   makeFlags = [
-    "installed_test_metadir=$(installedTests)/share/installed-tests/RSVG"
-    "installed_testdir=$(installedTests)/libexec/installed-tests/RSVG"
+    "installed_test_metadir=${placeholder "installedTests"}/share/installed-tests/RSVG"
+    "installed_testdir=${placeholder "installedTests"}/libexec/installed-tests/RSVG"
   ];
 
-  NIX_CFLAGS_COMPILE
-    = stdenv.lib.optionalString stdenv.isDarwin "-I${cairo.dev}/include/cairo";
+  doCheck = false; # all tests fail on libtool-generated rsvg-convert not being able to find coreutils
 
   # It wants to add loaders and update the loaders.cache in gdk-pixbuf
   # Patching the Makefiles to it creates rsvg specific loaders and the
@@ -60,8 +95,6 @@ stdenv.mkDerivation rec {
         -i gdk-pixbuf-loader/librsvg.thumbnailer.in
   '';
 
-  doCheck = false; # fails 20 of 145 tests, very likely to be buggy
-
   # Merge gdkpixbuf and librsvg loaders
   postInstall = ''
     mv $GDK_PIXBUF/loaders.cache $GDK_PIXBUF/loaders.cache.tmp
@@ -70,16 +103,21 @@ stdenv.mkDerivation rec {
   '';
 
   passthru = {
-    updateScript = gnome3.updateScript {
+    updateScript = gnome.updateScript {
       packageName = pname;
+      versionPolicy = "odd-unstable";
+    };
+
+    tests = {
+      installedTests = nixosTests.installed-tests.librsvg;
     };
   };
 
-  meta = with stdenv.lib; {
+  meta = with lib; {
     description = "A small library to render SVG images to Cairo surfaces";
-    homepage = https://wiki.gnome.org/Projects/LibRsvg;
+    homepage = "https://wiki.gnome.org/Projects/LibRsvg";
     license = licenses.lgpl2Plus;
-    maintainers = gnome3.maintainers;
+    maintainers = teams.gnome.members;
     platforms = platforms.unix;
   };
 }

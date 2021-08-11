@@ -1,17 +1,17 @@
-{ stdenv, fetchFromGitHub, automake, autoconf, libtool, pkgconfig
-, libusb
+{ lib, stdenv, fetchFromGitHub, automake, autoconf, libtool, pkg-config
+, libusb1
 , readline
 }:
 
 stdenv.mkDerivation rec {
   pname = "libirecovery";
-  version = "2019-01-28";
+  version = "1.0.0";
 
   src = fetchFromGitHub {
     owner = "libimobiledevice";
     repo = pname;
-    rev = "5da2a0d7d60f79d93c283964888c6fbbc17be1a3";
-    sha256 = "0fqmr1h4b3qn608dn606y7aqv3bsm949gx72b5d6433xlw9b23n8";
+    rev = version;
+    sha256 = "0p9ncqnz5kb7qisw00ynvasw1hax5qx241h9nwppi2g544i9lbnr";
   };
 
   outputs = [ "out" "dev" ];
@@ -20,11 +20,11 @@ stdenv.mkDerivation rec {
     autoconf
     automake
     libtool
-    pkgconfig
+    pkg-config
   ];
 
   buildInputs = [
-    libusb
+    libusb1
     readline
   ];
 
@@ -38,8 +38,8 @@ stdenv.mkDerivation rec {
     ''--with-udevrule="OWNER=\"root\", GROUP=\"myusergroup\", MODE=\"0660\""''
   ];
 
-  meta = with stdenv.lib; {
-    homepage = https://github.com/libimobiledevice/libirecovery;
+  meta = with lib; {
+    homepage = "https://github.com/libimobiledevice/libirecovery";
     description = "Library and utility to talk to iBoot/iBSS via USB on Mac OS X, Windows, and Linux";
     longDescription = ''
       libirecovery is a cross-platform library which implements communication to
@@ -48,7 +48,7 @@ stdenv.mkDerivation rec {
     '';
     license = licenses.lgpl21;
     # Upstream description says it works on more platforms, but packager hasn't tried that yet
-    platforms = platforms.linux;
+    platforms = platforms.linux ++ platforms.darwin;
     maintainers = with maintainers; [ nh2 ];
   };
 }

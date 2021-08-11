@@ -1,34 +1,13 @@
-{ lib, python3 }:
+{ lib, python3Packages }:
 
-# Flexget have been a trouble maker in the past,
-# if you see flexget breaking when updating packages, don't worry.
-# The current state is that we have no active maintainers for this package.
-# -- Mic92
+python3Packages.buildPythonApplication rec {
+  pname = "flexget";
+  version = "3.1.133";
 
-let
-  python' = python3.override { inherit packageOverrides; };
-
-  packageOverrides = self: super: {
-    guessit = super.guessit.overridePythonAttrs (old: rec {
-      version = "3.0.3";
-      src = old.src.override {
-        inherit version;
-        sha256 = "1q06b3k31bfb8cxjimpf1rkcrwnc596a9cppjw15minvdangl32r";
-      };
-    });
-  };
-
-in
-
-with python'.pkgs;
-
-buildPythonApplication rec {
-  pname = "FlexGet";
-  version = "2.21.25";
-
-  src = fetchPypi {
-    inherit pname version;
-    sha256 = "0l77fgg0w5dca1bwk4fcc1yz1g7njb0x07yx4bazyg821gl15rc9";
+  src = python3Packages.fetchPypi {
+    pname = "FlexGet";
+    inherit version;
+    sha256 = "1mfmy2nbxx9k6hnhwxpf2062rwspigfhbvkpr161grd5amcs2cr6";
   };
 
   postPatch = ''
@@ -43,29 +22,49 @@ buildPythonApplication rec {
   # ~400 failures
   doCheck = false;
 
-  propagatedBuildInputs = [
+  propagatedBuildInputs = with python3Packages; [
     # See https://github.com/Flexget/Flexget/blob/master/requirements.in
-    feedparser sqlalchemy pyyaml
-    beautifulsoup4 html5lib
-    PyRSS2Gen pynzb rpyc jinja2
-    requests dateutil jsonschema
-    pathpy guessit rebulk APScheduler
-    terminaltables colorclass
-    cherrypy flask flask-restful
-    flask-restplus flask-compress
-    flask_login flask-cors
-    pyparsing zxcvbn future
+    APScheduler
+    beautifulsoup4
+    cherrypy
+    colorama
+    colorclass
+    feedparser
+    flask-compress
+    flask-cors
+    flask_login
+    flask-restful
+    flask-restx
+    flask
+    greenlet
+    guessit
+    html5lib
+    jinja2
+    jsonschema
+    loguru
+    more-itertools
     progressbar
-    # Optional requirements
-    deluge-client
-    # Plugins
-    transmissionrpc
-  ] ++ lib.optional (pythonOlder "3.4") pathlib;
+    pynzb
+    pyparsing
+    PyRSS2Gen
+    python-dateutil
+    pyyaml
+    rebulk
+    requests
+    rpyc
+    sgmllib3k
+    sqlalchemy
+    terminaltables
+    zxcvbn
+    psutil
+    # plugins
+    transmission-rpc
+  ];
 
   meta = with lib; {
-    homepage    = https://flexget.com/;
-    description = "Multipurpose automation tool for content like torrents";
-    license     = licenses.mit;
-    maintainers = with maintainers; [ ];
+    homepage = "https://flexget.com/";
+    description = "Multipurpose automation tool for all of your media";
+    license = licenses.mit;
+    maintainers = with maintainers; [ marsam ];
   };
 }

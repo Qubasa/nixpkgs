@@ -4,12 +4,11 @@ with python3;
 
 pkgs.buildPythonApplication rec {
   pname = "pypi2nix";
-  version = "2.0.0";
+  version = "2.0.4";
   src = pkgs.fetchPypi {
     inherit pname version;
-    sha256 = "0w9z07kdnfs96230jag8xgz4wx337bb3q3bvqxn3r31x8fsmz6rr";
+    sha256 = "0y4zkkcijz5hchd8j6a106ysrg1dnad7dzdgnmz38rgm6zbrky0d";
   };
-  checkInputs = with pkgs; [ pytest ];
   propagatedBuildInputs = with pkgs; [
     attrs
     click
@@ -19,6 +18,8 @@ pkgs.buildPythonApplication rec {
     parsley
     setuptools
     toml
+    jsonschema
   ];
-  checkPhase = "${python3.interpreter} -m pytest unittests -m 'not nix'";
+  # https://github.com/nix-community/pypi2nix/issues/460
+  meta.broken = true;
 }

@@ -1,18 +1,18 @@
-{ stdenv, buildPythonPackage, fetchPypi
+{ lib, buildPythonPackage, fetchPypi
 , capstone}:
 
 buildPythonPackage rec {
   pname = "ROPGadget";
-  version = "5.8";
+  version = "6.5";
 
   src = fetchPypi {
     inherit pname version;
-    sha256 = "184qncm2ss474prphw0xnf7ifkpgj955dzlb2vqq94z6xvf3xyd9";
+    sha256 = "4c0e56f2ba0aef13b2c8ca286aad663525b92020b11bacd16791f5236247905c";
   };
 
   propagatedBuildInputs = [ capstone ];
 
-  meta = with stdenv.lib; {
+  meta = with lib; {
     description = "Tool to search for gadgets in binaries to facilitate ROP exploitation";
     homepage = "http://shell-storm.org/project/ROPgadget/";
     license = licenses.bsd3;

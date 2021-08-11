@@ -1,4 +1,4 @@
-{ stdenv
+{ lib, stdenv
 , rtpPath ? "share/vim-plugins"
 , vim
 }:
@@ -18,7 +18,7 @@ rec {
     buildPhase ? "",
     preInstall ? "",
     postInstall ? "",
-    path ? (builtins.parseDrvName name).name,
+    path ? lib.getName name,
     addonInfo ? null,
     ...
   }:
@@ -54,6 +54,7 @@ rec {
     }));
 
   buildVimPluginFrom2Nix = attrs: buildVimPlugin ({
+    # vim plugins may override this
     buildPhase = ":";
     configurePhase =":";
   } // attrs);

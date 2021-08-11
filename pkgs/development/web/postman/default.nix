@@ -1,17 +1,17 @@
-{ stdenv, fetchurl, makeDesktopItem, wrapGAppsHook
-, atk, at-spi2-atk, alsaLib, cairo, cups, dbus, expat, gdk-pixbuf, glib, gtk3
-, freetype, fontconfig, nss, nspr, pango, udev, libX11, libxcb, libXi
+{ lib, stdenv, fetchurl, makeDesktopItem, wrapGAppsHook
+, atk, at-spi2-atk, at-spi2-core, alsa-lib, cairo, cups, dbus, expat, gdk-pixbuf, glib, gtk3
+, freetype, fontconfig, nss, nspr, pango, udev, libuuid, libX11, libxcb, libXi
 , libXcursor, libXdamage, libXrandr, libXcomposite, libXext, libXfixes
-, libXrender, libXtst, libXScrnSaver
+, libXrender, libXtst, libXScrnSaver, libdrm, mesa
 }:
 
 stdenv.mkDerivation rec {
   pname = "postman";
-  version = "7.9.0";
+  version = "8.4.0";
 
   src = fetchurl {
     url = "https://dl.pstmn.io/download/version/${version}/linux64";
-    sha256 = "0qgw3mvds99ca1gy0zfxzi7n1yxv99xwqgzr9rkx5qm6bw9c1ppw";
+    sha256 = "040l0g6m8lmjrm0wvq8z13xyddasz7v95v54d658w14gv0n713vw";
     name = "${pname}.tar.gz";
   };
 
@@ -25,14 +25,15 @@ stdenv.mkDerivation rec {
     comment = "API Development Environment";
     desktopName = "Postman";
     genericName = "Postman";
-    categories = "Application;Development;";
+    categories = "Development;";
   };
 
   buildInputs = [
     stdenv.cc.cc.lib
     atk
     at-spi2-atk
-    alsaLib
+    at-spi2-core
+    alsa-lib
     cairo
     cups
     dbus
@@ -42,10 +43,13 @@ stdenv.mkDerivation rec {
     gtk3
     freetype
     fontconfig
+    mesa
     nss
     nspr
     pango
     udev
+    libdrm
+    libuuid
     libX11
     libxcb
     libXi
@@ -86,13 +90,13 @@ stdenv.mkDerivation rec {
     patchelf --set-interpreter "$(cat $NIX_CC/nix-support/dynamic-linker)" _Postman
     for file in $(find . -type f \( -name \*.node -o -name _Postman -o -name \*.so\* \) ); do
       ORIGIN=$(patchelf --print-rpath $file); \
-      patchelf --set-rpath "${stdenv.lib.makeLibraryPath buildInputs}:$ORIGIN" $file
+      patchelf --set-rpath "${lib.makeLibraryPath buildInputs}:$ORIGIN" $file
     done
     popd
   '';
 
-  meta = with stdenv.lib; {
-    homepage = https://www.getpostman.com;
+  meta = with lib; {
+    homepage = "https://www.getpostman.com";
     description = "API Development Environment";
     license = licenses.postman;
     platforms = [ "x86_64-linux" ];

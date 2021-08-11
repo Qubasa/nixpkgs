@@ -1,4 +1,4 @@
-{ stdenv, fetchgit, makeWrapper
+{ lib, stdenv, fetchgit, makeWrapper
 , surf, wmctrl, matchbox, xdotool, unclutter
 , xorg, pulseaudio, xprintidle-ng }:
 
@@ -38,12 +38,16 @@ stdenv.mkDerivation rec {
 
     patchShebangs $out/bin/surf-display
     wrapProgram $out/bin/surf-display \
-       --prefix PATH ':' ${stdenv.lib.makeBinPath buildInputs}
+       --prefix PATH ':' ${lib.makeBinPath buildInputs}
   '';
 
   makeFlags = [ "PREFIX=${placeholder "out"}" ];
 
-  meta = with stdenv.lib; {
+  passthru = {
+    providedSessions = [ "surf-display" ];
+  };
+
+  meta = with lib; {
     description = "Kiosk browser session manager based on the surf browser";
     homepage = "https://code.it-zukunft-schule.de/cgit/surf-display/";
     maintainers = with maintainers; [ etu ];

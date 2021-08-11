@@ -1,7 +1,8 @@
-{ stdenv
+{ lib, stdenv
 , fetchFromGitHub
+, nix-update-script
 , cmake
-, pkgconfig
+, pkg-config
 , vala_0_40
 , pantheon
 , curl
@@ -32,7 +33,7 @@ stdenv.mkDerivation rec {
   nativeBuildInputs = [
     cmake
     vala_0_40 # https://github.com/davidmhewitt/torrential/issues/135
-    pkgconfig
+    pkg-config
     wrapGAppsHook
   ];
 
@@ -50,10 +51,16 @@ stdenv.mkDerivation rec {
     pantheon.granite
   ];
 
-  meta = with stdenv.lib; {
+  passthru = {
+    updateScript = nix-update-script {
+      attrPath = pname;
+    };
+  };
+
+  meta = with lib; {
     description = "Download torrents in style with this speedy, minimalist torrent client for elementary OS";
-    homepage = https://github.com/davidmhewitt/torrential;
-    maintainers = with maintainers; [ kjuvi ] ++ pantheon.maintainers;
+    homepage = "https://github.com/davidmhewitt/torrential";
+    maintainers = with maintainers; [ xiorcale ] ++ pantheon.maintainers;
     platforms = platforms.linux;
     license = licenses.gpl3;
   };

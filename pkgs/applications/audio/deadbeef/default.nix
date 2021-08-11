@@ -1,9 +1,9 @@
-{ config, stdenv, fetchFromGitHub
+{ config, lib, stdenv, fetchFromGitHub
 , autoconf
 , automake
 , libtool
 , intltool
-, pkgconfig
+, pkg-config
 , jansson
 # deadbeef can use either gtk2 or gtk3
 , gtk2Support ? false, gtk2 ? null
@@ -25,7 +25,7 @@
 , hotkeysSupport ? true, libX11 ? null
 , osdSupport ? true, dbus ? null
 # output plugins
-, alsaSupport ? true, alsaLib ? null
+, alsaSupport ? true, alsa-lib ? null
 , pulseSupport ? config.pulseaudio or stdenv.isLinux, libpulseaudio ? null
 # effect plugins
 , resamplerSupport ? true, libsamplerate ? null
@@ -50,7 +50,7 @@ assert apeSupport -> yasm != null;
 assert artworkSupport -> imlib2 != null;
 assert hotkeysSupport -> libX11 != null;
 assert osdSupport -> dbus != null;
-assert alsaSupport -> alsaLib != null;
+assert alsaSupport -> alsa-lib != null;
 assert pulseSupport -> libpulseaudio != null;
 assert resamplerSupport -> libsamplerate != null;
 assert overloadSupport -> zlib != null;
@@ -59,23 +59,16 @@ assert remoteSupport -> curl != null;
 
 stdenv.mkDerivation rec {
   pname = "deadbeef";
-  version = "1.8.0";
+  version = "1.8.4";
 
   src = fetchFromGitHub {
     owner = "DeaDBeeF-Player";
     repo = "deadbeef";
     rev = version;
-    sha256 = "126i5qlkpv7pvi1mmc9y0jhqs6jjspsj7j615n2ddvsb2jsps81c";
+    sha256 = "161b0ll8v4cjgwwmk137hzvh0jidlkx56vjkpnr70f0x4jzv2nll";
   };
 
-  patches = [
-    # Fix broken symbol name
-    # https://github.com/NixOS/nixpkgs/pull/59187#issuecomment-480977993
-    # will be fixed in deadbeef 1.8.1
-    ./fix-wildmidi.patch
-  ];
-
-  buildInputs = with stdenv.lib; [ jansson ]
+  buildInputs = with lib; [ jansson ]
     ++ optional gtk2Support gtk2
     ++ optionals gtk3Support [ gtk3 gsettings-desktop-schemas ]
     ++ optional vorbisSupport libvorbis
@@ -91,7 +84,7 @@ stdenv.mkDerivation rec {
     ++ optional artworkSupport imlib2
     ++ optional hotkeysSupport libX11
     ++ optional osdSupport dbus
-    ++ optional alsaSupport alsaLib
+    ++ optional alsaSupport alsa-lib
     ++ optional pulseSupport libpulseaudio
     ++ optional resamplerSupport libsamplerate
     ++ optional overloadSupport zlib
@@ -104,8 +97,8 @@ stdenv.mkDerivation rec {
     automake
     intltool
     libtool
-    pkgconfig
-  ] ++ stdenv.lib.optional gtk3Support wrapGAppsHook;
+    pkg-config
+  ] ++ lib.optional gtk3Support wrapGAppsHook;
 
   enableParallelBuilding = true;
 
@@ -113,9 +106,9 @@ stdenv.mkDerivation rec {
     ./autogen.sh
   '';
 
-  meta = with stdenv.lib; {
+  meta = with lib; {
     description = "Ultimate Music Player for GNU/Linux";
-    homepage = http://deadbeef.sourceforge.net/;
+    homepage = "http://deadbeef.sourceforge.net/";
     license = licenses.gpl2;
     platforms = [ "x86_64-linux" "i686-linux" ];
     maintainers = [ maintainers.abbradar ];

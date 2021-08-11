@@ -2,6 +2,7 @@
 with lib;
 let
   cfg = config.services.jenkins;
+  jenkinsUrl = "http://${cfg.listenAddress}:${toString cfg.port}${cfg.prefix}";
 in {
   options = {
     services.jenkins = {
@@ -60,7 +61,7 @@ in {
 
       port = mkOption {
         default = 8080;
-        type = types.int;
+        type = types.port;
         description = ''
           Specifies port number on which the jenkins HTTP interface listens.
           The default is 8080.
@@ -86,8 +87,8 @@ in {
       };
 
       packages = mkOption {
-        default = [ pkgs.stdenv pkgs.git pkgs.jdk config.programs.ssh.package pkgs.nix ];
-        defaultText = "[ pkgs.stdenv pkgs.git pkgs.jdk config.programs.ssh.package pkgs.nix ]";
+        default = [ pkgs.stdenv pkgs.git pkgs.jdk11 config.programs.ssh.package pkgs.nix ];
+        defaultText = "[ pkgs.stdenv pkgs.git pkgs.jdk11 config.programs.ssh.package pkgs.nix ]";
         type = types.listOf types.package;
         description = ''
           Packages to add to PATH for the jenkins process.
@@ -141,29 +142,49 @@ in {
           Additional command line arguments to pass to the Java run time (as opposed to Jenkins).
         '';
       };
+
+      withCLI = mkOption {
+        type = types.bool;
+        default = false;
+        description = ''
+          Whether to make the CLI available.
+
+          More info about the CLI available at
+          <link xlink:href="https://www.jenkins.io/doc/book/managing/cli">
+          https://www.jenkins.io/doc/book/managing/cli</link> .
+        '';
+      };
     };
   };
 
   config = mkIf cfg.enable {
-    # server references the dejavu fonts
-    environment.systemPackages = [
-      pkgs.dejavu_fonts
-    ];
+    environment = {
+      # server references the dejavu fonts
+      systemPackages = [
+        pkgs.dejavu_fonts
+      ] ++ optional cfg.withCLI cfg.package;
 
-    users.groups = optional (cfg.group == "jenkins") {
-      name = "jenkins";
-      gid = config.ids.gids.jenkins;
+      variables = {}
+        // optionalAttrs cfg.withCLI {
+          # Make it more convenient to use the `jenkins-cli`.
+          JENKINS_URL = jenkinsUrl;
+        };
     };
 
-    users.users = optional (cfg.user == "jenkins") {
-      name = "jenkins";
-      description = "jenkins user";
-      createHome = true;
-      home = cfg.home;
-      group = cfg.group;
-      extraGroups = cfg.extraGroups;
-      useDefaultShell = true;
-      uid = config.ids.uids.jenkins;
+    users.groups = optionalAttrs (cfg.group == "jenkins") {
+      jenkins.gid = config.ids.gids.jenkins;
+    };
+
+    users.users = optionalAttrs (cfg.user == "jenkins") {
+      jenkins = {
+        description = "jenkins user";
+        createHome = true;
+        home = cfg.home;
+        group = cfg.group;
+        extraGroups = cfg.extraGroups;
+        useDefaultShell = true;
+        uid = config.ids.uids.jenkins;
+      };
     };
 
     systemd.services.jenkins = {
@@ -207,7 +228,7 @@ in {
 
       # For reference: https://wiki.jenkins.io/display/JENKINS/JenkinsLinuxStartupScript
       script = ''
-        ${pkgs.jdk}/bin/java ${concatStringsSep " " cfg.extraJavaOptions} -jar ${cfg.package}/webapps/jenkins.war --httpListenAddress=${cfg.listenAddress} \
+        ${pkgs.jdk11}/bin/java ${concatStringsSep " " cfg.extraJavaOptions} -jar ${cfg.package}/webapps/jenkins.war --httpListenAddress=${cfg.listenAddress} \
                                                   --httpPort=${toString cfg.port} \
                                                   --prefix=${cfg.prefix} \
                                                   -Djava.awt.headless=true \
@@ -215,7 +236,7 @@ in {
       '';
 
       postStart = ''
-        until [[ $(${pkgs.curl.bin}/bin/curl -L -s --head -w '\n%{http_code}' http://${cfg.listenAddress}:${toString cfg.port}${cfg.prefix} | tail -n1) =~ ^(200|403)$ ]]; do
+        until [[ $(${pkgs.curl.bin}/bin/curl -L -s --head -w '\n%{http_code}' ${jenkinsUrl} | tail -n1) =~ ^(200|403)$ ]]; do
           sleep 1
         done
       '';

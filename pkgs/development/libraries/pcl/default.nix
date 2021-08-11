@@ -1,34 +1,61 @@
-{ stdenv, fetchFromGitHub, cmake
-, qhull, flann, boost, vtk, eigen, pkgconfig, qtbase
-, libusb1, libpcap, libXt, libpng, Cocoa, AGL, OpenGL
+{ lib
+, stdenv
+, fetchFromGitHub
+, wrapQtAppsHook
+, cmake
+, qhull
+, flann
+, boost
+, vtk
+, eigen
+, pkg-config
+, qtbase
+, libusb1
+, libpcap
+, libXt
+, libpng
+, Cocoa
+, AGL
+, OpenGL
+, withCuda ? false, cudatoolkit
 }:
 
 stdenv.mkDerivation rec {
-  name = "pcl-1.9.1";
+  pname = "pcl";
+  version = "1.12.0";
 
   src = fetchFromGitHub {
     owner = "PointCloudLibrary";
     repo = "pcl";
-    rev = name;
-    sha256 = "0g0am3bf14sadfw231l5nmf5d2g1p9i7yq12c6q8rl7nw501ny9j";
+    rev = "${pname}-${version}";
+    sha256 = "0jhvciaw43y6iqqk7hyxnfhn1b4bsw5fpy04s01r5pkcsjjbdbqc";
   };
 
-  enableParallelBuilding = true;
+  nativeBuildInputs = [ pkg-config cmake wrapQtAppsHook ];
+  buildInputs = [
+    qhull
+    flann
+    boost
+    eigen
+    libusb1
+    libpcap
+    libpng
+    vtk
+    qtbase
+    libXt
+  ]
+  ++ lib.optionals stdenv.isDarwin [ Cocoa AGL ]
+  ++ lib.optionals withCuda [ cudatoolkit ];
 
-  nativeBuildInputs = [ pkgconfig cmake ];
-  buildInputs = [ qhull flann boost eigen libusb1 libpcap
-                  libpng vtk qtbase libXt ]
-    ++ stdenv.lib.optionals stdenv.isDarwin [ Cocoa AGL ];
-
-  cmakeFlags = stdenv.lib.optionals stdenv.isDarwin [
+  cmakeFlags = lib.optionals stdenv.isDarwin [
     "-DOPENGL_INCLUDE_DIR=${OpenGL}/Library/Frameworks"
-  ];
+  ] ++ lib.optionals withCuda [ "-DWITH_CUDA=true" ];
 
   meta = {
-    homepage = http://pointclouds.org/;
+    homepage = "https://pointclouds.org/";
     description = "Open project for 2D/3D image and point cloud processing";
-    license = stdenv.lib.licenses.bsd3;
-    maintainers = with stdenv.lib.maintainers; [viric];
-    platforms = with stdenv.lib.platforms; linux ++ darwin;
+    license = lib.licenses.bsd3;
+    maintainers = with lib.maintainers; [ viric ];
+    platforms = with lib.platforms; linux ++ darwin;
   };
 }

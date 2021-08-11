@@ -1,11 +1,9 @@
-{ stdenv
-, lib
+{ lib
 , buildPythonPackage
 , fetchPypi
 , argcomplete
 , colorama
 , jmespath
-, knack
 , pygments
 , pyyaml
 , six
@@ -17,11 +15,11 @@
 
 buildPythonPackage rec {
   pname = "knack";
-  version = "0.6.3";
+  version = "0.8.2";
 
   src = fetchPypi {
     inherit pname version;
-    sha256 = "08g15kwfppdr7vhbsg6qclpqbf11d9k3hwgrmvhh5fa1jrk95b5i";
+    sha256 = "4eaa50a1c5e79d1c5c8e5e1705b661721b0b83a089695e59e229cc26c64963b9";
   };
 
   propagatedBuildInputs = [
@@ -45,7 +43,7 @@ buildPythonPackage rec {
   '';
 
   meta = with lib; {
-    homepage = https://github.com/microsoft/knack;
+    homepage = "https://github.com/microsoft/knack";
     description = "A Command-Line Interface framework";
     platforms = platforms.all;
     license = licenses.mit;

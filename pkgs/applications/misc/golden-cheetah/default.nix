@@ -1,7 +1,7 @@
-{ stdenv, fetchFromGitHub, mkDerivation
-, qtbase, qtsvg, qtserialport, qtwebkit, qtmultimedia, qttools
-, qtconnectivity, qtcharts
-, yacc, flex, zlib, qmake, makeDesktopItem, makeWrapper
+{ lib, fetchFromGitHub, fetchpatch, mkDerivation
+, qtbase, qtsvg, qtserialport, qtwebengine, qtmultimedia, qttools
+, qtconnectivity, qtcharts, libusb-compat-0_1, gsl, blas
+, bison, flex, zlib, qmake, makeDesktopItem, makeWrapper
 }:
 
 let
@@ -12,33 +12,45 @@ let
     desktopName = "GoldenCheetah";
     genericName = "GoldenCheetah";
     comment = "Performance software for cyclists, runners and triathletes";
-    categories = "Application;Utility;";
+    categories = "Utility;";
   };
 in mkDerivation rec {
   pname = "golden-cheetah";
-  version = "3.5-DEV1903";
+  version = "3.6-DEV2107";
 
   src = fetchFromGitHub {
     owner = "GoldenCheetah";
     repo = "GoldenCheetah";
     rev = "v${version}";
-    sha256 = "130b0hm04i0hf97rs1xrdfhbal5vjsknj3x4cdxjh7rgbg2p1sm3";
+    sha256 = "1d54x3pv27w1ys2f5l7gnfhyijhgcgdjnq1c1mj7hvg35dmh054d";
   };
 
   buildInputs = [
-    qtbase qtsvg qtserialport qtwebkit qtmultimedia qttools zlib
-    qtconnectivity qtcharts
+    qtbase qtsvg qtserialport qtwebengine qtmultimedia qttools zlib
+    qtconnectivity qtcharts libusb-compat-0_1 gsl blas
   ];
-  nativeBuildInputs = [ flex makeWrapper qmake yacc ];
+  nativeBuildInputs = [ flex makeWrapper qmake bison ];
 
-  NIX_LDFLAGS = [ "-lz" ];
+  patches = [
+    # allow building with bison 3.7
+    # PR at https://github.com/GoldenCheetah/GoldenCheetah/pull/3590
+    (fetchpatch {
+      url = "https://github.com/GoldenCheetah/GoldenCheetah/commit/e1f42f8b3340eb4695ad73be764332e75b7bce90.patch";
+      sha256 = "1h0y9vfji5jngqcpzxna5nnawxs77i1lrj44w8a72j0ah0sznivb";
+    })
+  ];
 
-  qtWrapperArgs = [ "--set LD_LIBRARY_PATH ${zlib.out}/lib" ];
+  NIX_LDFLAGS = "-lz -lgsl -lblas";
+
+  qtWrapperArgs = [ "--prefix" "LD_LIBRARY_PATH" ":" "${zlib.out}/lib" ];
 
   preConfigure = ''
     cp src/gcconfig.pri.in src/gcconfig.pri
     cp qwt/qwtconfig.pri.in qwt/qwtconfig.pri
     echo 'QMAKE_LRELEASE = ${qttools.dev}/bin/lrelease' >> src/gcconfig.pri
+    echo 'LIBUSB_INSTALL = ${libusb-compat-0_1}' >> src/gcconfig.pri
+    echo 'LIBUSB_INCLUDE = ${libusb-compat-0_1.dev}/include' >> src/gcconfig.pri
+    echo 'LIBUSB_LIBS = -L${libusb-compat-0_1}/lib -lusb' >> src/gcconfig.pri
     sed -i -e '21,23d' qwt/qwtconfig.pri # Removed forced installation to /usr/local
   '';
 
@@ -53,13 +65,10 @@ in mkDerivation rec {
     runHook postInstall
   '';
 
-  # RCC: Error in 'Resources/application.qrc': Cannot find file 'translations/gc_fr.qm'
-  enableParallelBuilding = false;
-
-  meta = with stdenv.lib; {
+  meta = with lib; {
     description = "Performance software for cyclists, runners and triathletes";
     platforms = platforms.linux;
-    maintainers = [ maintainers.ocharles ];
-    license = licenses.gpl3;
+    maintainers = [ ];
+    license = licenses.gpl2Plus;
   };
 }

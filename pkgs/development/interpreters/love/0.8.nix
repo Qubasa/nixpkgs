@@ -1,5 +1,5 @@
-{ stdenv, fetchurl, pkgconfig
-, SDL, libGLU_combined, openal, lua
+{ lib, stdenv, fetchurl, pkg-config
+, SDL, libGLU, libGL, openal, lua
 , libdevil, freetype, physfs
 , libmodplug, mpg123, libvorbis, libogg
 }:
@@ -13,9 +13,9 @@ stdenv.mkDerivation rec {
     sha256 = "1k4fcsa8zzi04ja179bmj24hvqcbm3icfvrvrzyz2gw9qwfclrwi";
   };
 
-  nativeBuildInputs = [ pkgconfig ];
+  nativeBuildInputs = [ pkg-config ];
   buildInputs = [
-    SDL libGLU_combined openal lua
+    SDL libGLU libGL openal lua
     libdevil freetype physfs libmodplug mpg123 libvorbis libogg
   ];
 
@@ -38,7 +38,7 @@ stdenv.mkDerivation rec {
     } || true
   '';
 
-  NIX_CFLAGS_COMPILE = [
+  NIX_CFLAGS_COMPILE = toString [
     "-I${SDL.dev}/include/SDL"
     "-I${freetype.dev}include/freetype2"
     "-DGL_GLEXT_PROTOTYPES" # https://community.khronos.org/t/glgenbuffers-was-not-declared-in-this-scope/59283/2
@@ -47,9 +47,9 @@ stdenv.mkDerivation rec {
   meta = {
     homepage = "http://love2d.org";
     description = "A Lua-based 2D game engine/scripting language";
-    license = stdenv.lib.licenses.zlib;
+    license = lib.licenses.zlib;
 
-    platforms = stdenv.lib.platforms.linux;
-    maintainers = [ stdenv.lib.maintainers.raskin ];
+    platforms = lib.platforms.linux;
+    maintainers = [ lib.maintainers.raskin ];
   };
 }

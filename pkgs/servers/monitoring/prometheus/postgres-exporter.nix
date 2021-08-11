@@ -1,22 +1,26 @@
-{ lib, buildGoPackage, fetchFromGitHub }:
+{ lib, buildGoModule, fetchFromGitHub, nixosTests }:
 
-buildGoPackage rec {
+buildGoModule rec {
   pname = "postgres_exporter";
-  version = "0.6.0";
-
-  goPackagePath = "github.com/wrouesnel/postgres_exporter";
+  version = "0.10.0";
 
   src = fetchFromGitHub {
     owner = "wrouesnel";
     repo = "postgres_exporter";
     rev = "v${version}";
-    sha256 = "0a903mklp3aardlbz5fkslisav9khd1w3akcf9xkc5nfinr6xnqb";
+    sha256 = "sha256-QU/pPw0gOHF5SAET8S/v7nTPyEvBqkxwwGQ42PbQNvw=";
   };
+
+  vendorSha256 = "sha256-sSJjJR0wlW95I6bgzLKx4aVcqwKMRyzzWC4uz0BKLNY=";
+
+  doCheck = true;
+
+  passthru.tests = { inherit (nixosTests.prometheus-exporters) postgres; };
 
   meta = with lib; {
     inherit (src.meta) homepage;
     description = "A Prometheus exporter for PostgreSQL";
     license = licenses.asl20;
-    maintainers = with maintainers; [ fpletz globin willibutz ];
+    maintainers = with maintainers; [ fpletz globin willibutz ma27 ];
   };
 }

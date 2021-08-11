@@ -1,7 +1,7 @@
-{ lib, fetchFromGitHub, python3Packages }:
+{ lib, fetchFromGitHub, python3Packages, nixosTests }:
 
 python3Packages.buildPythonApplication rec {
-  name = "tor-exporter-${version}";
+  pname = "tor-exporter";
   version = "0.4";
 
   # Just a single .py file to use as the application's main entry point.
@@ -27,9 +27,11 @@ python3Packages.buildPythonApplication rec {
           --add-flags "$out/share/prometheus-tor-exporter.py"
   '';
 
+  passthru.tests = { inherit (nixosTests.prometheus-exporters) tor; };
+
   meta = with lib; {
     description = "Prometheus exporter that exposes metrics from a Tor daemon";
-    homepage = https://github.com/atx/prometheus-tor_exporter;
+    homepage = "https://github.com/atx/prometheus-tor_exporter";
     license = licenses.mit;
     maintainers = with maintainers; [ delroth ];
     platforms = platforms.unix;

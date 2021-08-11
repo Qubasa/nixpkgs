@@ -4,7 +4,7 @@
 , tqdm
 , aiohttp
 , pytest
-, setuptools_scm
+, setuptools-scm
 , pytest-localserver
 , pytest-socket
 , pytest-asyncio
@@ -13,15 +13,15 @@
 
 buildPythonPackage rec {
   pname = "parfive";
-  version = "1.0.0";
+  version = "1.3.0";
 
   src = fetchPypi {
     inherit pname version;
-    sha256 = "15dc8466922c8fb1f814d3f7c3f3656191ac17b38fd7cc3350b9bf726e144ebb";
+    sha256 = "c3067e6ca9d6fb88a10958338360bd9c47edfd8ab11098d4c601f7f2887edadd";
   };
 
   buildInputs = [
-    setuptools_scm
+    setuptools-scm
   ];
 
   propagatedBuildInputs = [
@@ -44,7 +44,7 @@ buildPythonPackage rec {
 
   meta = with lib; {
     description = "A HTTP and FTP parallel file downloader";
-    homepage = https://parfive.readthedocs.io/;
+    homepage = "https://parfive.readthedocs.io/";
     license = licenses.mit;
     maintainers = [ maintainers.costrouc ];
   };

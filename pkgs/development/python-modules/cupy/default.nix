@@ -1,40 +1,63 @@
-{ stdenv, buildPythonPackage
-, fetchPypi, isPy3k, linuxPackages
-, fastrlock, numpy, six, wheel, pytest, mock
-, cudatoolkit, cudnn, nccl
+{ lib, buildPythonPackage
+, fetchPypi, isPy3k, cython
+, fastrlock, numpy, six, wheel, pytestCheckHook, mock, setuptools
+, cudatoolkit, cudnn, cutensor, nccl
+, addOpenGLRunpath
 }:
 
 buildPythonPackage rec {
   pname = "cupy";
-  version = "6.4.0";
+  version = "8.6.0";
+  disabled = !isPy3k;
 
   src = fetchPypi {
     inherit pname version;
-    sha256 = "126waa1jiynq00glr1hq86sgwwmakq009crfsn8qqgrj4c4clw6a";
+    sha256 = "f3ed02ba18e38b4f3ed2c324fa08967e6714f59357ccb0b28badd9572e77500b";
   };
 
-  checkInputs = [
-    pytest
-    mock
+  preConfigure = ''
+    export CUDA_PATH=${cudatoolkit}
+  '';
+
+  nativeBuildInputs = [
+    addOpenGLRunpath
+    cython
   ];
+
+  LDFLAGS = "-L${cudatoolkit}/lib/stubs";
 
   propagatedBuildInputs = [
     cudatoolkit
     cudnn
-    linuxPackages.nvidia_x11
+    cutensor
     nccl
     fastrlock
     numpy
     six
+    setuptools
     wheel
   ];
 
-  # In python3, test was failed...
-  doCheck = !isPy3k;
+  checkInputs = [
+    pytestCheckHook
+    mock
+  ];
 
-  meta = with stdenv.lib; {
+  # Won't work with the GPU, whose drivers won't be accessible from the build
+  # sandbox
+  doCheck = false;
+
+  postFixup = ''
+    find $out -type f \( -name '*.so' -or -name '*.so.*' \) | while read lib; do
+      addOpenGLRunpath "$lib"
+    done
+  '';
+
+  enableParallelBuilding = true;
+
+  meta = with lib; {
     description = "A NumPy-compatible matrix library accelerated by CUDA";
-    homepage = https://cupy.chainer.org/;
+    homepage = "https://cupy.chainer.org/";
     license = licenses.mit;
     platforms = [ "x86_64-linux" ];
     maintainers = with maintainers; [ hyphon81 ];

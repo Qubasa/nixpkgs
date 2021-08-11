@@ -1,7 +1,8 @@
 { stdenv, lib, coreutils }:
 
-stdenv.mkDerivation {
-  name = "libredirect-0";
+stdenv.mkDerivation rec {
+  pname = "libredirect";
+  version = "0";
 
   unpackPhase = ''
     cp ${./libredirect.c} libredirect.c
@@ -46,8 +47,8 @@ stdenv.mkDerivation {
     )
   '';
 
-  meta = {
-    platforms = stdenv.lib.platforms.unix;
+  meta = with lib; {
+    platforms = platforms.unix;
     description = "An LD_PRELOAD library to intercept and rewrite the paths in glibc calls";
     longDescription = ''
       libredirect is an LD_PRELOAD library to intercept and rewrite the paths in

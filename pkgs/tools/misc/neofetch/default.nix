@@ -1,28 +1,41 @@
-{ stdenv, fetchFromGitHub }:
+{ lib, stdenvNoCC, fetchFromGitHub, bash, makeWrapper, pciutils
+, x11Support ? true, ueberzug
+}:
 
-stdenv.mkDerivation rec {
+stdenvNoCC.mkDerivation rec {
   pname = "neofetch";
-  version = "6.1.0";
+  version = "unstable-2020-11-26";
 
   src = fetchFromGitHub {
     owner = "dylanaraps";
     repo = "neofetch";
-    rev = version;
-    sha256 = "022xzn9jk18k2f4b6011d8jk5nbl84i3mw3inlz4q52p2hvk8fch";
+    rev = "6dd85d67fc0d4ede9248f2df31b2cd554cca6c2f";
+    sha256 = "sha256-PZjFF/K7bvPIjGVoGqaoR8pWE6Di/qJVKFNcIz7G8xE=";
   };
 
-  dontBuild = true;
+  strictDeps = true;
+  buildInputs = [ bash ];
+  nativeBuildInputs = [ makeWrapper ];
+  postPatch = ''
+    patchShebangs --host neofetch
+  '';
+
+  postInstall = ''
+    wrapProgram $out/bin/neofetch \
+      --prefix PATH : ${lib.makeBinPath ([ pciutils ] ++ lib.optional x11Support ueberzug) }
+  '';
 
   makeFlags = [
     "PREFIX=${placeholder "out"}"
     "SYSCONFDIR=${placeholder "out"}/etc"
   ];
 
-  meta = with stdenv.lib; {
+  meta = with lib; {
     description = "A fast, highly customizable system info script";
-    homepage = https://github.com/dylanaraps/neofetch;
+    homepage = "https://github.com/dylanaraps/neofetch";
     license = licenses.mit;
     platforms = platforms.all;
     maintainers = with maintainers; [ alibabzo konimex ];
+    mainProgram = "neofetch";
   };
 }

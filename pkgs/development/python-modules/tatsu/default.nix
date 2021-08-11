@@ -1,31 +1,28 @@
-{ stdenv, buildPythonPackage, fetchFromGitHub, pythonOlder
-, colorama, mypy, pyyaml, regex
-, dataclasses, typing
-, pytestrunner, pytest-mypy
+{ lib, buildPythonPackage, fetchFromGitHub, pythonOlder
+, colorama, regex
+, pytest-runner, pytestCheckHook, pytest-mypy
 }:
 
 buildPythonPackage rec {
-  pname = "TatSu";
-  version = "4.4.0";
+  pname = "tatsu";
+  version = "5.6.1";
 
   src = fetchFromGitHub {
     owner = "neogeny";
-    repo = pname;
+    repo = "TatSu";
     rev = "v${version}";
-    sha256 = "1jjd73yr3x56ij2ggxf6s62mf90i9v7wn3i0h67zxys55hlp2yh4";
+    sha256 = "149ra1lwax5m1svlv4dwjfqw00lc5vwyfj6zw2v0ammmfm1b94x9";
   };
 
-  nativeBuildInputs = [ pytestrunner ];
-  propagatedBuildInputs = [ colorama mypy pyyaml regex ]
-    ++ stdenv.lib.optionals (pythonOlder "3.7") [ dataclasses ]
-    ++ stdenv.lib.optionals (pythonOlder "3.5") [ typing ];
-  checkInputs = [ pytest-mypy ];
+  disabled = pythonOlder "3.8";
 
-  checkPhase = ''
-    pytest test/
-  '';
+  nativeBuildInputs = [ pytest-runner ];
+  propagatedBuildInputs = [ colorama regex ];
+  checkInputs = [ pytestCheckHook pytest-mypy ];
 
-  meta = with stdenv.lib; {
+  pythonImportsCheck = [ "tatsu" ];
+
+  meta = with lib; {
     description = "Generates Python parsers from grammars in a variation of EBNF";
     longDescription = ''
       TatSu (the successor to Grako) is a tool that takes grammars in a

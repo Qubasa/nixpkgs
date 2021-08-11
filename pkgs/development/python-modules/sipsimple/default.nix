@@ -5,7 +5,7 @@
 , pkgs
 , cython
 , dnspython
-, dateutil
+, python-dateutil
 , xcaplib
 , msrplib
 , lxml
@@ -25,17 +25,20 @@ buildPythonPackage rec {
   };
 
   preConfigure = ''
+    # TODO: Executable bits are set by upstream with the next release
+    # see AGProjects/python-sipsimple/commit/a36d66cf758afb43c59f7ac48b193c4148eb1848
     chmod +x ./deps/pjsip/configure ./deps/pjsip/aconfigure
+
     export LD=$CC
   '';
 
-  nativeBuildInputs = [ pkgs.pkgconfig ];
-  buildInputs = with pkgs; [ alsaLib ffmpeg libv4l sqlite libvpx ];
-  propagatedBuildInputs = [ cython pkgs.openssl dnspython dateutil xcaplib msrplib lxml python-otr ];
+  nativeBuildInputs = [ pkgs.pkg-config ];
+  buildInputs = with pkgs; [ alsa-lib ffmpeg_3 libv4l sqlite libvpx ];
+  propagatedBuildInputs = [ cython pkgs.openssl dnspython python-dateutil xcaplib msrplib lxml python-otr ];
 
   meta = with lib; {
     description = "SIP SIMPLE implementation for Python";
-    homepage = http://sipsimpleclient.org/;
+    homepage = "https://sipsimpleclient.org/";
     license = licenses.gpl3;
     maintainers = with maintainers; [ pSub ];
   };

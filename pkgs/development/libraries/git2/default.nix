@@ -1,37 +1,38 @@
-{ stdenv, fetchFromGitHub, cmake, pkgconfig, python
-, zlib, libssh2, openssl, http-parser, curl
+{ lib, stdenv, fetchFromGitHub, cmake, pkg-config, python3
+, zlib, libssh2, openssl, pcre, http-parser
 , libiconv, Security
 }:
 
 stdenv.mkDerivation rec {
   pname = "libgit2";
-  version = "0.27.8";
-  # keep the version in sync with pythonPackages.pygit2 and libgit2-glib
+  version = "1.1.1";
+  # keep the version in sync with python3.pkgs.pygit2 and libgit2-glib
 
   src = fetchFromGitHub {
     owner = "libgit2";
     repo = "libgit2";
     rev = "v${version}";
-    sha256 = "0wzx8nkyy9m7mx6cks58chjd4289vjsw97mxm9w6f1ggqsfnmbr9";
+    sha256 = "sha256-SxceIxT0aeiiiZCeSIe6EOa+MyVpQVaiv/ZZn6fkwIc=";
   };
 
-  cmakeFlags = [ "-DTHREADSAFE=ON" ];
+  cmakeFlags = [
+    "-DTHREADSAFE=ON"
+    "-DUSE_HTTP_PARSER=system"
+  ];
 
-  nativeBuildInputs = [ cmake python pkgconfig ];
+  nativeBuildInputs = [ cmake python3 pkg-config ];
 
-  buildInputs = [ zlib libssh2 openssl http-parser curl ]
-    ++ stdenv.lib.optional stdenv.isDarwin Security;
+  buildInputs = [ zlib libssh2 openssl pcre http-parser ]
+    ++ lib.optional stdenv.isDarwin Security;
 
-  propagatedBuildInputs = stdenv.lib.optional (!stdenv.isLinux) libiconv;
-
-  enableParallelBuilding = true;
+  propagatedBuildInputs = lib.optional (!stdenv.isLinux) libiconv;
 
   doCheck = false; # hangs. or very expensive?
 
   meta = {
     description = "The Git linkable library";
-    homepage = https://libgit2.github.com/;
-    license = stdenv.lib.licenses.gpl2;
-    platforms = with stdenv.lib.platforms; all;
+    homepage = "https://libgit2.github.com/";
+    license = lib.licenses.gpl2;
+    platforms = with lib.platforms; all;
   };
 }

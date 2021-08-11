@@ -1,35 +1,49 @@
-{ stdenv, fetchFromGitHub, rustPlatform, dbus, gmp, openssl, pkgconfig
-, darwin }:
+{ callPackage
+, lib
+, stdenv
+, fetchFromGitHub
+, rustPlatform
+, pkg-config
+, dbus
+, libiconv
+, Security
+}:
 
-let
-  inherit (darwin.apple_sdk.frameworks) Security;
-in rustPlatform.buildRustPackage rec {
-  name = "maturin-${version}";
-  version = "0.7.6";
+rustPlatform.buildRustPackage rec {
+  pname = "maturin";
+  version = "0.10.6";
 
   src = fetchFromGitHub {
     owner = "PyO3";
     repo = "maturin";
     rev = "v${version}";
-    sha256 = "1siqd8k6grlbj9n1a75jq8px1pzvzpr2ph689g53rjngf1k44zqk";
+    hash = "sha256-qWDrdS1zxe5woQSKLHhDSGJ1KF4SHk1mhaQApJXCCO4=";
   };
 
-  cargoSha256 = "18678qzrzj044aj5nvyjn5hvby0i0x23gx26nhcf1nqcjn3fr32l";
+  cargoHash = "sha256-NEXgb7yWQkqbbofd3oYQ5n+CmfaM2cWj8HwufrcRKkc=";
 
-  nativeBuildInputs = [ pkgconfig ];
+  nativeBuildInputs = [ pkg-config ];
 
-  buildInputs = [ gmp openssl ]
-    ++ stdenv.lib.optional stdenv.isDarwin Security
-    ++ stdenv.lib.optional stdenv.isLinux dbus;
+  buildInputs = lib.optionals stdenv.isLinux [ dbus ]
+    ++ lib.optionals stdenv.isDarwin [ Security libiconv ];
 
   # Requires network access, fails in sandbox.
   doCheck = false;
 
-  meta = with stdenv.lib; {
-    description = "Build and publish crates with pyo3 bindings as python packages";
-    homepage = https://github.com/PyO3/maturin;
-    license = licenses.mit;
+  passthru.tests.pyo3 = callPackage ./pyo3-test {};
+
+  meta = with lib; {
+    description = "Build and publish Rust crates Python packages";
+    longDescription = ''
+      Build and publish Rust crates with PyO3, rust-cpython, and
+      cffi bindings as well as Rust binaries as Python packages.
+
+      This project is meant as a zero-configuration replacement for
+      setuptools-rust and Milksnake. It supports building wheels for
+      Python and can upload them to PyPI.
+    '';
+    homepage = "https://github.com/PyO3/maturin";
+    license = licenses.asl20;
     maintainers = [ maintainers.danieldk ];
-    platforms = platforms.all;
   };
 }

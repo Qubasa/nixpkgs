@@ -14,7 +14,7 @@ let
     ''
       #! ${pkgs.runtimeShell} -e
       export DISPLAY="$(systemctl --user show-environment | ${pkgs.gnused}/bin/sed 's/^DISPLAY=\(.*\)/\1/; t; d')"
-      exec ${askPassword}
+      exec ${askPassword} "$@"
     '';
 
   knownHosts = map (h: getAttr h cfg.knownHosts) (attrNames cfg.knownHosts);
@@ -36,7 +36,7 @@ in
       askPassword = mkOption {
         type = types.str;
         default = "${pkgs.x11_ssh_askpass}/libexec/x11-ssh-askpass";
-        description = ''Program used by SSH to ask for passwords.'';
+        description = "Program used by SSH to ask for passwords.";
       };
 
       forwardX11 = mkOption {
@@ -61,12 +61,9 @@ in
         '';
       };
 
-      # Allow DSA keys for now. (These were deprecated in OpenSSH 7.0.)
       pubkeyAcceptedKeyTypes = mkOption {
         type = types.listOf types.str;
-        default = [
-          "+ssh-dss"
-        ];
+        default = [];
         example = [ "ssh-ed25519" "ssh-rsa" ];
         description = ''
           Specifies the key types that will be used for public key authentication.
@@ -75,9 +72,7 @@ in
 
       hostKeyAlgorithms = mkOption {
         type = types.listOf types.str;
-        default = [
-          "+ssh-dss"
-        ];
+        default = [];
         example = [ "ssh-ed25519" "ssh-rsa" ];
         description = ''
           Specifies the host key algorithms that the client wants to use in order of preference.
@@ -115,6 +110,16 @@ in
         '';
       };
 
+      agentPKCS11Whitelist = mkOption {
+        type = types.nullOr types.str;
+        default = null;
+        example = "\${pkgs.opensc}/lib/opensc-pkcs11.so";
+        description = ''
+          A pattern-list of acceptable paths for PKCS#11 shared libraries
+          that may be used with the -s option to ssh-add.
+        '';
+      };
+
       package = mkOption {
         type = types.package;
         default = pkgs.openssh;
@@ -126,7 +131,7 @@ in
 
       knownHosts = mkOption {
         default = {};
-        type = types.loaOf (types.submodule ({ name, ... }: {
+        type = types.attrsOf (types.submodule ({ name, ... }: {
           options = {
             certAuthority = mkOption {
               type = types.bool;
@@ -189,6 +194,33 @@ in
         '';
       };
 
+      kexAlgorithms = mkOption {
+        type = types.nullOr (types.listOf types.str);
+        default = null;
+        example = [ "curve25519-sha256@libssh.org" "diffie-hellman-group-exchange-sha256" ];
+        description = ''
+          Specifies the available KEX (Key Exchange) algorithms.
+        '';
+      };
+
+      ciphers = mkOption {
+        type = types.nullOr (types.listOf types.str);
+        default = null;
+        example = [ "chacha20-poly1305@openssh.com" "aes256-gcm@openssh.com" ];
+        description = ''
+          Specifies the ciphers allowed and their order of preference.
+        '';
+      };
+
+      macs = mkOption {
+        type = types.nullOr (types.listOf types.str);
+        default = null;
+        example = [ "hmac-sha2-512-etm@openssh.com" "hmac-sha1" ];
+        description = ''
+          Specifies the MAC (message authentication code) algorithms in order of preference. The MAC algorithm is used
+          for data integrity protection.
+        '';
+      };
     };
 
   };
@@ -227,6 +259,9 @@ in
 
         ${optionalString (cfg.pubkeyAcceptedKeyTypes != []) "PubkeyAcceptedKeyTypes ${concatStringsSep "," cfg.pubkeyAcceptedKeyTypes}"}
         ${optionalString (cfg.hostKeyAlgorithms != []) "HostKeyAlgorithms ${concatStringsSep "," cfg.hostKeyAlgorithms}"}
+        ${optionalString (cfg.kexAlgorithms != null) "KexAlgorithms ${concatStringsSep "," cfg.kexAlgorithms}"}
+        ${optionalString (cfg.ciphers != null) "Ciphers ${concatStringsSep "," cfg.ciphers}"}
+        ${optionalString (cfg.macs != null) "MACs ${concatStringsSep "," cfg.macs}"}
       '';
 
     environment.etc."ssh/ssh_known_hosts".text = knownHostsText;
@@ -241,6 +276,7 @@ in
             ExecStart =
                 "${cfg.package}/bin/ssh-agent " +
                 optionalString (cfg.agentTimeout != null) ("-t ${cfg.agentTimeout} ") +
+                optionalString (cfg.agentPKCS11Whitelist != null) ("-P ${cfg.agentPKCS11Whitelist} ") +
                 "-a %t/ssh-agent";
             StandardOutput = "null";
             Type = "forking";

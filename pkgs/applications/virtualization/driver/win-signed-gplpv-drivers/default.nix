@@ -1,4 +1,4 @@
-{ stdenv, fetchurl, p7zip }:
+{ lib, stdenv, fetchurl, p7zip }:
 
 let
   src_x86 = fetchurl {
@@ -16,7 +16,7 @@ stdenv.mkDerivation  {
   name = "gplpv-0.11.0.373";
   version = "0.11.0.373";
 
-  phases = [ "buildPhase" "installPhase" ];
+  dontUnpack = true;
 
   buildPhase = ''
     mkdir -p x86
@@ -31,14 +31,14 @@ stdenv.mkDerivation  {
     cp amd64/* $out/amd64/.
     '';
 
-  meta = with stdenv.lib; {
+  meta = with lib; {
     description = ''
       A collection of open source Window PV drivers that allow
       Windows to be para-virtualized.
       The drivers are signed by Univention with a Software Publishers
       Certificate obtained from the VeriSign CA.
       '';
-    homepage = http://wiki.univention.de/index.php?title=Installing-signed-GPLPV-drivers;
+    homepage = "http://wiki.univention.de/index.php?title=Installing-signed-GPLPV-drivers";
     maintainers = [ maintainers.tstrobel ];
     platforms = platforms.linux;
     license = licenses.gpl2;

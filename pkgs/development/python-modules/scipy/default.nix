@@ -1,17 +1,17 @@
-{lib, fetchPypi, python, buildPythonPackage, gfortran, nose, pytest, numpy}:
+{lib, fetchPypi, python, buildPythonPackage, gfortran, nose, pytest, pytest-xdist, numpy, pybind11 }:
 
 buildPythonPackage rec {
   pname = "scipy";
-  version = "1.3.1";
+  version = "1.6.3";
 
   src = fetchPypi {
     inherit pname version;
-    sha256 = "2643cfb46d97b7797d1dbdb6f3c23fe3402904e3c90e6facfe6a9b98d808c1b5";
+    sha256 = "a75b014d3294fce26852a9d04ea27b5671d86736beb34acdfc05859246260707";
   };
 
-  checkInputs = [ nose pytest ];
+  checkInputs = [ nose pytest pytest-xdist ];
   nativeBuildInputs = [ gfortran ];
-  buildInputs = [ numpy.blas ];
+  buildInputs = [ numpy.blas pybind11 ];
   propagatedBuildInputs = [ numpy ];
 
   # Remove tests because of broken wrapper
@@ -19,9 +19,7 @@ buildPythonPackage rec {
     rm scipy/linalg/tests/test_lapack.py
   '';
 
-  # INTERNALERROR, solved with https://github.com/scipy/scipy/pull/8871
-  # however, it does not apply cleanly.
-  doCheck = false;
+  doCheck = true;
 
   preConfigure = ''
     sed -i '0,/from numpy.distutils.core/s//import setuptools;from numpy.distutils.core/' setup.py
@@ -32,12 +30,10 @@ buildPythonPackage rec {
     ln -s ${numpy.cfg} site.cfg
   '';
 
-  enableParallelBuilding = true;
-
   checkPhase = ''
     runHook preCheck
     pushd dist
-    ${python.interpreter} -c 'import scipy; scipy.test("fast", verbose=10)'
+    ${python.interpreter} -c "import scipy; scipy.test('fast', verbose=10, parallel=$NIX_BUILD_CORES)"
     popd
     runHook postCheck
   '';
@@ -48,9 +44,12 @@ buildPythonPackage rec {
 
   setupPyBuildFlags = [ "--fcompiler='gnu95'" ];
 
-  meta = {
-    description = "SciPy (pronounced 'Sigh Pie') is open-source software for mathematics, science, and engineering. ";
-    homepage = https://www.scipy.org/;
-    maintainers = with lib.maintainers; [ fridh ];
+  SCIPY_USE_G77_ABI_WRAPPER = 1;
+
+  meta = with lib; {
+    description = "SciPy (pronounced 'Sigh Pie') is open-source software for mathematics, science, and engineering";
+    homepage = "https://www.scipy.org/";
+    license = licenses.bsd3;
+    maintainers = [ maintainers.fridh ];
   };
 }

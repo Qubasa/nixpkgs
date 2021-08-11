@@ -1,9 +1,10 @@
-{ stdenv
+{ lib, stdenv
 , fetchFromGitHub
+, nix-update-script
 , vala
 , meson
 , ninja
-, pkgconfig
+, pkg-config
 , pantheon
 , python3
 , gettext
@@ -28,7 +29,7 @@ stdenv.mkDerivation rec {
     meson
     ninja
     vala
-    pkgconfig
+    pkg-config
     python3
     wrapGAppsHook
   ];
@@ -40,15 +41,26 @@ stdenv.mkDerivation rec {
     libgee
   ];
 
+  patches = [
+    # See: https://github.com/donadigo/appeditor/issues/88
+    ./fix-build-vala-0.46.patch
+  ];
+
   postPatch = ''
     chmod +x meson/post_install.py
     patchShebangs meson/post_install.py
   '';
 
-  meta = with stdenv.lib; {
+  passthru = {
+    updateScript = nix-update-script {
+      attrPath = pname;
+    };
+  };
+
+  meta = with lib; {
     description = "Edit the Pantheon desktop application menu";
-    homepage = https://github.com/donadigo/appeditor;
-    maintainers = with maintainers; [ kjuvi ] ++ pantheon.maintainers;
+    homepage = "https://github.com/donadigo/appeditor";
+    maintainers = with maintainers; [ xiorcale ] ++ pantheon.maintainers;
     platforms = platforms.linux;
     license = licenses.gpl3;
   };

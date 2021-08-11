@@ -1,7 +1,7 @@
-{ stdenv, fetchurl, jre, makeWrapper }:
+{ callPackage, lib, stdenv, fetchurl, jre, makeWrapper }:
 
-stdenv.mkDerivation rec {
-  version = "4.1.3";
+let this = stdenv.mkDerivation rec {
+  version = "5.1.0";
   pname = "openapi-generator-cli";
 
   jarfilename = "${pname}-${version}.jar";
@@ -11,24 +11,32 @@ stdenv.mkDerivation rec {
   ];
 
   src = fetchurl {
-    url = "http://central.maven.org/maven2/org/openapitools/${pname}/${version}/${jarfilename}";
-    sha256 = "0bqdjparv12wscq4qhm9xnryyfmdnn3w77hrhnsy8mlvxk2vnk13";
+    url = "mirror://maven/org/openapitools/${pname}/${version}/${jarfilename}";
+    sha256 = "06dvy4pwgpyf209n0b27qwkjj7zlgadg2czwxapy94fd1wpq9yb2";
   };
 
-  phases = [ "installPhase" ];
+  dontUnpack = true;
 
   installPhase = ''
+    runHook preInstall
+
     install -D "$src" "$out/share/java/${jarfilename}"
 
     makeWrapper ${jre}/bin/java $out/bin/${pname} \
       --add-flags "-jar $out/share/java/${jarfilename}"
+
+    runHook postInstall
   '';
 
-  meta = with stdenv.lib; {
+  meta = with lib; {
     description = "Allows generation of API client libraries (SDK generation), server stubs and documentation automatically given an OpenAPI Spec";
-    homepage = https://github.com/OpenAPITools/openapi-generator;
+    homepage = "https://github.com/OpenAPITools/openapi-generator";
     license = licenses.asl20;
     maintainers = [ maintainers.shou ];
   };
-}
 
+  passthru.tests.example = callPackage ./example.nix {
+    openapi-generator-cli = this;
+  };
+};
+in this

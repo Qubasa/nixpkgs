@@ -1,45 +1,54 @@
-{ stdenv
+{ lib, stdenv
 , fetchurl
 
-, pkgconfig
+, autoreconfHook
+, pkg-config
 
-, zlib
+, libdeflate
 , libjpeg
 , xz
+, zlib
 }:
 
+#FIXME: fix aarch64-darwin build and get rid of ./aarch64-darwin.nix
+
 stdenv.mkDerivation rec {
-  version = "4.0.10";
   pname = "libtiff";
+  version = "4.3.0";
 
   src = fetchurl {
     url = "https://download.osgeo.org/libtiff/tiff-${version}.tar.gz";
-    sha256 = "1r4np635gr6zlc0bic38dzvxia6iqzcrary4n1ylarzpr8fd2lic";
+    sha256 = "1j3snghqjbhwmnm5vz3dr1zm68dj15mgbx1wqld7vkl7n2nfaihf";
   };
 
-  patches = [
-    (fetchurl {
-      url = "https://gitlab.com/libtiff/libtiff/commit/0c74a9f49b8d7a36b17b54a7428b3526d20f88a8.patch";
-      name = "CVE-2019-6128.patch";
-      sha256 = "03yvsfq6dxjd3v8ypfwz6cpz2iymqwcbawqqlmkh40dayi7fgizr";
-    })
-    # Manual backport of https://gitlab.com/libtiff/libtiff/commit/1b5e3b6a23827c33acf19ad50ce5ce78f12b3773.patch
-    ./CVE-2019-14973.patch
-  ];
+  # FreeImage needs this patch
+  patches = [ ./headers.patch ];
 
-  outputs = [ "bin" "dev" "out" "man" "doc" ];
+  outputs = [ "bin" "dev" "dev_private" "out" "man" "doc" ];
 
-  nativeBuildInputs = [ pkgconfig ];
+  postFixup = ''
+    moveToOutput include/tif_dir.h $dev_private
+    moveToOutput include/tif_config.h $dev_private
+    moveToOutput include/tiffiop.h $dev_private
+  '';
 
-  propagatedBuildInputs = [ zlib libjpeg xz ]; #TODO: opengl support (bogus configure detection)
+  # If you want to change to a different build system, please make
+  # sure cross-compilation works first!
+  nativeBuildInputs = [ autoreconfHook pkg-config ];
+
+  propagatedBuildInputs = [ libjpeg xz zlib ]; #TODO: opengl support (bogus configure detection)
+
+  buildInputs = [ libdeflate ]; # TODO: move all propagatedBuildInputs to buildInputs.
 
   enableParallelBuilding = true;
 
-  doCheck = true; # not cross;
+  doCheck = true;
 
-  meta = with stdenv.lib; {
+  meta = with lib; {
     description = "Library and utilities for working with the TIFF image file format";
-    homepage = http://download.osgeo.org/libtiff;
+    homepage = "https://libtiff.gitlab.io/libtiff";
+    changelog = "https://libtiff.gitlab.io/libtiff/v${version}.html";
+    maintainers = with maintainers; [ qyliss ];
     license = licenses.libtiff;
     platforms = platforms.unix;
   };

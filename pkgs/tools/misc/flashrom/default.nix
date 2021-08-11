@@ -1,30 +1,47 @@
-{ lib, stdenv, fetchurl, pkgconfig, libftdi, pciutils }:
+{ lib
+, stdenv
+, fetchurl
+, meson
+, ninja
+, pkg-config
+, libftdi1
+, libusb1
+, pciutils
+, installShellFiles
+}:
 
 stdenv.mkDerivation rec {
   pname = "flashrom";
-  version = "1.1";
+  version = "1.2";
 
   src = fetchurl {
     url = "https://download.flashrom.org/releases/flashrom-v${version}.tar.bz2";
-    sha256 = "06afq680n9p34hi3vrkn12vd1pfyq2062db9qqbi4hi21k3skbdf";
+    sha256 = "0ax4kqnh7kd3z120ypgp73qy1knz47l6qxsqzrfkd97mh5cdky71";
   };
 
-  # Newer versions of libusb deprecate some API flashrom uses.
-  #postPatch = ''
-  #  substituteInPlace Makefile \
-  #    --replace "-Werror" "-Werror -Wno-error=deprecated-declarations -Wno-error=unused-const-variable="
-  #'';
+  postPatch = ''
+    substituteInPlace util/z60_flashrom.rules \
+      --replace "plugdev" "flashrom"
+  '';
 
-  nativeBuildInputs = [ pkgconfig ];
-  buildInputs = [ libftdi pciutils ];
+  # Meson build doesn't build and install manpage. Only Makefile can.
+  # Build manpage from source directory. Here we're inside the ./build subdirectory
+  postInstall = ''
+    make flashrom.8 -C ..
+    installManPage ../flashrom.8
+    install -Dm644 ../util/z60_flashrom.rules $out/etc/udev/rules.d/flashrom.rules
+  '';
 
-  preConfigure = "export PREFIX=$out";
+  mesonFlags = lib.optionals stdenv.isAarch64 [ "-Dpciutils=false" ];
+  nativeBuildInputs = [ meson pkg-config ninja installShellFiles ];
+  buildInputs = [ libftdi1 libusb1 pciutils ];
 
   meta = with lib; {
-    homepage = http://www.flashrom.org;
+    homepage = "http://www.flashrom.org";
     description = "Utility for reading, writing, erasing and verifying flash ROM chips";
     license = licenses.gpl2;
-    maintainers = with maintainers; [ funfunctor fpletz ];
-    platforms = with platforms; linux;
+    maintainers = with maintainers; [ funfunctor fpletz felixsinger ];
+    platforms = platforms.all;
+    broken = stdenv.isDarwin; # requires DirectHW
   };
 }

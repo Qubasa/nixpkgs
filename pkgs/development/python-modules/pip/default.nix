@@ -14,14 +14,14 @@
 
 buildPythonPackage rec {
   pname = "pip";
-  version = "19.3.1";
+  version = "21.1.3";
   format = "other";
 
   src = fetchFromGitHub {
     owner = "pypa";
     repo = pname;
     rev = version;
-    sha256 = "079gz0v37ah1l4i5iwyfb0d3mni422yv5ynnxa0wcqpnvkc7sfnw";
+    sha256 = "sha256-zfMz9p4I6Kmw849xuvnmGWHmWtajDntFW1jjDilKkgk=";
     name = "${pname}-${version}-source";
   };
 
@@ -38,7 +38,7 @@ buildPythonPackage rec {
   meta = {
     description = "The PyPA recommended tool for installing Python packages";
     license = with lib.licenses; [ mit ];
-    homepage = https://pip.pypa.io/;
+    homepage = "https://pip.pypa.io/";
     priority = 10;
   };
 }

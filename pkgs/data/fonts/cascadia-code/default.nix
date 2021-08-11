@@ -1,21 +1,19 @@
-{ lib, fetchurl }:
-
+{ lib, fetchzip }:
 let
-  pname = "cascadia-code";
-  version = "1910.04";
+  version = "2106.17";
 in
-fetchurl {
-  name = "${pname}-${version}";
-  url = "https://github.com/microsoft/cascadia-code/releases/download/v${version}/Cascadia.ttf";
+fetchzip {
+  name = "cascadia-code-${version}";
 
-  downloadToTemp = true;
-  recursiveHash = true;
+  url = "https://github.com/microsoft/cascadia-code/releases/download/v${version}/CascadiaCode-${version}.zip";
+
+  sha256 = "sha256-EsXD6gY3q3KIk37vYPz731lLz5989cd+s5fz5rKIn2k=";
 
   postFetch = ''
-    install -Dm444 $downloadedFile $out/share/fonts/truetype/Cascadia.ttf
+    mkdir -p $out/share/fonts/
+    unzip -j $downloadedFile \*.otf -d $out/share/fonts/opentype
+    unzip -j $downloadedFile \*.ttf -d $out/share/fonts/truetype
   '';
-
-  sha256 = "124zbv7xwirwwxrm988h3plwd2vynqxyx7p2gijqrnw69q9pf67q";
 
   meta = with lib; {
     description = "Monospaced font that includes programming ligatures and is designed to enhance the modern look and feel of the Windows Terminal";

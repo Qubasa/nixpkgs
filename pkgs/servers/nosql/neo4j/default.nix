@@ -1,18 +1,17 @@
-{ stdenv, fetchurl, makeWrapper, jre8, which, gawk }:
+{ lib, stdenv, fetchurl, makeWrapper, jre, which, gawk }:
 
-with stdenv.lib;
+with lib;
 
 stdenv.mkDerivation rec {
   pname = "neo4j";
-  version = "3.5.11";
+  version = "3.5.14";
 
   src = fetchurl {
     url = "https://neo4j.com/artifact.php?name=neo4j-community-${version}-unix.tar.gz";
-    sha256 = "0xk37rvb37rd7pwpv4ingmb2v6ad1kqka8ldmd16n89fqfvg5m2d";
+    sha256 = "1zjb6cgk2lpzx6pq1cs5fh65in6b5ccpl1cgfiglgpjc948mnhzv";
   };
 
-  buildInputs = [ makeWrapper jre8 which gawk ];
-
+  nativeBuildInputs = [ makeWrapper ];
 
   installPhase = ''
     mkdir -p "$out/share/neo4j"
@@ -23,17 +22,17 @@ stdenv.mkDerivation rec {
     do
         makeWrapper "$out/share/neo4j/bin/$NEO4J_SCRIPT" \
             "$out/bin/$NEO4J_SCRIPT" \
-            --prefix PATH : "${stdenv.lib.makeBinPath [ jre8 which gawk ]}" \
-            --set JAVA_HOME "$jre8"
+            --prefix PATH : "${lib.makeBinPath [ jre which gawk ]}" \
+            --set JAVA_HOME "${jre}"
     done
   '';
 
-  meta = with stdenv.lib; {
+  meta = with lib; {
     description = "A highly scalable, robust (fully ACID) native graph database";
-    homepage = http://www.neo4j.org/;
+    homepage = "http://www.neo4j.org/";
     license = licenses.gpl3;
 
     maintainers = [ maintainers.offline ];
-    platforms = stdenv.lib.platforms.unix;
+    platforms = lib.platforms.unix;
   };
 }

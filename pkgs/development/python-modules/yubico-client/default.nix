@@ -3,11 +3,11 @@
 
 buildPythonPackage rec {
   pname = "yubico-client";
-  version = "1.11.0";
+  version = "1.13.0";
 
   src = fetchPypi {
     inherit pname version;
-    sha256 = "c1d1c1f918c058932493c5a50341583e48487264129ed5b973c327ae48afed87";
+    sha256 = "e3b86cd2a123105edfacad40551c7b26e9c1193d81ffe168ee704ebfd3d11162";
   };
 
   propagatedBuildInputs = [ requests ];
@@ -17,7 +17,7 @@ buildPythonPackage rec {
 
   meta = with lib; {
     description = "Verifying Yubico OTPs based on the validation protocol version 2.0";
-    homepage = https://github.com/Kami/python-yubico-client/;
+    homepage = "https://github.com/Kami/python-yubico-client/";
     maintainers= with maintainers; [ peterromfeldhk ];
     license = licenses.bsd3;
   };

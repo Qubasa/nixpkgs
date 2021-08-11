@@ -1,6 +1,6 @@
-{ stdenv, fetchFromGitHub, libelf, which, pkgconfig, freeglut
+{ lib, stdenv, fetchFromGitHub, libelf, which, pkg-config, freeglut
 , avrgcc, avrlibc
-, libGLU_combined
+, libGLU, libGL
 , GLUT }:
 
 stdenv.mkDerivation rec {
@@ -22,9 +22,11 @@ stdenv.mkDerivation rec {
     "AVR=avr-"
   ];
 
-  nativeBuildInputs = [ which pkgconfig avrgcc ];
-  buildInputs = [ libelf freeglut libGLU_combined ]
-    ++ stdenv.lib.optional stdenv.isDarwin GLUT;
+  NIX_CFLAGS_COMPILE = [ "-Wno-error=stringop-truncation" ];
+
+  nativeBuildInputs = [ which pkg-config avrgcc ];
+  buildInputs = [ libelf freeglut libGLU libGL ]
+    ++ lib.optional stdenv.isDarwin GLUT;
 
   # Hack to avoid TMPDIR in RPATHs.
   preFixup = ''rm -rf "$(pwd)" && mkdir "$(pwd)" '';
@@ -32,9 +34,9 @@ stdenv.mkDerivation rec {
   doCheck = true;
   checkTarget = "-C tests run_tests";
 
-  meta = with stdenv.lib; {
+  meta = with lib; {
     description = "A lean and mean Atmel AVR simulator";
-    homepage    = https://github.com/buserror/simavr;
+    homepage    = "https://github.com/buserror/simavr";
     license     = licenses.gpl3;
     platforms   = platforms.unix;
     maintainers = with maintainers; [ goodrone ];

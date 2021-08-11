@@ -8,11 +8,11 @@
 
 buildPythonPackage rec {
   pname = "sympy";
-  version = "1.4"; # Upgrades may break sage. Please test or ping @timokau.
+  version = "1.8";
 
   src = fetchPypi {
     inherit pname version;
-    sha256 = "1q937csy8rd18pk2fz1ssj7jyj7l3rjx4nzbiz5vcymfhrb1x8bi";
+    sha256 = "1ca588a9f6ce6a323c5592f9635159c2093572826668a1022c75c75bdf0297cb";
   };
 
   checkInputs = [ glibcLocales ];
@@ -21,23 +21,16 @@ buildPythonPackage rec {
 
   # tests take ~1h
   doCheck = false;
-
-  patches = [
-    # to be fixed by https://github.com/sympy/sympy/pull/13476
-    (fetchpatch {
-      url = "https://git.sagemath.org/sage.git/plain/build/pkgs/sympy/patches/03_undeffun_sage.patch?id=3277ba76d0ba7174608a31a0c6623e9210c63e3d";
-      sha256 = "0xcp1qafvqnivvvi0byh51mbgqicjhmswwvqvamjz9rxfzm5f7d7";
-    })
-  ];
+  pythonImportsCheck = [ "sympy" ];
 
   preCheck = ''
     export LANG="en_US.UTF-8"
   '';
 
-  meta = {
+  meta = with lib; {
     description = "A Python library for symbolic mathematics";
-    homepage    = http://www.sympy.org/;
-    license     = lib.licenses.bsd3;
-    maintainers = with lib.maintainers; [ lovek323 timokau ];
+    homepage    = "https://www.sympy.org/";
+    license     = licenses.bsd3;
+    maintainers = with maintainers; [ lovek323 ] ++ teams.sage.members;
   };
 }

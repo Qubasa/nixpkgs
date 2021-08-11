@@ -1,7 +1,7 @@
-{ stdenv
+{ lib, stdenv
 , fetchgit
 , autoreconfHook
-, pkgconfig
+, pkg-config
 , glib
 , dbus
 , ell
@@ -12,14 +12,14 @@
 
 stdenv.mkDerivation rec {
   pname = "ofono";
-  version = "1.30";
+  version = "1.32";
 
   outputs = [ "out" "dev" ];
 
   src = fetchgit {
     url = "git://git.kernel.org/pub/scm/network/ofono/ofono.git";
     rev = version;
-    sha256 = "1qzysmzpgbh6zc3x9xh931wxcazka9wwx727c2k66z9gal2n6n66";
+    sha256 = "sha256-bJ7Qgau5soPiptrhcMZ8rWxfprRCTeR7OjQ5HZQ9hbc=";
   };
 
   patches = [
@@ -28,7 +28,7 @@ stdenv.mkDerivation rec {
 
   nativeBuildInputs = [
     autoreconfHook
-    pkgconfig
+    pkg-config
   ];
 
   buildInputs = [
@@ -46,11 +46,19 @@ stdenv.mkDerivation rec {
     "--enable-external-ell"
   ];
 
+  postInstall = ''
+    rm -r $out/etc/ofono
+    ln -s /etc/ofono $out/etc/ofono
+  '';
+
+  enableParallelBuilding = true;
+  enableParallelChecking = false;
+
   doCheck = true;
 
-  meta = with stdenv.lib; {
+  meta = with lib; {
     description = "Infrastructure for building mobile telephony (GSM/UMTS) applications";
-    homepage = https://01.org/ofono;
+    homepage = "https://01.org/ofono";
     license = licenses.gpl2;
     maintainers = with maintainers; [ jtojnar ];
     platforms = platforms.linux;

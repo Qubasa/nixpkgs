@@ -1,28 +1,29 @@
-{ stdenv, lib, graalvm8, fetchurl }:
+{ stdenv, lib, graalvm11-ce, fetchurl }:
 
-stdenv.mkDerivation rec{
+stdenv.mkDerivation rec {
   pname = "clj-kondo";
-  version = "2019.07.31-alpha";
+  version = "2021.03.31";
 
   reflectionJson = fetchurl {
     name = "reflection.json";
-    url = "https://raw.githubusercontent.com/borkdude/${pname}/v${version}/reflection.json";
-    sha256 = "1m6kja38p6aypawbynkyq8bdh8wpdjmyqrhslinqid9r8cl25rcq";
+    url = "https://raw.githubusercontent.com/clj-kondo/${pname}/v${version}/reflection.json";
+    sha256 = "sha256-C4QYk5lLienCHKnWXXZPcKmsCTMtIIkXOkvCrZfyIhA=";
   };
 
   src = fetchurl {
-    url = "https://github.com/borkdude/${pname}/releases/download/v${version}/${pname}-${version}-standalone.jar";
-    sha256 = "03ipl7br9pgx2hdbiaxv9ip0ibafkyzkc8qlx8xyi528bcfi54bf";
+    url = "https://github.com/clj-kondo/${pname}/releases/download/v${version}/${pname}-${version}-standalone.jar";
+    sha256 = "sha256-XSs0u758wEuaqZvFIevBrL61YNPUJ9Sc1DS+O9agj94=";
   };
 
   dontUnpack = true;
 
-  buildInputs = [ graalvm8 ];
+  buildInputs = [ graalvm11-ce ];
 
   buildPhase = ''
     native-image  \
       -jar ${src} \
       -H:Name=clj-kondo \
+      ${lib.optionalString stdenv.isDarwin ''-H:-CheckToolchain''} \
       -H:+ReportExceptionStackTraces \
       -J-Dclojure.spec.skip-macros=true \
       -J-Dclojure.compiler.direct-linking=true \
@@ -42,10 +43,10 @@ stdenv.mkDerivation rec{
   '';
 
   meta = with lib; {
-    description = "A linter for Clojure code that sparks joy.";
-    homepage = https://github.com/borkdude/clj-kondo;
+    description = "A linter for Clojure code that sparks joy";
+    homepage = "https://github.com/clj-kondo/clj-kondo";
     license = licenses.epl10;
-    platforms = graalvm8.meta.platforms;
-    maintainers = with maintainers; [ jlesquembre ];
+    platforms = graalvm11-ce.meta.platforms;
+    maintainers = with maintainers; [ jlesquembre bandresen ];
   };
 }

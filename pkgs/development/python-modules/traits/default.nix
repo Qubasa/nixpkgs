@@ -1,19 +1,20 @@
-{ stdenv
+{ lib
 , buildPythonPackage
 , fetchPypi
+, isPy27
 , python
 , pytest
 , numpy
-, isPy33
 }:
 
 buildPythonPackage rec {
   pname = "traits";
-  version = "5.1.2";
+  version = "6.2.0";
+  disabled = isPy27; # setup.py no longer py3 compat
 
   src = fetchPypi {
     inherit pname version;
-    sha256 = "0a17qmpw0z9h7ybh5yxrghvkcf2q90vgxzbnv1n4i0fxhi7mjy3s";
+    sha256 = "16fa1518b0778fd53bf0547e6a562b1787bf68c8f6b7995a13bd1902529fdb0c";
   };
 
   # Use pytest because its easier to discover tests
@@ -28,11 +29,11 @@ buildPythonPackage rec {
   # https://github.com/enthought/traits/issues/187
   # https://github.com/enthought/traits/pull/188
   # Furthermore, some tests fail due to being in a chroot
-  doCheck = isPy33;
+  doCheck = false;
 
-  meta = with stdenv.lib; {
+  meta = with lib; {
     description = "Explicitly typed attributes for Python";
-    homepage = https://pypi.python.org/pypi/traits;
+    homepage = "https://pypi.python.org/pypi/traits";
     license = "BSD";
   };
 

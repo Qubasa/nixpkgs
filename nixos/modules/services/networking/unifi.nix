@@ -147,8 +147,10 @@ in
       }) mountPoints;
 
     systemd.tmpfiles.rules = [
-      "e '${stateDir}' 0700 unifi - - -"
+      "d '${stateDir}' 0700 unifi - - -"
       "d '${stateDir}/data' 0700 unifi - - -"
+      "d '${stateDir}/webapps' 0700 unifi - - -"
+      "L+ '${stateDir}/webapps/ROOT' - - - - ${cfg.unifiPackage}/webapps/ROOT"
     ];
 
     systemd.services.unifi = {
@@ -160,17 +162,8 @@ in
       unitConfig.RequiresMountsFor = stateDir;
       # This a HACK to fix missing dependencies of dynamic libs extracted from jars
       environment.LD_LIBRARY_PATH = with pkgs.stdenv; "${cc.cc.lib}/lib";
-
-      preStart = ''
-        # Create the volatile webapps
-        rm -rf "${stateDir}/webapps"
-        mkdir -p "${stateDir}/webapps"
-        ln -s "${cfg.unifiPackage}/webapps/ROOT" "${stateDir}/webapps/ROOT"
-      '';
-
-      postStop = ''
-        rm -rf "${stateDir}/webapps"
-      '';
+      # Make sure package upgrades trigger a service restart
+      restartTriggers = [ cfg.unifiPackage cfg.mongodbPackage ];
 
       serviceConfig = {
         Type = "simple";
@@ -180,6 +173,41 @@ in
         User = "unifi";
         UMask = "0077";
         WorkingDirectory = "${stateDir}";
+
+        # Hardening
+        AmbientCapabilities = "";
+        CapabilityBoundingSet = "";
+        # ProtectClock= adds DeviceAllow=char-rtc r
+        DeviceAllow = "";
+        DevicePolicy = "closed";
+        LockPersonality = true;
+        NoNewPrivileges = true;
+        PrivateDevices = true;
+        PrivateMounts = true;
+        PrivateTmp = true;
+        PrivateUsers = true;
+        ProtectClock = true;
+        ProtectControlGroups = true;
+        ProtectHome = true;
+        ProtectHostname = true;
+        ProtectKernelLogs = true;
+        ProtectKernelModules = true;
+        ProtectKernelTunables = true;
+        ProtectSystem = "strict";
+        RemoveIPC = true;
+        RestrictNamespaces = true;
+        RestrictRealtime = true;
+        RestrictSUIDSGID = true;
+        SystemCallErrorNumber = "EPERM";
+        SystemCallFilter = [ "@system-service" ];
+
+        # Required for ProtectSystem=strict
+        BindPaths = [ stateDir ];
+
+        # Needs network access
+        PrivateNetwork = false;
+        # Cannot be true due to OpenJDK
+        MemoryDenyWriteExecute = false;
       };
     };
 

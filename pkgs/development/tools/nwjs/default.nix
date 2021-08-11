@@ -1,6 +1,6 @@
-{ stdenv, fetchurl, buildEnv, makeWrapper
+{ stdenv, lib, fetchurl, buildEnv, makeWrapper
 
-, xorg, alsaLib, dbus, glib, gtk3, atk, pango, freetype, fontconfig
+, xorg, alsa-lib, dbus, glib, gtk3, atk, pango, freetype, fontconfig
 , gdk-pixbuf, cairo, nss, nspr, gconf, expat, systemd, libcap
 , libnotify
 , ffmpeg, libxcb, cups
@@ -16,7 +16,7 @@ let
     name = "nwjs-env";
     paths = [
       xorg.libX11 xorg.libXrender glib /*gtk2*/ gtk3 atk pango cairo gdk-pixbuf
-      freetype fontconfig xorg.libXcomposite alsaLib xorg.libXdamage
+      freetype fontconfig xorg.libXcomposite alsa-lib xorg.libXdamage
       xorg.libXext xorg.libXfixes nss nspr gconf expat dbus
       xorg.libXtst xorg.libXi xorg.libXcursor xorg.libXrandr
       xorg.libXScrnSaver cups
@@ -47,13 +47,11 @@ in stdenv.mkDerivation rec {
       "0nlpdz76k1p1pq4xygfr2an91m0d7p5fjyg2xhiggyy8b7sp4964";
   };
 
-  phases = [ "unpackPhase" "installPhase" ];
-
   # we have runtime deps like sqlite3 that should remain
   dontPatchELF = true;
 
   installPhase =
-    let ccPath = stdenv.lib.makeLibraryPath [ stdenv.cc.cc ];
+    let ccPath = lib.makeLibraryPath [ stdenv.cc.cc ];
     in ''
       mkdir -p $out/share/nwjs
       cp -R * $out/share/nwjs
@@ -61,7 +59,7 @@ in stdenv.mkDerivation rec {
 
       patchelf --set-interpreter "$(cat $NIX_CC/nix-support/dynamic-linker)" $out/share/nwjs/nw
 
-      ln -s ${systemd.lib}/lib/libudev.so $out/share/nwjs/libudev.so.0
+      ln -s ${lib.getLib systemd}/lib/libudev.so $out/share/nwjs/libudev.so.0
 
       libpath="$out/share/nwjs/lib/"
       for f in "$libpath"/*.so; do
@@ -83,11 +81,11 @@ in stdenv.mkDerivation rec {
       ln -s $out/share/nwjs/nw $out/bin
   '';
 
-  buildInputs = [ makeWrapper ];
+  nativeBuildInputs = [ makeWrapper ];
 
-  meta = with stdenv.lib; {
+  meta = with lib; {
     description = "An app runtime based on Chromium and node.js";
-    homepage = https://nwjs.io/;
+    homepage = "https://nwjs.io/";
     platforms = ["i686-linux" "x86_64-linux"];
     maintainers = [ maintainers.offline ];
     license = licenses.bsd3;

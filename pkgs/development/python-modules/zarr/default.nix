@@ -1,7 +1,8 @@
 { lib
 , buildPythonPackage
+, isPy27
 , fetchPypi
-, setuptools_scm
+, setuptools-scm
 , asciitree
 , numpy
 , fasteners
@@ -11,15 +12,16 @@
 
 buildPythonPackage rec {
   pname = "zarr";
-  version = "2.3.2";
+  version = "2.8.3";
+  disabled = isPy27;
 
   src = fetchPypi {
     inherit pname version;
-    sha256 = "c62d0158fb287151c978904935a177b3d2d318dea3057cfbeac8541915dfa105";
+    sha256 = "8aece33269ba3ee2af9320aa528d5fe93f76c30e4ad7fdbfb604b1db3f0d779f";
   };
 
   nativeBuildInputs = [
-    setuptools_scm
+    setuptools-scm
   ];
 
   propagatedBuildInputs = [
@@ -39,7 +41,7 @@ buildPythonPackage rec {
 
   meta = with lib; {
     description = "An implementation of chunked, compressed, N-dimensional arrays for Python";
-    homepage = https://github.com/zarr-developers/zarr;
+    homepage = "https://github.com/zarr-developers/zarr";
     license = licenses.mit;
     maintainers = [ maintainers.costrouc ];
   };

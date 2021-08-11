@@ -7,11 +7,11 @@
 
 buildPythonPackage rec {
   pname = "numexpr";
-  version = "2.7.0";
+  version = "2.7.3";
 
   src = fetchPypi {
     inherit pname version;
-    sha256 = "37324b5981b8962102bdc8640c4f05f5589da5d1df2702418783085cb78ca217";
+    sha256 = "43616529f9b7d1afc83386f943dc66c4da5e052f00217ba7e3ad8dd1b5f3a825";
   };
 
   # Remove existing site.cfg, use the one we built for numpy.
@@ -19,19 +19,18 @@ buildPythonPackage rec {
     ln -s ${numpy.cfg} site.cfg
   '';
 
-  propagatedBuildInputs = [ numpy ];
+  nativeBuildInputs = [
+    numpy
+  ];
 
-  # Run the test suite.
-  # It requires the build path to be in the python search path.
+  propagatedBuildInputs = [
+    numpy
+  ];
+
   checkPhase = ''
-    pushd $out
-    ${python}/bin/${python.executable} <<EOF
-    import sys
-    import numexpr
-    r = numexpr.test()
-    if not r.wasSuccessful():
-        sys.exit(1)
-    EOF
+    runtest="$(pwd)/numexpr/tests/test_numexpr.py"
+    pushd "$out"
+    ${python.interpreter} "$runtest"
     popd
   '';
 

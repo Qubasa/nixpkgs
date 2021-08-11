@@ -1,4 +1,4 @@
-{ stdenv, fetchurl, buildPythonApplication, blivet }:
+{ lib, fetchurl, buildPythonApplication, blivet }:
 
 buildPythonApplication rec {
   pname = "nixpart";
@@ -13,9 +13,8 @@ buildPythonApplication rec {
 
   meta = {
     description = "NixOS storage manager/partitioner";
-    license = stdenv.lib.licenses.gpl2Plus;
-    maintainers = [ stdenv.lib.maintainers.aszlig ];
-    platforms = stdenv.lib.platforms.linux;
-    broken = true;
+    license = lib.licenses.gpl2Plus;
+    maintainers = [ lib.maintainers.aszlig ];
+    platforms = lib.platforms.linux;
   };
 }

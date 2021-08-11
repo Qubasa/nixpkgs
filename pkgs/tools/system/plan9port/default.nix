@@ -1,4 +1,4 @@
-{ stdenv, fetchFromGitHub, which
+{ lib, stdenv, fetchFromGitHub, which
 , darwin ? null
 , xorgproto ? null
 , libX11
@@ -11,20 +11,14 @@
 
 stdenv.mkDerivation {
   pname = "plan9port";
-  version = "2019-02-25";
+  version = "2021-04-22";
 
   src =  fetchFromGitHub {
     owner = "9fans";
     repo = "plan9port";
-    rev = "047fd921744f39a82a86d9370e03f7af511e6e84";
-    sha256 = "1lp17948q7vpl8rc2bf5a45bc8jqyj0s3zffmks9r25ai42vgb43";
+    rev = "70cc6e5ba7798b315c3fb3aae19620a01604a459";
+    hash = "sha256-HCn8R9YSocHrpw/xK5n8gsCLSAbAQgw0NtjO9vYIbKo=";
   };
-
-  patches = [
-    ./tmpdir.patch
-    ./darwin-sw_vers.patch
-    ./darwin-cfframework.patch
-  ];
 
   postPatch = ''
     #hardcoded path
@@ -38,7 +32,7 @@ stdenv.mkDerivation {
 
     substituteInPlace bin/9c \
       --replace 'which uniq' '${which}/bin/which uniq'
-  '' + stdenv.lib.optionalString (!stdenv.isDarwin) ''
+  '' + lib.optionalString (!stdenv.isDarwin) ''
     #add missing ctrl+c\z\x\v keybind for non-Darwin
     substituteInPlace src/cmd/acme/text.c \
       --replace "case Kcmd+'c':" "case 0x03: case Kcmd+'c':" \
@@ -49,11 +43,11 @@ stdenv.mkDerivation {
 
   buildInputs = [
     perl
-  ] ++ stdenv.lib.optionals (!stdenv.isDarwin) [
+  ] ++ lib.optionals (!stdenv.isDarwin) [
     xorgproto libX11 libXext libXt fontconfig
     freetype # fontsrv wants ft2build.h provides system fonts for acme and sam.
-  ] ++ stdenv.lib.optionals stdenv.isDarwin (with darwin.apple_sdk.frameworks; [
-    darwin.cf-private Carbon Cocoa IOKit Metal QuartzCore
+  ] ++ lib.optionals stdenv.isDarwin (with darwin.apple_sdk.frameworks; [
+    Carbon Cocoa IOKit Metal QuartzCore
   ]);
 
   builder = ./builder.sh;
@@ -80,17 +74,23 @@ stdenv.mkDerivation {
     ./test
   '';
 
-  meta = with stdenv.lib; {
-    homepage = https://9fans.github.io/plan9port/;
+  meta = with lib; {
+    homepage = "https://9fans.github.io/plan9port/";
     description = "Plan 9 from User Space";
     longDescription = ''
       Plan 9 from User Space (aka plan9port) is a port of many Plan 9 programs
       from their native Plan 9 environment to Unix-like operating systems.
     '';
-    license = licenses.lpl-102;
-    maintainers = with maintainers; [ AndersonTorres bbarker
-                                      ftrvxmtrx kovirobi ];
+    license = licenses.mit;
+    maintainers = with maintainers; [
+      AndersonTorres
+      bbarker
+      ehmry
+      ftrvxmtrx
+      kovirobi
+    ];
     platforms = platforms.unix;
+    broken = stdenv.isDarwin;
   };
 }
 # TODO: investigate the mouse chording support patch

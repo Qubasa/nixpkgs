@@ -1,19 +1,24 @@
-{ stdenv, fetchurl, glib, udev, libgudev, polkit, ppp, gettext, pkgconfig
-, libmbim, libqmi, systemd, vala, gobject-introspection, dbus }:
+{ lib, stdenv, fetchurl
+, glib, udev, libgudev, polkit, ppp, gettext, pkg-config, python3
+, libmbim, libqmi, systemd, vala, gobject-introspection, dbus
+}:
 
 stdenv.mkDerivation rec {
   pname = "modem-manager";
-  version = "1.10.4";
+  version = "1.16.8";
 
-  package = "ModemManager";
   src = fetchurl {
-    url = "https://www.freedesktop.org/software/${package}/${package}-${version}.tar.xz";
-    sha256 = "0w6wdj9dh7zwhzl68775h1ni6zcgvss524dp17kph50zpas6nmgs";
+    url = "https://www.freedesktop.org/software/ModemManager/ModemManager-${version}.tar.xz";
+    sha256 = "sha256-If36+UFxJhrZ2ZdxiU9a3kvDnvPR/x1CEFTRRxPpeIA=";
   };
 
-  nativeBuildInputs = [ vala gobject-introspection gettext pkgconfig ];
+  nativeBuildInputs = [ vala gobject-introspection gettext pkg-config ];
 
   buildInputs = [ glib udev libgudev polkit ppp libmbim libqmi systemd ];
+
+  installCheckInputs = [
+    python3 python3.pkgs.dbus-python python3.pkgs.pygobject3
+  ];
 
   configureFlags = [
     "--with-polkit"
@@ -26,17 +31,29 @@ stdenv.mkDerivation rec {
     "--with-systemd-journal"
   ];
 
-  preCheck = ''
-    export G_TEST_DBUS_DAEMON="${dbus.daemon}/bin/dbus-daemon"
+  postPatch = ''
+    patchShebangs tools/test-modemmanager-service.py
   '';
 
-  doCheck = true;
+  # In Nixpkgs g-ir-scanner is patched to produce absolute paths, and
+  # that interferes with ModemManager's tests, causing them to try to
+  # load libraries from the install path, which doesn't usually exist
+  # when `make check' is run.  So to work around that, we run it as an
+  # install check instead, when those paths will have been created.
+  doInstallCheck = true;
+  preInstallCheck = ''
+    export G_TEST_DBUS_DAEMON="${dbus.daemon}/bin/dbus-daemon"
+    patchShebangs tools/tests/test-wrapper.sh
+  '';
+  installCheckTarget = "check";
 
-  meta = with stdenv.lib; {
+  enableParallelBuilding = true;
+
+  meta = with lib; {
     description = "WWAN modem manager, part of NetworkManager";
-    homepage = https://www.freedesktop.org/wiki/Software/ModemManager/;
+    homepage = "https://www.freedesktop.org/wiki/Software/ModemManager/";
     license = licenses.gpl2Plus;
-    maintainers = [ ];
+    maintainers = teams.freedesktop.members;
     platforms = platforms.linux;
   };
 }

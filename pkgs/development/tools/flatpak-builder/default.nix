@@ -1,6 +1,7 @@
-{ stdenv
+{ lib, stdenv
 , fetchurl
 , substituteAll
+, nixosTests
 
 , autoreconfHook
 , docbook_xml_dtd_412
@@ -10,11 +11,11 @@
 , gettext
 , libxml2
 , libxslt
-, pkgconfig
+, pkg-config
 , xmlto
 
 , acl
-, bazaar
+, breezy
 , binutils
 , bzip2
 , coreutils
@@ -43,16 +44,15 @@
 let
   installed_testdir = "${placeholder "installedTests"}/libexec/installed-tests/flatpak-builder";
   installed_test_metadir = "${placeholder "installedTests"}/share/installed-tests/flatpak-builder";
-  version = "1.0.9";
 in stdenv.mkDerivation rec {
   pname = "flatpak-builder";
-  inherit version;
+  version = "1.0.14";
 
   outputs = [ "out" "doc" "man" "installedTests" ];
 
   src = fetchurl {
     url = "https://github.com/flatpak/flatpak-builder/releases/download/${version}/${pname}-${version}.tar.xz";
-    sha256 = "00qd770qjsiyd8qhhhyn7zg6jyi283ix5dhjzcfdn9yr3h53kvyn";
+    sha256 = "sha256-abZa9PY4BBJ1GMVFGE+d/JqTWM3tqr7yseUGI64rjYs=";
   };
 
   nativeBuildInputs = [
@@ -64,7 +64,7 @@ in stdenv.mkDerivation rec {
     gettext
     libxml2
     libxslt
-    pkgconfig
+    pkg-config
     xmlto
   ];
 
@@ -87,9 +87,11 @@ in stdenv.mkDerivation rec {
   patches = [
     # patch taken from gtk_doc
     ./respect-xml-catalog-files-var.patch
+
+    # Hardcode paths
     (substituteAll {
       src = ./fix-paths.patch;
-      bzr = "${bazaar}/bin/bzr";
+      brz = "${breezy}/bin/brz";
       cp = "${coreutils}/bin/cp";
       patch = "${patch}/bin/patch";
       tar = "${gnutar}/bin/tar";
@@ -131,13 +133,22 @@ in stdenv.mkDerivation rec {
   '';
 
   passthru = {
-    installedTestsDependencies = [ gnupg ostree python2 gnumake ];
+    installedTestsDependencies = [
+      gnupg
+      ostree
+      python2
+      gnumake
+    ];
+
+    tests = {
+      installedTests = nixosTests.installed-tests.flatpak-builder;
+    };
   };
 
-  meta = with stdenv.lib; {
+  meta = with lib; {
     description = "Tool to build flatpaks from source";
-    homepage = https://flatpak.org/;
-    license = licenses.lgpl21;
+    homepage = "https://github.com/flatpak/flatpak-builder";
+    license = licenses.lgpl21Plus;
     maintainers = with maintainers; [ jtojnar ];
     platforms = platforms.linux;
   };

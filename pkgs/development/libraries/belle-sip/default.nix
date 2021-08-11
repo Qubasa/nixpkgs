@@ -1,42 +1,47 @@
-{ stdenv, antlr3_4, libantlr3c, jre, polarssl, fetchFromGitHub
-  , cmake, zlib, bctoolbox
+{ antlr3_4
+, bctoolbox
+, cmake
+, fetchFromGitLab
+, lib
+, libantlr3c
+, mbedtls
+, stdenv
+, zlib
 }:
 
 stdenv.mkDerivation rec {
-  baseName = "belle-sip";
-  version = "1.6.3";
-  name = "${baseName}-${version}";
+  pname = "belle-sip";
+  version = "4.5.14";
 
-  src = fetchFromGitHub {
-    owner = "BelledonneCommunications";
-    repo = baseName;
+  src = fetchFromGitLab {
+    domain = "gitlab.linphone.org";
+    owner = "public";
+    group = "BC";
+    repo = pname;
     rev = version;
-    sha256 = "0q70db1klvhca1af29bm9paka3gyii5hfbzrj4178gclsg7cj8fk";
+    sha256 = "sha256-L6dhgBJrzYgBuMNd2eMZJCqB/GIZjKipfn1SffxBFWw=";
   };
 
-  nativeBuildInputs = [ jre cmake ];
+  nativeBuildInputs = [ antlr3_4 cmake ];
 
   buildInputs = [ zlib ];
 
-  NIX_CFLAGS_COMPILE = [
+  # Do not build static libraries
+  cmakeFlags = [ "-DENABLE_STATIC=NO" ];
+
+  NIX_CFLAGS_COMPILE = toString [
     "-Wno-error=deprecated-declarations"
     "-Wno-error=format-truncation"
     "-Wno-error=cast-function-type"
   ];
 
-  propagatedBuildInputs = [ antlr3_4 libantlr3c polarssl bctoolbox ];
+  propagatedBuildInputs = [ libantlr3c mbedtls bctoolbox ];
 
-  configureFlags = [
-    "--with-polarssl=${polarssl}"
-  ];
-
-  # Fails to build with lots of parallel jobs
-  enableParallelBuilding = false;
-
-  meta = with stdenv.lib; {
-    homepage = http://www.linphone.org/index.php/eng;
-    description = "A Voice-over-IP phone";
-    license = licenses.gpl2;
+  meta = with lib; {
+    homepage = "https://linphone.org/technical-corner/belle-sip";
+    description = "Modern library implementing SIP (RFC 3261) transport, transaction and dialog layers";
+    license = licenses.gpl3Plus;
     platforms = platforms.all;
+    maintainers = with maintainers; [ jluttine ];
   };
 }

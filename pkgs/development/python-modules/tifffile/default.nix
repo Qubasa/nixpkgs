@@ -1,15 +1,23 @@
-{ lib, fetchPypi, buildPythonPackage, isPy27
-, numpy, enum34, futures, pathlib
+{ lib
+, fetchPypi
+, buildPythonPackage
+, isPy27
+, isPy3k
+, numpy
+, imagecodecs-lite
+, enum34 ? null
+, futures ? null
+, pathlib ? null
 , pytest
 }:
 
 buildPythonPackage rec {
   pname = "tifffile";
-  version = "2019.7.26";
+  version = "2021.6.14";
 
   src = fetchPypi {
     inherit pname version;
-    sha256 = "82c5c72de4dc19cc7011e4e8c45492e17121bd02cfa98c015ddd2a83e36f09bc";
+    sha256 = "a2f83d82800a8d83cbd04340f9d65a6873a970874947a6b823b1b1238e84cba6";
   };
 
   patches = lib.optional isPy27 ./python2-regex-compat.patch;
@@ -17,17 +25,28 @@ buildPythonPackage rec {
   # Missing dependencies: imagecodecs, czifile, cmapfile, oiffile, lfdfiles
   # and test data missing from PyPI tarball
   doCheck = false;
-  checkInputs = [ pytest ];
+
+  checkInputs = [
+    pytest
+  ];
+
   checkPhase = ''
     pytest
   '';
 
-  propagatedBuildInputs = [ numpy ]
-    ++ lib.optional isPy27 [ futures enum34 pathlib ];
+  propagatedBuildInputs = [
+    numpy
+  ] ++ lib.optionals isPy3k [
+    imagecodecs-lite
+  ] ++ lib.optionals isPy27 [
+    futures
+    enum34
+    pathlib
+  ];
 
   meta = with lib; {
     description = "Read and write image data from and to TIFF files.";
-    homepage = https://www.lfd.uci.edu/~gohlke/;
+    homepage = "https://www.lfd.uci.edu/~gohlke/";
     maintainers = [ maintainers.lebastr ];
     license = licenses.bsd3;
   };

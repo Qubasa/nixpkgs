@@ -9,6 +9,7 @@
 #include <limits.h>
 #include <string.h>
 #include <spawn.h>
+#include <dirent.h>
 
 #define MAX_REDIRECTS 128
 
@@ -59,6 +60,15 @@ static const char * rewrite(const char * path, char * buf)
     return path;
 }
 
+static int open_needs_mode(int flags)
+{
+#ifdef O_TMPFILE
+    return (flags & O_CREAT) || (flags & O_TMPFILE) == O_TMPFILE;
+#else
+    return flags & O_CREAT;
+#endif
+}
+
 /* The following set of Glibc library functions is very incomplete -
    it contains only what we needed for programs in Nixpkgs. Just add
    more functions as needed. */
@@ -67,7 +77,7 @@ int open(const char * path, int flags, ...)
 {
     int (*open_real) (const char *, int, mode_t) = dlsym(RTLD_NEXT, "open");
     mode_t mode = 0;
-    if (flags & O_CREAT) {
+    if (open_needs_mode(flags)) {
         va_list ap;
         va_start(ap, flags);
         mode = va_arg(ap, mode_t);
@@ -81,7 +91,7 @@ int open64(const char * path, int flags, ...)
 {
     int (*open64_real) (const char *, int, mode_t) = dlsym(RTLD_NEXT, "open64");
     mode_t mode = 0;
-    if (flags & O_CREAT) {
+    if (open_needs_mode(flags)) {
         va_list ap;
         va_start(ap, flags);
         mode = va_arg(ap, mode_t);
@@ -95,7 +105,7 @@ int openat(int dirfd, const char * path, int flags, ...)
 {
     int (*openat_real) (int, const char *, int, mode_t) = dlsym(RTLD_NEXT, "openat");
     mode_t mode = 0;
-    if (flags & O_CREAT) {
+    if (open_needs_mode(flags)) {
         va_list ap;
         va_start(ap, flags);
         mode = va_arg(ap, mode_t);
@@ -110,6 +120,13 @@ FILE * fopen(const char * path, const char * mode)
     FILE * (*fopen_real) (const char *, const char *) = dlsym(RTLD_NEXT, "fopen");
     char buf[PATH_MAX];
     return fopen_real(rewrite(path, buf), mode);
+}
+
+FILE * __nss_files_fopen(const char * path)
+{
+    FILE * (*__nss_files_fopen_real) (const char *) = dlsym(RTLD_NEXT, "__nss_files_fopen");
+    char buf[PATH_MAX];
+    return __nss_files_fopen_real(rewrite(path, buf));
 }
 
 FILE * fopen64(const char * path, const char * mode)
@@ -140,9 +157,9 @@ int stat(const char * path, struct stat * st)
     return __stat_real(rewrite(path, buf), st);
 }
 
-int * access(const char * path, int mode)
+int access(const char * path, int mode)
 {
-    int * (*access_real) (const char *, int mode) = dlsym(RTLD_NEXT, "access");
+    int (*access_real) (const char *, int mode) = dlsym(RTLD_NEXT, "access");
     char buf[PATH_MAX];
     return access_real(rewrite(path, buf), mode);
 }
@@ -173,9 +190,85 @@ int posix_spawnp(pid_t * pid, const char * file,
     return posix_spawnp_real(pid, rewrite(file, buf), file_actions, attrp, argv, envp);
 }
 
-int execv(const char *path, char *const argv[])
+int execv(const char * path, char * const argv[])
 {
-    int (*execv_real) (const char *path, char *const argv[]) = dlsym(RTLD_NEXT, "execv");
+    int (*execv_real) (const char * path, char * const argv[]) = dlsym(RTLD_NEXT, "execv");
     char buf[PATH_MAX];
     return execv_real(rewrite(path, buf), argv);
+}
+
+int execvp(const char * path, char * const argv[])
+{
+    int (*_execvp) (const char *, char * const argv[]) = dlsym(RTLD_NEXT, "execvp");
+    char buf[PATH_MAX];
+    return _execvp(rewrite(path, buf), argv);
+}
+
+int execve(const char * path, char * const argv[], char * const envp[])
+{
+    int (*_execve) (const char *, char * const argv[], char * const envp[]) = dlsym(RTLD_NEXT, "execve");
+    char buf[PATH_MAX];
+    return _execve(rewrite(path, buf), argv, envp);
+}
+
+DIR * opendir(const char * path)
+{
+    char buf[PATH_MAX];
+    DIR * (*_opendir) (const char*) = dlsym(RTLD_NEXT, "opendir");
+
+    return _opendir(rewrite(path, buf));
+}
+
+#define SYSTEM_CMD_MAX 512
+
+char *replace_substring(char * source, char * buf, char * replace_string, char * start_ptr, char * suffix_ptr) {
+    char head[SYSTEM_CMD_MAX] = {0};
+    strncpy(head, source, start_ptr - source);
+
+    char tail[SYSTEM_CMD_MAX] = {0};
+    if(suffix_ptr < source + strlen(source)) {
+       strcpy(tail, suffix_ptr);
+    }
+
+    sprintf(buf, "%s%s%s", head, replace_string, tail);
+    return buf;
+}
+
+char *replace_string(char * buf, char * from, char * to) {
+    int num_matches = 0;
+    char * matches[SYSTEM_CMD_MAX];
+    int from_len = strlen(from);
+    for(int i=0; i<strlen(buf); i++){
+       char *cmp_start = buf + i;
+       if(strncmp(from, cmp_start, from_len) == 0){
+          matches[num_matches] = cmp_start;
+          num_matches++;
+       }
+    }
+    int len_diff = strlen(to) - strlen(from);
+    for(int n = 0; n < num_matches; n++) {
+       char replaced[SYSTEM_CMD_MAX];
+       replace_substring(buf, replaced, to, matches[n], matches[n]+from_len);
+       strcpy(buf, replaced);
+       for(int nn = n+1; nn < num_matches; nn++) {
+          matches[nn] += len_diff;
+       }
+    }
+    return buf;
+}
+
+void rewriteSystemCall(const char * command, char * buf) {
+    strcpy(buf, command);
+    for (int n = 0; n < nrRedirects; ++n) {
+       replace_string(buf, from[n], to[n]);
+    }
+}
+
+int system(const char *command)
+{
+    int (*_system) (const char*) = dlsym(RTLD_NEXT, "system");
+
+    char newCommand[SYSTEM_CMD_MAX];
+    rewriteSystemCall(command, newCommand);
+    return _system(newCommand);
 }

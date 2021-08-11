@@ -1,25 +1,30 @@
-{ stdenv, fetchFromGitHub
-, meson, ninja, pkgconfig, scdoc
+{ lib, stdenv, fetchFromGitHub
+, meson, ninja, pkg-config, scdoc, wayland-scanner
 , wayland, wayland-protocols, systemd
 }:
 
 stdenv.mkDerivation rec {
   pname = "swayidle";
-  version = "1.5";
+  version = "1.6";
 
   src = fetchFromGitHub {
     owner = "swaywm";
     repo = "swayidle";
     rev = version;
-    sha256 = "05qi96j58xqxjiighay1d39rfanxcpn6vlynj23mb5dymxvlaq9n";
+    sha256 = "1nd3v8r9549lykdwh4krldfl59lzaspmmai5k1icy7dvi6kkr18r";
   };
 
-  nativeBuildInputs = [ meson ninja pkgconfig scdoc ];
+  postPatch = ''
+    substituteInPlace meson.build \
+      --replace "version: '1.5'" "version: '${version}'"
+  '';
+
+  nativeBuildInputs = [ meson ninja pkg-config scdoc wayland-scanner ];
   buildInputs = [ wayland wayland-protocols systemd ];
 
   mesonFlags = [ "-Dman-pages=enabled" "-Dlogind=enabled" ];
 
-  meta = with stdenv.lib; {
+  meta = with lib; {
     description = "Idle management daemon for Wayland";
     longDescription = ''
       Sway's idle management daemon. It is compatible with any Wayland

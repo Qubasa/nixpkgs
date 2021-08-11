@@ -1,5 +1,8 @@
+if [[ -z "${__nix_wrapQtAppsHook-}" ]]; then
+__nix_wrapQtAppsHook=1  # Don't run this hook more than once.
+
 # Inherit arguments given in mkDerivation
-qtWrapperArgs=( $qtWrapperArgs )
+qtWrapperArgs=( ${qtWrapperArgs-} )
 
 qtHostPathSeen=()
 
@@ -64,16 +67,16 @@ qtOwnPathsHook() {
 
 preFixupPhases+=" qtOwnPathsHook"
 
-# Note: $qtWrapperArgs still gets defined even if $dontWrapQtApps is set.
+# Note: $qtWrapperArgs still gets defined even if ${dontWrapQtApps-} is set.
 wrapQtAppsHook() {
     # skip this hook when requested
-    [ -z "$dontWrapQtApps" ] || return 0
+    [ -z "${dontWrapQtApps-}" ] || return 0
 
     # guard against running multiple times (e.g. due to propagation)
     [ -z "$wrapQtAppsHookHasRun" ] || return 0
     wrapQtAppsHookHasRun=1
 
-    local targetDirs=( "$prefix/bin" "$prefix/libexec"  )
+    local targetDirs=( "$prefix/bin" "$prefix/sbin" "$prefix/libexec"  )
     echo "wrapping Qt applications in ${targetDirs[@]}"
 
     for targetDir in "${targetDirs[@]}"
@@ -100,3 +103,5 @@ wrapQtAppsHook() {
 }
 
 fixupOutputHooks+=(wrapQtAppsHook)
+
+fi

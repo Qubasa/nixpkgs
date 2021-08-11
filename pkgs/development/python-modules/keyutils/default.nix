@@ -1,4 +1,4 @@
-{ lib, buildPythonPackage, fetchFromGitHub, keyutils, pytestrunner, pytest }:
+{ lib, buildPythonPackage, fetchFromGitHub, keyutils, pytest-runner, pytest }:
 
 buildPythonPackage rec {
   pname = "keyutils";
@@ -13,11 +13,11 @@ buildPythonPackage rec {
   };
 
   buildInputs = [ keyutils ];
-  checkInputs = [ pytest pytestrunner ];
+  checkInputs = [ pytest pytest-runner ];
 
   meta = {
     description = "A set of python bindings for keyutils";
-    homepage = https://github.com/sassoftware/python-keyutils;
+    homepage = "https://github.com/sassoftware/python-keyutils";
     license = lib.licenses.asl20;
     maintainers = with lib.maintainers; [ primeos ];
   };

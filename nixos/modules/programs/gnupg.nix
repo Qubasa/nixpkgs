@@ -70,6 +70,7 @@ in
     agent.pinentryFlavor = mkOption {
       type = types.nullOr (types.enum pkgs.pinentry.flavors);
       example = "gnome3";
+      default = defaultPinentryFlavor;
       description = ''
         Which pinentry interface to use. If not null, the path to the
         pinentry binary will be passed to gpg-agent via commandline and
@@ -91,12 +92,10 @@ in
   };
 
   config = mkIf cfg.agent.enable {
-    programs.gnupg.agent.pinentryFlavor = mkDefault defaultPinentryFlavor;
-
     # This overrides the systemd user unit shipped with the gnupg package
     systemd.user.services.gpg-agent = mkIf (cfg.agent.pinentryFlavor != null) {
       serviceConfig.ExecStart = [ "" ''
-        ${pkgs.gnupg}/bin/gpg-agent --supervised \
+        ${cfg.package}/bin/gpg-agent --supervised \
           --pinentry-program ${pkgs.pinentry.${cfg.agent.pinentryFlavor}}/bin/pinentry
       '' ];
     };
@@ -120,6 +119,8 @@ in
     systemd.user.sockets.dirmngr = mkIf cfg.dirmngr.enable {
       wantedBy = [ "sockets.target" ];
     };
+
+    services.dbus.packages = mkIf (cfg.agent.pinentryFlavor == "gnome3") [ pkgs.gcr ];
 
     environment.systemPackages = with pkgs; [ cfg.package ];
     systemd.packages = [ cfg.package ];

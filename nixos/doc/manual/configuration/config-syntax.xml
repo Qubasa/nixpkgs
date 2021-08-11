@@ -14,12 +14,12 @@
   when managing complex systems. The syntax and semantics of the Nix language
   are fully described in the
   <link
-xlink:href="http://nixos.org/nix/manual/#chap-writing-nix-expressions">Nix
+xlink:href="https://nixos.org/nix/manual/#chap-writing-nix-expressions">Nix
   manual</link>, but here we give a short overview of the most important
   constructs useful in NixOS configuration files.
  </para>
  <xi:include href="config-file.xml" />
- <xi:include href="abstractions.xml" />
+ <xi:include href="../from_md/configuration/abstractions.section.xml" />
  <xi:include href="modularity.xml" />
  <xi:include href="summary.xml" />
 </chapter>

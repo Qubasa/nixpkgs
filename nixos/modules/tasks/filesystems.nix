@@ -7,8 +7,9 @@ let
 
   addCheckDesc = desc: elemType: check: types.addCheck elemType check
     // { description = "${elemType.description} (with check: ${desc})"; };
-  nonEmptyStr = addCheckDesc "non-empty" types.str
-    (x: x != "" && ! (all (c: c == " " || c == "\t") (stringToCharacters x)));
+
+  isNonEmpty = s: (builtins.match "[ \t\n]*" s) == null;
+  nonEmptyStr = addCheckDesc "non-empty" types.str isNonEmpty;
 
   fileSystems' = toposort fsBefore (attrValues config.fileSystems);
 
@@ -21,17 +22,17 @@ let
                      # their assertions too
                      (attrValues config.fileSystems);
 
-  prioOption = prio: optionalString (prio != null) " pri=${toString prio}";
-
   specialFSTypes = [ "proc" "sysfs" "tmpfs" "ramfs" "devtmpfs" "devpts" ];
+
+  nonEmptyWithoutTrailingSlash = addCheckDesc "non-empty without trailing slash" types.str
+    (s: isNonEmpty s && (builtins.match ".+/" s) == null);
 
   coreFileSystemOpts = { name, config, ... }: {
 
     options = {
-
       mountPoint = mkOption {
         example = "/mnt/usb";
-        type = nonEmptyStr;
+        type = nonEmptyWithoutTrailingSlash;
         description = "Location of the mounted the file system.";
       };
 
@@ -54,6 +55,20 @@ let
         example = [ "data=journal" ];
         description = "Options used to mount the file system.";
         type = types.listOf nonEmptyStr;
+      };
+
+      depends = mkOption {
+        default = [ ];
+        example = [ "/persist" ];
+        type = types.listOf nonEmptyWithoutTrailingSlash;
+        description = ''
+          List of paths that should be mounted before this one. This filesystem's
+          <option>device</option> and <option>mountPoint</option> are always
+          checked and do not need to be included explicitly. If a path is added
+          to this list, any other filesystem whose mount point is a parent of
+          the path will be mounted before this filesystem. The paths do not need
+          to actually be the <option>mountPoint</option> of some other filesystem.
+        '';
       };
 
     };
@@ -159,7 +174,7 @@ in
           "/bigdisk".label = "bigdisk";
         }
       '';
-      type = types.loaOf (types.submodule [coreFileSystemOpts fileSystemOpts]);
+      type = types.attrsOf (types.submodule [coreFileSystemOpts fileSystemOpts]);
       description = ''
         The file systems to be mounted.  It must include an entry for
         the root directory (<literal>mountPoint = "/"</literal>).  Each
@@ -193,7 +208,7 @@ in
 
     boot.specialFileSystems = mkOption {
       default = {};
-      type = types.loaOf (types.submodule coreFileSystemOpts);
+      type = types.attrsOf (types.submodule coreFileSystemOpts);
       internal = true;
       description = ''
         Special filesystems that are mounted very early during boot.
@@ -239,6 +254,11 @@ in
         skipCheck = fs: fs.noCheck || fs.device == "none" || builtins.elem fs.fsType fsToSkipCheck;
         # https://wiki.archlinux.org/index.php/fstab#Filepath_spaces
         escape = string: builtins.replaceStrings [ " " "\t" ] [ "\\040" "\\011" ] string;
+        swapOptions = sw: concatStringsSep "," (
+          sw.options
+          ++ optional (sw.priority != null) "pri=${toString sw.priority}"
+          ++ optional (sw.discardPolicy != null) "discard${optionalString (sw.discardPolicy != "both") "=${toString sw.discardPolicy}"}"
+        );
       in ''
         # This is a generated file.  Do not edit!
         #
@@ -261,7 +281,7 @@ in
 
         # Swap devices.
         ${flip concatMapStrings config.swapDevices (sw:
-            "${sw.realDevice} none swap${prioOption sw.priority}\n"
+            "${sw.realDevice} none swap ${swapOptions sw}\n"
         )}
       '';
 
@@ -271,10 +291,10 @@ in
         wants = [ "local-fs.target" "remote-fs.target" ];
       };
 
-    # Emit systemd services to format requested filesystems.
     systemd.services =
-      let
 
+    # Emit systemd services to format requested filesystems.
+      let
         formatDevice = fs:
           let
             mountPoint' = "${escapeSystemdPath fs.mountPoint}.mount";
@@ -286,7 +306,7 @@ in
             before = [ mountPoint' "systemd-fsck@${device'}.service" ];
             requires = [ device'' ];
             after = [ device'' ];
-            path = [ pkgs.utillinux ] ++ config.system.fsPackages;
+            path = [ pkgs.util-linux ] ++ config.system.fsPackages;
             script =
               ''
                 if ! [ -e "${fs.device}" ]; then exit 1; fi
@@ -301,8 +321,45 @@ in
             unitConfig.DefaultDependencies = false; # needed to prevent a cycle
             serviceConfig.Type = "oneshot";
           };
+      in listToAttrs (map formatDevice (filter (fs: fs.autoFormat) fileSystems)) // {
+    # Mount /sys/fs/pstore for evacuating panic logs and crashdumps from persistent storage onto the disk using systemd-pstore.
+    # This cannot be done with the other special filesystems because the pstore module (which creates the mount point) is not loaded then.
+        "mount-pstore" = {
+          serviceConfig = {
+            Type = "oneshot";
+            # skip on kernels without the pstore module
+            ExecCondition = "${pkgs.kmod}/bin/modprobe -b pstore";
+            ExecStart = pkgs.writeShellScript "mount-pstore.sh" ''
+              set -eu
+              # if the pstore module is builtin it will have mounted the persistent store automatically. it may also be already mounted for other reasons.
+              ${pkgs.util-linux}/bin/mountpoint -q /sys/fs/pstore || ${pkgs.util-linux}/bin/mount -t pstore -o nosuid,noexec,nodev pstore /sys/fs/pstore
+              # wait up to 1.5 seconds for the backend to be registered and the files to appear. a systemd path unit cannot detect this happening; and succeeding after a restart would not start dependent units.
+              TRIES=15
+              while [ "$(cat /sys/module/pstore/parameters/backend)" = "(null)" ]; do
+                if (( $TRIES )); then
+                  sleep 0.1
+                  TRIES=$((TRIES-1))
+                else
+                  echo "Persistent Storage backend was not registered in time." >&2
+                  break
+                fi
+              done
+            '';
+            RemainAfterExit = true;
+          };
+          unitConfig = {
+            ConditionVirtualization = "!container";
+            DefaultDependencies = false; # needed to prevent a cycle
+          };
+          before = [ "systemd-pstore.service" ];
+          wantedBy = [ "systemd-pstore.service" ];
+        };
+      };
 
-      in listToAttrs (map formatDevice (filter (fs: fs.autoFormat) fileSystems));
+    systemd.tmpfiles.rules = [
+      "d /run/keys 0750 root ${toString config.ids.gids.keys}"
+      "z /run/keys 0750 root ${toString config.ids.gids.keys}"
+    ];
 
     # Sync mount options with systemd's src/core/mount-setup.c: mount_table.
     boot.specialFileSystems = {
@@ -312,8 +369,8 @@ in
       "/dev/shm" = { fsType = "tmpfs"; options = [ "nosuid" "nodev" "strictatime" "mode=1777" "size=${config.boot.devShmSize}" ]; };
       "/dev/pts" = { fsType = "devpts"; options = [ "nosuid" "noexec" "mode=620" "ptmxmode=0666" "gid=${toString config.ids.gids.tty}" ]; };
 
-      # To hold secrets that shouldn't be written to disk (generally used for NixOps, harmless elsewhere)
-      "/run/keys" = { fsType = "ramfs"; options = [ "nosuid" "nodev" "mode=750" "gid=${toString config.ids.gids.keys}" ]; };
+      # To hold secrets that shouldn't be written to disk
+      "/run/keys" = { fsType = "ramfs"; options = [ "nosuid" "nodev" "mode=750" ]; };
     } // optionalAttrs (!config.boot.isContainer) {
       # systemd-nspawn populates /sys by itself, and remounting it causes all
       # kinds of weird issues (most noticeably, waiting for host disk device

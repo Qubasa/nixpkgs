@@ -3,13 +3,12 @@
   pkgs ? import ../../.. { inherit system config; }
 }:
 
-with import ../../lib/testing.nix { inherit system pkgs; };
+with import ../../lib/testing-python.nix { inherit system pkgs; };
 with pkgs.lib;
 
 let
   mkKubernetesBaseTest =
     { name, domain ? "my.zyx", test, machines
-    , pkgs ? import <nixpkgs> { inherit system; }
     , extraConfiguration ? null }:
     let
       masterName = head (filter (machineName: any (role: role == "master") machines.${machineName}.roles) (attrNames machines));
@@ -41,7 +40,7 @@ let
                   allowedTCPPorts = [
                     10250 # kubelet
                   ];
-                  trustedInterfaces = ["docker0"];
+                  trustedInterfaces = ["mynet"];
 
                   extraCommands = concatMapStrings  (node: ''
                     iptables -A INPUT -s ${node.config.networking.primaryIPAddress} -j ACCEPT
@@ -53,6 +52,7 @@ let
               services.flannel.iface = "eth1";
               services.kubernetes = {
                 addons.dashboard.enable = true;
+                proxy.hostname = "${masterName}.${domain}";
 
                 easyCerts = true;
                 inherit (machine) roles;
@@ -61,6 +61,13 @@ let
                   advertiseAddress = master.ip;
                 };
                 masterAddress = "${masterName}.${config.networking.domain}";
+                # workaround for:
+                #   https://github.com/kubernetes/kubernetes/issues/102676
+                #   (workaround from) https://github.com/kubernetes/kubernetes/issues/95488
+                kubelet.extraOpts = ''\
+                  --cgroups-per-qos=false \
+                  --enforce-node-allocatable="" \
+                '';
               };
             }
             (optionalAttrs (any (role: role == "master") machine.roles) {
@@ -74,10 +81,8 @@ let
       ) machines;
 
       testScript = ''
-        startAll;
-
-        ${test}
-      '';
+        start_all()
+      '' + test;
     };
 
   mkKubernetesMultiNodeTest = attrs: mkKubernetesBaseTest ({

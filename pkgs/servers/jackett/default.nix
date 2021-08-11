@@ -1,40 +1,30 @@
-{ lib, stdenv, fetchurl, makeWrapper, curl, icu60, openssl, zlib }:
+{ lib, stdenv, fetchurl, mono, makeWrapper, curl, icu60, openssl, zlib }:
 
 stdenv.mkDerivation rec {
   pname = "jackett";
-  version = "0.11.751";
+  version = "0.18.531";
 
   src = fetchurl {
-    url = "https://github.com/Jackett/Jackett/releases/download/v${version}/Jackett.Binaries.LinuxAMDx64.tar.gz";
-    sha256 = "09y9pck35pj2g89936zallxr3hanmbgp8jc42nj2js68l0z64qz3";
+    url = "https://github.com/Jackett/Jackett/releases/download/v${version}/Jackett.Binaries.Mono.tar.gz";
+    sha256 = "sha256-ZykgYzE86bt5SNeHng995TQuE15ajWhThgqt2fJFizc=";
   };
 
-  buildInputs = [ makeWrapper ];
+  nativeBuildInputs = [ makeWrapper ];
 
   installPhase = ''
-    mkdir -p $out/{bin,opt/${pname}-${version}}
-    cp -r * $out/opt/${pname}-${version}
+    mkdir -p $out/{bin,share/${pname}-${version}}
+    cp -r * $out/share/${pname}-${version}
 
-    makeWrapper "$out/opt/${pname}-${version}/jackett" $out/bin/Jackett \
-      --prefix LD_LIBRARY_PATH ':' "${curl.out}/lib:${icu60.out}/lib:${openssl.out}/lib:${zlib.out}/lib"
+    makeWrapper "${mono}/bin/mono" $out/bin/Jackett \
+      --add-flags "$out/share/${pname}-${version}/JackettConsole.exe" \
+      --prefix LD_LIBRARY_PATH : ${lib.makeLibraryPath [ curl icu60 openssl zlib ]}
   '';
 
-  preFixup = let
-    libPath = lib.makeLibraryPath [
-      stdenv.cc.cc.lib  # libstdc++.so.6
-    ];
-  in ''
-    patchelf \
-      --set-interpreter "$(cat $NIX_CC/nix-support/dynamic-linker)" \
-      --set-rpath "${libPath}" \
-      $out/opt/${pname}-${version}/jackett
-  '';
-
-  meta = with stdenv.lib; {
-    description = "API Support for your favorite torrent trackers.";
-    homepage = https://github.com/Jackett/Jackett/;
-    license = licenses.gpl2;
-    maintainers = with maintainers; [ edwtjo nyanloutre ];
+  meta = with lib; {
+    description = "API Support for your favorite torrent trackers";
+    homepage = "https://github.com/Jackett/Jackett/";
+    license = licenses.gpl2Only;
+    maintainers = with maintainers; [ edwtjo nyanloutre purcell ];
     platforms = platforms.all;
   };
 }

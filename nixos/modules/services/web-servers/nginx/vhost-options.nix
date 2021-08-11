@@ -1,4 +1,4 @@
-# This file defines the options that can be used both for the Apache
+# This file defines the options that can be used both for the Nginx
 # main server configuration, and for the virtual hosts.  (The latter
 # has additional options that affect the web server as a whole, like
 # the user/group to run under.)
@@ -118,6 +118,18 @@ with lib;
       '';
     };
 
+    rejectSSL = mkOption {
+      type = types.bool;
+      default = false;
+      description = ''
+        Whether to listen for and reject all HTTPS connections to this vhost. Useful in
+        <link linkend="opt-services.nginx.virtualHosts._name_.default">default</link>
+        server blocks to avoid serving the certificate for another vhost. Uses the
+        <literal>ssl_reject_handshake</literal> directive available in nginx versions
+        1.19.4 and above.
+      '';
+    };
+
     sslCertificate = mkOption {
       type = types.path;
       example = "/var/host.cert";
@@ -133,7 +145,7 @@ with lib;
     sslTrustedCertificate = mkOption {
       type = types.nullOr types.path;
       default = null;
-      example = "/var/root.cert";
+      example = "\${pkgs.cacert}/etc/ssl/certs/ca-bundle.crt";
       description = "Path to root SSL certificate for stapling and client certificates.";
     };
 
@@ -148,6 +160,19 @@ with lib;
         If there is one server block configured to enable http2,then it is
         enabled for all server blocks on this IP.
         See https://stackoverflow.com/a/39466948/263061.
+      '';
+    };
+
+    http3 = mkOption {
+      type = types.bool;
+      default = false;
+      description = ''
+        Whether to enable HTTP 3.
+        This requires using <literal>pkgs.nginxQuic</literal> package
+        which can be achieved by setting <literal>services.nginx.package = pkgs.nginxQuic;</literal>.
+        Note that HTTP 3 support is experimental and
+        *not* yet recommended for production.
+        Read more at https://quic.nginx.org/
       '';
     };
 
@@ -198,7 +223,7 @@ with lib;
         Basic Auth protection for a vhost.
 
         WARNING: This is implemented to store the password in plain text in the
-        nix store.
+        Nix store.
       '';
     };
 
@@ -207,6 +232,10 @@ with lib;
       default = null;
       description = ''
         Basic Auth password file for a vhost.
+        Can be created via: <command>htpasswd -c &lt;filename&gt; &lt;username&gt;</command>.
+
+        WARNING: The generate file contains the users' passwords in a
+        non-cryptographically-securely hashed way.
       '';
     };
 

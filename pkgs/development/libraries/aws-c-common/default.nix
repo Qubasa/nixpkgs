@@ -1,28 +1,34 @@
-{ lib, stdenv, fetchFromGitHub, cmake }:
+{ lib
+, stdenv
+, fetchFromGitHub
+, cmake
+}:
 
 stdenv.mkDerivation rec {
   pname = "aws-c-common";
-  version = "0.3.11";
+  version = "0.6.8";
 
   src = fetchFromGitHub {
     owner = "awslabs";
     repo = pname;
     rev = "v${version}";
-    sha256 = "0a7hi4crnc3j1j39qcnd44zqdfwzw1xghcf80marx5vdf1qdzy6p";
+    sha256 = "sha256-wtgD8txViYu7yXdnID6TTf4gCDmvebD19XRxFnubndY=";
   };
 
   nativeBuildInputs = [ cmake ];
 
-  NIX_CFLAGS_COMPILE = lib.optionals stdenv.isDarwin [
-    "-Wno-nullability-extension"
-    "-Wno-typedef-redefinition"
+  cmakeFlags = [
+    "-DBUILD_SHARED_LIBS=ON"
+    "-DCMAKE_SKIP_BUILD_RPATH=OFF" # for tests
   ];
+
+  doCheck = true;
 
   meta = with lib; {
     description = "AWS SDK for C common core";
-    homepage = https://github.com/awslabs/aws-c-common;
+    homepage = "https://github.com/awslabs/aws-c-common";
     license = licenses.asl20;
     platforms = platforms.unix;
-    maintainers = with maintainers; [ orivej eelco ];
+    maintainers = with maintainers; [ orivej eelco r-burns ];
   };
 }

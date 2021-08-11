@@ -1,9 +1,9 @@
-import ../make-test.nix ({ pkgs, ...}: let
+import ../make-test-python.nix ({ pkgs, ...}: let
   adminpass = "hunter2";
   adminuser = "custom-admin-username";
 in {
   name = "nextcloud-with-postgresql-and-redis";
-  meta = with pkgs.stdenv.lib.maintainers; {
+  meta = with pkgs.lib.maintainers; {
     maintainers = [ eqyiel ];
   };
 
@@ -17,7 +17,6 @@ in {
       services.nextcloud = {
         enable = true;
         hostName = "nextcloud";
-        nginx.enable = true;
         caching = {
           apcu = false;
           redis = true;
@@ -60,14 +59,14 @@ in {
 
   testScript = let
     configureRedis = pkgs.writeScript "configure-redis" ''
-      #!${pkgs.stdenv.shell}
+      #!${pkgs.runtimeShell}
       nextcloud-occ config:system:set redis 'host' --value 'localhost' --type string
       nextcloud-occ config:system:set redis 'port' --value 6379 --type integer
       nextcloud-occ config:system:set memcache.local --value '\OC\Memcache\Redis' --type string
       nextcloud-occ config:system:set memcache.locking --value '\OC\Memcache\Redis' --type string
     '';
     withRcloneEnv = pkgs.writeScript "with-rclone-env" ''
-      #!${pkgs.stdenv.shell}
+      #!${pkgs.runtimeShell}
       export RCLONE_CONFIG_NEXTCLOUD_TYPE=webdav
       export RCLONE_CONFIG_NEXTCLOUD_URL="http://nextcloud/remote.php/webdav/"
       export RCLONE_CONFIG_NEXTCLOUD_VENDOR="nextcloud"
@@ -76,21 +75,25 @@ in {
       "''${@}"
     '';
     copySharedFile = pkgs.writeScript "copy-shared-file" ''
-      #!${pkgs.stdenv.shell}
+      #!${pkgs.runtimeShell}
       echo 'hi' | ${pkgs.rclone}/bin/rclone rcat nextcloud:test-shared-file
     '';
 
     diffSharedFile = pkgs.writeScript "diff-shared-file" ''
-      #!${pkgs.stdenv.shell}
+      #!${pkgs.runtimeShell}
       diff <(echo 'hi') <(${pkgs.rclone}/bin/rclone cat nextcloud:test-shared-file)
     '';
   in ''
-    startAll();
-    $nextcloud->waitForUnit("multi-user.target");
-    $nextcloud->succeed("${configureRedis}");
-    $nextcloud->succeed("curl -sSf http://nextcloud/login");
-    $nextcloud->succeed("${withRcloneEnv} ${copySharedFile}");
-    $client->waitForUnit("multi-user.target");
-    $client->succeed("${withRcloneEnv} ${diffSharedFile}");
+    start_all()
+    nextcloud.wait_for_unit("multi-user.target")
+    nextcloud.succeed("${configureRedis}")
+    nextcloud.succeed("curl -sSf http://nextcloud/login")
+    nextcloud.succeed(
+        "${withRcloneEnv} ${copySharedFile}"
+    )
+    client.wait_for_unit("multi-user.target")
+    client.succeed(
+        "${withRcloneEnv} ${diffSharedFile}"
+    )
   '';
 })

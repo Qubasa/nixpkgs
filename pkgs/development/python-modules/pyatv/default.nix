@@ -1,23 +1,65 @@
-{ stdenv, buildPythonPackage, fetchPypi, srptools, aiohttp, zeroconf
-, ed25519, cryptography, curve25519-donna, pytest, pytestrunner
-, netifaces, asynctest, virtualenv, toml, filelock, tox }:
+{ lib
+, buildPythonPackage
+, aiohttp
+, audio-metadata
+, bitarray
+, cryptography
+, deepdiff
+, fetchFromGitHub
+, miniaudio
+, netifaces
+, protobuf
+, pytest-aiohttp
+, pytest-asyncio
+, pytest-timeout
+, pytestCheckHook
+, srptools
+, zeroconf
+}:
 
 buildPythonPackage rec {
   pname = "pyatv";
-  version = "0.3.13";
+  version = "0.8.2";
 
-  src = fetchPypi {
-    inherit pname version;
-    sha256 = "8fc1a903a9d666e4109127410d35a83458559a86bc0de3fe1ffb3f15d2d653b3";
+  src = fetchFromGitHub {
+    owner = "postlund";
+    repo = pname;
+    rev = "v${version}";
+    sha256 = "035cjm78xakvfi7k8zahjk0xr23p9my67d8jvq5bqrd506awrl0f";
   };
 
-  propagatedBuildInputs = [ srptools aiohttp zeroconf ed25519 cryptography curve25519-donna tox ];
+  postPatch = ''
+    substituteInPlace setup.py \
+      --replace "pytest-runner" ""
+  '';
 
-  checkInputs = [ pytest pytestrunner netifaces asynctest virtualenv toml filelock ];
+  propagatedBuildInputs = [
+    aiohttp
+    audio-metadata
+    bitarray
+    cryptography
+    miniaudio
+    netifaces
+    protobuf
+    srptools
+    zeroconf
+  ];
 
-  meta = with stdenv.lib; {
-    description = "A python client library for the Apple TV";
-    homepage = https://github.com/postlund/pyatv;
+  checkInputs = [
+    deepdiff
+    pytest-aiohttp
+    pytest-asyncio
+    pytest-timeout
+    pytestCheckHook
+  ];
+
+  __darwinAllowLocalNetworking = true;
+
+  pythonImportsCheck = [ "pyatv" ];
+
+  meta = with lib; {
+    description = "Python client library for the Apple TV";
+    homepage = "https://github.com/postlund/pyatv";
     license = licenses.mit;
     maintainers = with maintainers; [ elseym ];
   };

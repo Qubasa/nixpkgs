@@ -1,18 +1,19 @@
-{ stdenv, fetchurl, libxslt, docbook_xsl, docbook_xml_dtd_45, pcre }:
+{ lib, stdenv, fetchurl, libxslt, docbook_xsl, docbook_xml_dtd_45, pcre, withZ3 ? true, z3 }:
 
 stdenv.mkDerivation rec {
   pname = "cppcheck";
-  version = "1.88";
+  version = "2.5";
 
   src = fetchurl {
     url = "mirror://sourceforge/${pname}/${pname}-${version}.tar.bz2";
-    sha256 = "1jiqv9pzzy2gxkdhxv3gqjarwgbvc7kxyc66dm3i6xwp94bl89dv";
+    sha256 = "sha256-s+KJpA11A4bFOXgy2eVkRMYBFwwBjU7QZgSPZ0oVKxo=";
   };
 
-  buildInputs = [ pcre ];
+  buildInputs = [ pcre ] ++ lib.optionals withZ3 [ z3 ];
   nativeBuildInputs = [ libxslt docbook_xsl docbook_xml_dtd_45 ];
 
-  makeFlags = ''PREFIX=$(out) CFGDIR=$(out)/cfg HAVE_RULES=yes'';
+  makeFlags = [ "PREFIX=$(out)" "FILESDIR=$(out)/cfg" "HAVE_RULES=yes" ]
+   ++ lib.optionals withZ3 [ "USE_Z3=yes" "CPPFLAGS=-DNEW_Z3=1" ];
 
   outputs = [ "out" "man" ];
 
@@ -24,13 +25,13 @@ stdenv.mkDerivation rec {
     cp cppcheck.1 $man/share/man/man1/cppcheck.1
   '';
 
-  meta = with stdenv.lib; {
+  meta = with lib; {
     description = "A static analysis tool for C/C++ code";
     longDescription = ''
       Check C/C++ code for memory leaks, mismatching allocation-deallocation,
       buffer overruns and more.
     '';
-    homepage = http://cppcheck.sourceforge.net/;
+    homepage = "http://cppcheck.sourceforge.net/";
     license = licenses.gpl3Plus;
     platforms = platforms.unix;
     maintainers = with maintainers; [ joachifm ];

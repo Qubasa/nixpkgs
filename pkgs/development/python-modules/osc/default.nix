@@ -1,22 +1,21 @@
-{ stdenv, buildPythonPackage , fetchFromGitHub
-, bashInteractive , urlgrabber, m2crypto
+{ lib, buildPythonPackage, fetchFromGitHub, bashInteractive, urlgrabber
+, m2crypto, rpm, chardet
 }:
 
 buildPythonPackage rec {
   pname = "osc";
-  version = "0.165.4";
+  version = "0.170.0";
 
   src = fetchFromGitHub {
     owner = "openSUSE";
     repo = "osc";
     rev = version;
-    sha256 = "1f8q65wlgchzwzarwrv6a0p60gw0ykpf4d5s7cks835hyawgcbyl";
+    sha256 = "10dj9kscz59qm8rw5084gf0m8ail2rl7r8rg66ij92x88wvi9mbz";
   };
 
   buildInputs = [ bashInteractive ]; # needed for bash-completion helper
-  propagatedBuildInputs = [ urlgrabber m2crypto ];
-
-  doCheck = false;
+  checkInputs = [ rpm ];
+  propagatedBuildInputs = [ urlgrabber m2crypto chardet ];
 
   postInstall = ''
     ln -s $out/bin/osc-wrapper.py $out/bin/osc
@@ -31,7 +30,8 @@ buildPythonPackage rec {
     EOF
   '';
 
-  meta = with stdenv.lib; {
+  meta = with lib; {
+    homepage = "https://github.com/openSUSE/osc";
     description = "opensuse-commander with svn like handling";
     maintainers = [ maintainers.peti ];
     license = licenses.gpl2;

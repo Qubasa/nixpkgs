@@ -1,22 +1,40 @@
-{ stdenv, buildPythonPackage, fetchPypi, pytestrunner, pytest }:
+{ lib
+, buildPythonPackage
+, fetchFromGitHub
+, pytestCheckHook
+}:
 
 buildPythonPackage rec {
   pname = "Cerberus";
-  version = "1.3.1";
+  version = "1.3.4";
 
-  src = fetchPypi {
-    inherit pname version;
-    sha256 = "0be48fc0dc84f83202a5309c0aa17cd5393e70731a1698a50d118b762fbe6875";
+  src = fetchFromGitHub {
+    owner = "pyeve";
+    repo = "cerberus";
+    rev = version;
+    sha256 = "03kj15cf1pbd11mxsik96m5w1m6p0fbdc4ia5ihzmq8rz28razpq";
   };
 
-  checkInputs = [ pytestrunner pytest ];
+  checkInputs = [
+    pytestCheckHook
+  ];
 
-  checkPhase = ''
-    pytest -k 'not nested_oneofs'
+  preCheck = ''
+    export TESTDIR=$(mktemp -d)
+    cp -R ./cerberus/tests $TESTDIR
+    pushd $TESTDIR
   '';
 
-  meta = with stdenv.lib; {
-    homepage = http://python-cerberus.org/;
+  postCheck = ''
+    popd
+  '';
+
+  pythonImportsCheck = [
+    "cerberus"
+  ];
+
+  meta = with lib; {
+    homepage = "http://python-cerberus.org/";
     description = "Lightweight, extensible schema and data validation tool for Python dictionaries";
     license = licenses.mit;
   };

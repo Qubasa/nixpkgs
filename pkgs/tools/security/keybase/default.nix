@@ -1,14 +1,15 @@
-{ stdenv, lib, buildGoPackage, fetchFromGitHub
+{ stdenv, substituteAll, lib, buildGoPackage, fetchFromGitHub
 , AVFoundation, AudioToolbox, ImageIO, CoreMedia
 , Foundation, CoreGraphics, MediaToolbox
+, gnupg
 }:
 
 buildGoPackage rec {
   pname = "keybase";
-  version = "4.6.0";
+  version = "5.7.1";
 
   goPackagePath = "github.com/keybase/client";
-  subPackages = [ "go/keybase" ];
+  subPackages = [ "go/kbnm" "go/keybase" ];
 
   dontRenameImports = true;
 
@@ -16,16 +17,25 @@ buildGoPackage rec {
     owner = "keybase";
     repo = "client";
     rev = "v${version}";
-    sha256 = "1aqj5s3vfji1zl7xdzphnsw3b8pnbg22n9rzdxkcdjf7via5wz2k";
+    sha256 = "sha256-72rVk8pYIQFESQqBu4bmFBPpAOB0oG2Iu36TbAdecBw=";
   };
 
-  buildInputs = lib.optionals stdenv.isDarwin [ AVFoundation AudioToolbox ImageIO CoreMedia Foundation CoreGraphics MediaToolbox ];
-  buildFlags = [ "-tags production" ];
+  patches = [
+    (substituteAll {
+      src = ./fix-paths-keybase.patch;
+      gpg = "${gnupg}/bin/gpg";
+      gpg2 = "${gnupg}/bin/gpg2";
+    })
+  ];
 
-  meta = with stdenv.lib; {
-    homepage = https://www.keybase.io/;
-    description = "The Keybase official command-line utility and service.";
+  buildInputs = lib.optionals stdenv.isDarwin [ AVFoundation AudioToolbox ImageIO CoreMedia Foundation CoreGraphics MediaToolbox ];
+  tags = [ "production" ];
+
+  meta = with lib; {
+    homepage = "https://www.keybase.io/";
+    description = "The Keybase official command-line utility and service";
     platforms = platforms.linux ++ platforms.darwin;
-    maintainers = with maintainers; [ carlsverre np rvolosatovs ];
+    maintainers = with maintainers; [ avaq carlsverre np rvolosatovs Br1ght0ne ];
+    license = licenses.bsd3;
   };
 }

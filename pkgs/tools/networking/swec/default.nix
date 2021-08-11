@@ -1,14 +1,16 @@
-{ fetchurl, stdenv, makeWrapper, perlPackages }:
+{ fetchurl, lib, stdenv, makeWrapper, perlPackages }:
 
 stdenv.mkDerivation rec {
-  name = "swec-0.4";
+  pname = "swec";
+  version = "0.4";
 
   src = fetchurl {
-    url = "http://files.zerodogg.org/swec/${name}.tar.bz2";
+    url = "http://files.zerodogg.org/swec/swec-${version}.tar.bz2";
     sha256 = "1m3971z4z1wr0paggprfz0n8ng8vsnkc9m6s3bdplgyz7qjk6jwx";
   };
 
-  buildInputs = [ makeWrapper perlPackages.perl perlPackages.LWP perlPackages.URI perlPackages.HTMLParser ];
+  nativeBuildInputs = [ makeWrapper ];
+  buildInputs = [ perlPackages.perl perlPackages.LWP perlPackages.URI perlPackages.HTMLParser ];
   checkInputs = [ perlPackages.HTTPServerSimple perlPackages.Parent ];
 
   configurePhase = ''
@@ -23,9 +25,9 @@ stdenv.mkDerivation rec {
   installPhase = ''
     make install prefix="$out"
 
-    mkdir -p "$out/share/${name}"
-    cp -v default.sdf "$out/share/${name}"
-    sed -i "$out/bin/swec" -e"s|realpath(\$0)|'$out/share/${name}/swec'|g"
+    mkdir -p "$out/share/swec-${version}"
+    cp -v default.sdf "$out/share/swec-${version}"
+    sed -i "$out/bin/swec" -e"s|realpath(\$0)|'$out/share/swec-${version}/swec'|g"
 
     wrapProgram "$out/bin/swec" \
       --prefix PERL5LIB : ${with perlPackages; makePerlPath [ LWP URI HTMLParser ]}
@@ -35,7 +37,7 @@ stdenv.mkDerivation rec {
   checkPhase = "make test";
 
   meta = {
-    homepage = https://random.zerodogg.org/swec/;
+    homepage = "https://random.zerodogg.org/swec/";
 
     description = "Simple Web Error Checker (SWEC)";
 
@@ -64,9 +66,9 @@ stdenv.mkDerivation rec {
          (well, not exactly true, SWEC will ignore robots.txt).
       '';
 
-    license = stdenv.lib.licenses.gpl3Plus;
+    license = lib.licenses.gpl3Plus;
 
     maintainers = [ ];
-    platforms = stdenv.lib.platforms.linux;
+    platforms = lib.platforms.linux;
   };
 }

@@ -1,8 +1,8 @@
-{ lib, buildPythonPackage, fetchPypi, requests, pytest, pytestcov, pytest-mock, pytest_xdist }:
+{ lib, buildPythonPackage, fetchPypi, requests, pytest, pytest-cov, pytest-mock, pytest-xdist }:
 
 buildPythonPackage rec {
   pname = "stripe";
-  version = "2.37.2";
+  version = "2.58.0";
 
   # Tests require network connectivity and there's no easy way to disable
   # them. ~ C.
@@ -10,16 +10,16 @@ buildPythonPackage rec {
 
   src = fetchPypi {
     inherit pname version;
-    sha256 = "7ad8ee6d9bdca86d6ed38c4eb48b1b67b9529ac4fee6c26d3f9aa4d5e98b50d6";
+    sha256 = "34829b528e652ffc919d40eff2ba78021149818bab76e33c07801382921cf6d5";
   };
 
   propagatedBuildInputs = [ requests ];
 
-  checkInputs = [ pytest pytestcov pytest-mock pytest_xdist ];
+  checkInputs = [ pytest pytest-cov pytest-mock pytest-xdist ];
 
   meta = with lib; {
     description = "Stripe Python bindings";
-    homepage = https://github.com/stripe/stripe-python;
+    homepage = "https://github.com/stripe/stripe-python";
     license = licenses.mit;
   };
 }

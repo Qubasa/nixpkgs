@@ -64,11 +64,13 @@ in
     enabledConfigs = filter (f: f.enable) (attrValues cfg.peers);
 
     mkEtc = peerCfg: {
-      "ppp/peers/${peerCfg.name}".text = peerCfg.config;
+      name = "ppp/peers/${peerCfg.name}";
+      value.text = peerCfg.config;
     };
 
     mkSystemd = peerCfg: {
-      "pppd-${peerCfg.name}" = {
+      name = "pppd-${peerCfg.name}";
+      value = {
         restartTriggers = [ config.environment.etc."ppp/peers/${peerCfg.name}".source ];
         before = [ "network.target" ];
         wants = [ "network.target" ];
@@ -80,13 +82,21 @@ in
           LD_PRELOAD = "${pkgs.libredirect}/lib/libredirect.so";
           NIX_REDIRECTS = "/var/run=/run/pppd";
         };
-        serviceConfig = {
+        serviceConfig = let
+          capabilities = [
+            "CAP_BPF"
+            "CAP_SYS_TTY_CONFIG"
+            "CAP_NET_ADMIN"
+            "CAP_NET_RAW"
+          ];
+        in
+        {
           ExecStart = "${getBin cfg.package}/sbin/pppd call ${peerCfg.name} nodetach nolog";
           Restart = "always";
           RestartSec = 5;
 
-          AmbientCapabilities = "CAP_SYS_TTY_CONFIG CAP_NET_ADMIN CAP_NET_RAW CAP_SYS_ADMIN";
-          CapabilityBoundingSet = "CAP_SYS_TTY_CONFIG CAP_NET_ADMIN CAP_NET_RAW CAP_SYS_ADMIN";
+          AmbientCapabilities = capabilities;
+          CapabilityBoundingSet = capabilities;
           KeyringMode = "private";
           LockPersonality = true;
           MemoryDenyWriteExecute = true;
@@ -101,7 +111,17 @@ in
           ProtectKernelTunables = false;
           ProtectSystem = "strict";
           RemoveIPC = true;
-          RestrictAddressFamilies = "AF_PACKET AF_UNIX AF_PPPOX AF_ATMPVC AF_ATMSVC AF_INET AF_INET6 AF_IPX";
+          RestrictAddressFamilies = [
+            "AF_ATMPVC"
+            "AF_ATMSVC"
+            "AF_INET"
+            "AF_INET6"
+            "AF_IPX"
+            "AF_NETLINK"
+            "AF_PACKET"
+            "AF_PPPOX"
+            "AF_UNIX"
+          ];
           RestrictNamespaces = true;
           RestrictRealtime = true;
           RestrictSUIDSGID = true;
@@ -124,11 +144,11 @@ in
       };
     };
 
-    etcFiles = map mkEtc enabledConfigs;
-    systemdConfigs = map mkSystemd enabledConfigs;
+    etcFiles = listToAttrs (map mkEtc enabledConfigs);
+    systemdConfigs = listToAttrs (map mkSystemd enabledConfigs);
 
   in mkIf cfg.enable {
-    environment.etc = mkMerge etcFiles;
-    systemd.services = mkMerge systemdConfigs;
+    environment.etc = etcFiles;
+    systemd.services = systemdConfigs;
   };
 }

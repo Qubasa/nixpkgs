@@ -1,15 +1,17 @@
-{ stdenv, fetchurl, makeWrapper, bash, perl, diffstat, diffutils, patch, findutils }:
+{ lib, stdenv, fetchurl, makeWrapper, bash, perl, diffstat, diffutils, patch, findutils }:
 
 stdenv.mkDerivation rec {
 
-  name = "quilt-0.66";
+  pname = "quilt";
+  version = "0.66";
 
   src = fetchurl {
-    url = "mirror://savannah/quilt/${name}.tar.gz";
+    url = "mirror://savannah/${pname}/${pname}-${version}.tar.gz";
     sha256 = "01vfvk4pqigahx82fhaaffg921ivd3k7rylz1yfvy4zbdyd32jri";
   };
 
-  buildInputs = [ makeWrapper perl bash diffutils patch findutils diffstat ];
+  nativeBuildInputs = [ makeWrapper ];
+  buildInputs = [ perl bash diffutils patch findutils diffstat ];
 
   postInstall = ''
     wrapProgram $out/bin/quilt --prefix PATH : \
@@ -17,7 +19,7 @@ stdenv.mkDerivation rec {
   '';
 
   meta = {
-    homepage = https://savannah.nongnu.org/projects/quilt;
+    homepage = "https://savannah.nongnu.org/projects/quilt";
     description = "Easily manage large numbers of patches";
 
     longDescription = ''
@@ -27,8 +29,8 @@ stdenv.mkDerivation rec {
       and more.
     '';
 
-    license = stdenv.lib.licenses.gpl2Plus;
-    platforms = stdenv.lib.platforms.all;
+    license = lib.licenses.gpl2Plus;
+    platforms = lib.platforms.all;
   };
 
 }

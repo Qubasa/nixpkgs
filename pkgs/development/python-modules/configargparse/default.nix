@@ -1,20 +1,31 @@
-{ lib, buildPythonPackage, fetchPypi }:
+{ lib
+, buildPythonPackage
+, fetchFromGitHub
+, mock
+, pytestCheckHook
+}:
 
 buildPythonPackage rec {
-  pname = "ConfigArgParse";
-  version = "0.15.1";
+  pname = "configargparse";
+  version = "1.4.1";
 
-  src = fetchPypi {
-    inherit pname version;
-    sha256 = "baaf0fd2c1c108d007f402dab5481ac5f12d77d034825bf5a27f8224757bd0ac";
+  src = fetchFromGitHub {
+    owner = "bw2";
+    repo = "ConfigArgParse";
+    rev = "v${version}";
+    sha256 = "sha256-hzhjrdrXxjksvbHlTnQVsT350g0yuG1F21fElv6bLSA=";
   };
 
-  # no tests in tarball
-  doCheck = false;
+  checkInputs = [
+    mock
+    pytestCheckHook
+  ];
+
+  pythonImportsCheck = [ "configargparse" ];
 
   meta = with lib; {
     description = "A drop-in replacement for argparse";
-    homepage = https://github.com/zorro3/ConfigArgParse;
+    homepage = "https://github.com/bw2/ConfigArgParse";
     license = licenses.mit;
     maintainers = [ maintainers.willibutz ];
   };

@@ -4,8 +4,8 @@ with skawarePackages;
 
 buildPackage {
   pname = "s6-dns";
-  version = "2.3.1.1";
-  sha256 = "0clib10dk3r9rcxv1yfr6gdvqqrx0arzivjpmhz9p8xaif53wpj1";
+  version = "2.3.5.1";
+  sha256 = "0qsgqwdr5ms337fc9f2b4aa5cr7myvbzndvgkgswnrdwszjm078c";
 
   description = "A suite of DNS client programs and libraries for Unix systems";
 
@@ -28,6 +28,7 @@ buildPackage {
     rm $(find -type f -mindepth 1 -maxdepth 1 -executable)
     rm libs6dns.*
     rm libskadns.*
+    rm libdcache.*
 
     mv doc $doc/share/doc/s6-dns/html
   '';

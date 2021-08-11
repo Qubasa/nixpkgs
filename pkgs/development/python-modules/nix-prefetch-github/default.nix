@@ -1,31 +1,42 @@
-{ fetchPypi
+{ fetchFromGitHub
 , lib
 , buildPythonPackage
 , attrs
 , click
 , effect
-, jinja2
+, git
+, pytestCheckHook
+, pytest-cov
+, pythonOlder
 }:
 
 buildPythonPackage rec {
   pname = "nix-prefetch-github";
-  version = "2.3.1";
+  version = "4.0.4";
 
-  src = fetchPypi {
-    inherit pname version;
-    sha256 = "1jkvmj33xinff0sb47yg33n131yi93pyq86skqc78xd38j6c8q9s";
+  disabled = pythonOlder "3.7";
+
+  src = fetchFromGitHub {
+    owner = "seppeljordan";
+    repo = "nix-prefetch-github";
+    rev = "v${version}";
+    sha256 = "g5G818Gq5EGyRIyg/ZW7guxMS0IyJ4nYaRjG/CtGhuc=";
   };
 
   propagatedBuildInputs = [
     attrs
     click
     effect
-    jinja2
   ];
+
+  checkInputs = [ pytestCheckHook pytest-cov git ];
+
+  # ignore tests which are impure
+  disabledTests = [ "network" "requires_nix_build" ];
 
   meta = with lib; {
     description = "Prefetch sources from github";
-    homepage = https://github.com/seppeljordan/nix-prefetch-github;
+    homepage = "https://github.com/seppeljordan/nix-prefetch-github";
     license = licenses.gpl3;
     maintainers = with maintainers; [ seppeljordan ];
   };

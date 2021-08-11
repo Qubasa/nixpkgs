@@ -1,4 +1,4 @@
-{ lib, file, fetchFromGitLab, buildPerlPackage, ArchiveZip, ArchiveCpio }:
+{ lib, stdenv, file, fetchFromGitLab, buildPerlPackage, ArchiveZip, ArchiveCpio, shortenPerlShebang }:
 
 buildPerlPackage rec {
   pname = "strip-nondeterminism";
@@ -17,7 +17,9 @@ buildPerlPackage rec {
   # stray test failure
   doCheck = false;
 
-  buildInputs = [ ArchiveZip ArchiveCpio file ];
+  nativeBuildInputs = lib.optionals stdenv.isDarwin [ shortenPerlShebang ];
+  buildInputs = [ ArchiveZip ArchiveCpio ];
+  propagatedNativeBuildInputs = [ file ];
 
   perlPostHook = ''
     # we don’t need the debhelper script
@@ -25,8 +27,13 @@ buildPerlPackage rec {
     rm $out/share/man/man1/dh_strip_nondeterminism.1.gz
   '';
 
+  postInstall = lib.optionalString stdenv.isDarwin ''
+    shortenPerlShebang $out/bin/strip-nondeterminism
+  '';
+
   meta = with lib; {
     description = "A Perl module for stripping bits of non-deterministic information";
+    homepage = "https://reproducible-builds.org/";
     license = licenses.gpl3;
     maintainers = with maintainers; [ pSub ];
   };

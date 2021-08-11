@@ -1,28 +1,43 @@
-{ stdenv, fetchFromGitHub, lib, bzip2, cmake, lz4, snappy, zlib, zstd, enableLite ? false }:
+{ lib, stdenv
+, fetchFromGitHub
+, fetchpatch
+, cmake
+, ninja
+, bzip2
+, lz4
+, snappy
+, zlib
+, zstd
+, enableJemalloc ? false, jemalloc
+, enableLite ? false
+, enableShared ? !stdenv.hostPlatform.isStatic
+}:
 
 stdenv.mkDerivation rec {
   pname = "rocksdb";
-  version = "6.3.6";
+  version = "6.23.2";
 
   src = fetchFromGitHub {
     owner = "facebook";
     repo = pname;
     rev = "v${version}";
-    sha256 = "0i993z7xxsbs595y7wxfhgm69mg5893lfkpidcbaqnzj8j0kn0ab";
+    sha256 = "0ivdcc012c35f2wcc5qzic2jlrwp4whyz5sbz1nyfyrnv0xf5djw";
   };
 
-  nativeBuildInputs = [ cmake ];
-  buildInputs = [ bzip2 lz4 snappy zlib zstd ];
+  nativeBuildInputs = [ cmake ninja ];
 
-  postPatch = ''
-    substituteInPlace CMakeLists.txt --replace "find_package(zlib " "find_package(ZLIB "
-  '';
+  propagatedBuildInputs = [ bzip2 lz4 snappy zlib zstd ];
+
+  buildInputs = lib.optional enableJemalloc jemalloc;
+
+  NIX_CFLAGS_COMPILE = lib.optionalString stdenv.cc.isGNU "-Wno-error=deprecated-copy -Wno-error=pessimizing-move";
 
   cmakeFlags = [
     "-DPORTABLE=1"
-    "-DWITH_JEMALLOC=0"
+    "-DWITH_JEMALLOC=${if enableJemalloc then "1" else "0"}"
     "-DWITH_JNI=0"
-    "-DWITH_TESTS=0"
+    "-DWITH_BENCHMARK_TOOLS=0"
+    "-DWITH_TESTS=1"
     "-DWITH_TOOLS=0"
     "-DWITH_BZ2=1"
     "-DWITH_LZ4=1"
@@ -30,17 +45,24 @@ stdenv.mkDerivation rec {
     "-DWITH_ZLIB=1"
     "-DWITH_ZSTD=1"
     "-DWITH_GFLAGS=0"
+    "-DUSE_RTTI=1"
+    "-DROCKSDB_INSTALL_ON_WINDOWS=YES" # harmless elsewhere
     (lib.optional
-        (stdenv.hostPlatform.system == "i686-linux"
-         || stdenv.hostPlatform.system == "x86_64-linux")
+        (stdenv.hostPlatform.isx86 && stdenv.hostPlatform.isLinux)
         "-DFORCE_SSE42=1")
     (lib.optional enableLite "-DROCKSDB_LITE=1")
-  ];
+    "-DFAIL_ON_WARNINGS=${if stdenv.hostPlatform.isMinGW then "NO" else "YES"}"
+  ] ++ lib.optional (!enableShared) "-DROCKSDB_BUILD_SHARED=0";
 
-  meta = with stdenv.lib; {
-    homepage = https://rocksdb.org;
+  # otherwise "cc1: error: -Wformat-security ignored without -Wformat [-Werror=format-security]"
+  hardeningDisable = lib.optional stdenv.hostPlatform.isWindows "format";
+
+  meta = with lib; {
+    homepage = "https://rocksdb.org";
     description = "A library that provides an embeddable, persistent key-value store for fast storage";
+    changelog = "https://github.com/facebook/rocksdb/raw/v${version}/HISTORY.md";
     license = licenses.asl20;
+    platforms = platforms.all;
     maintainers = with maintainers; [ adev magenbluten ];
   };
 }

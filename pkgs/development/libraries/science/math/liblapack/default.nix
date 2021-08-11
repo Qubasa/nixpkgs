@@ -1,41 +1,60 @@
-{
-  stdenv,
-  fetchurl,
-  gfortran,
-  cmake,
-  python2,
-  shared ? false
+{ lib
+, stdenv
+, fetchFromGitHub
+, gfortran
+, cmake
+, shared ? true
 }:
-let
-  inherit (stdenv.lib) optional;
-  version = "3.8.0";
-in
 
-stdenv.mkDerivation {
+stdenv.mkDerivation rec {
   pname = "liblapack";
-  inherit version;
-  src = fetchurl {
-    url = "http://www.netlib.org/lapack/lapack-${version}.tar.gz";
-    sha256 = "1xmwi2mqmipvg950gb0rhgprcps8gy8sjm8ic9rgy2qjlv22rcny";
+  version = "3.10.0";
+
+  src = fetchFromGitHub {
+    owner = "Reference-LAPACK";
+    repo = "lapack";
+    rev = "v${version}";
+    sha256 = "sha256-ewYUM+M7jDO5LLnB4joiKkqgXjEDmWbFZbgad8x98gc=";
   };
 
-  buildInputs = [ gfortran cmake ];
-  nativeBuildInputs = [ python2 ];
+  nativeBuildInputs = [ gfortran cmake ];
+
+  # Configure stage fails on aarch64-darwin otherwise, due to either clang 11 or gfortran 10.
+  hardeningDisable = lib.optionals (stdenv.isDarwin && stdenv.isAarch64) [ "stackprotector" ];
 
   cmakeFlags = [
     "-DCMAKE_Fortran_FLAGS=-fPIC"
     "-DLAPACKE=ON"
-  ]
-  ++ (optional shared "-DBUILD_SHARED_LIBS=ON");
+    "-DCBLAS=ON"
+    "-DBUILD_TESTING=ON"
+  ] ++ lib.optional shared "-DBUILD_SHARED_LIBS=ON";
 
-  doCheck = ! shared;
+  doCheck = true;
 
-  enableParallelBuilding = true;
+  # Some CBLAS related tests fail on Darwin:
+  #  14 - CBLAS-xscblat2 (Failed)
+  #  15 - CBLAS-xscblat3 (Failed)
+  #  17 - CBLAS-xdcblat2 (Failed)
+  #  18 - CBLAS-xdcblat3 (Failed)
+  #  20 - CBLAS-xccblat2 (Failed)
+  #  21 - CBLAS-xccblat3 (Failed)
+  #  23 - CBLAS-xzcblat2 (Failed)
+  #  24 - CBLAS-xzcblat3 (Failed)
+  #
+  # Upstream issue to track:
+  # * https://github.com/Reference-LAPACK/lapack/issues/440
+  ctestArgs = lib.optionalString stdenv.isDarwin "-E '^(CBLAS-(x[sdcz]cblat[23]))$'";
 
-  meta = with stdenv.lib; {
-    inherit version;
+  checkPhase = ''
+    runHook preCheck
+    ctest ${ctestArgs}
+    runHook postCheck
+  '';
+
+  meta = with lib; {
     description = "Linear Algebra PACKage";
-    homepage = http://www.netlib.org/lapack/;
+    homepage = "http://www.netlib.org/lapack/";
+    maintainers = with maintainers; [ ];
     license = licenses.bsd3;
     platforms = platforms.all;
   };

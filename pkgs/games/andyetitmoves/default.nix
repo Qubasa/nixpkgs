@@ -1,17 +1,14 @@
-{ stdenv, fetchurl, libvorbis, libogg, libtheora, SDL, libXft, SDL_image, zlib, libX11, libpng, openal, runtimeShell, requireFile, commercialVersion ? false }:
+{ lib, stdenv, fetchurl, libvorbis, libogg, libtheora, SDL, libXft, SDL_image, zlib, libX11, libpng, openal, runtimeShell, requireFile, commercialVersion ? false }:
 
-let plainName = "andyetitmoves";
-    version   = "1.2.2";
-in
-
-stdenv.mkDerivation {
-  name = "${plainName}-${version}";
+stdenv.mkDerivation rec {
+  pname = "andyetitmoves";
+  version   = "1.2.2";
 
   src = if stdenv.hostPlatform.system == "i686-linux" || stdenv.hostPlatform.system == "x86_64-linux"
     then
       let postfix        = if stdenv.hostPlatform.system == "i686-linux" then "i386" else "x86_64";
-          commercialName = "${plainName}-${version}_${postfix}.tar.gz";
-          demoUrl        = "http://www.andyetitmoves.net/demo/${plainName}Demo-${version}_${postfix}.tar.gz";
+          commercialName = "${pname}-${version}_${postfix}.tar.gz";
+          demoUrl        = "http://www.andyetitmoves.net/demo/${pname}Demo-${version}_${postfix}.tar.gz";
       in
       if commercialVersion
         then requireFile {
@@ -66,10 +63,10 @@ stdenv.mkDerivation {
       And Yet It Moves is an award-winning physics-based platform game in which players rotate the game world at will to solve challenging puzzles. Tilting the world turns walls into floors, slides into platforms, and stacks of rocks into dangerous hazards.
     '';
 
-    homepage = http://www.andyetitmoves.net/;
+    homepage = "http://www.andyetitmoves.net/";
 
-    license = stdenv.lib.licenses.unfree;
+    license = lib.licenses.unfree;
 
-    maintainers = with stdenv.lib.maintainers; [bluescreen303];
+    maintainers = with lib.maintainers; [bluescreen303];
   };
 }

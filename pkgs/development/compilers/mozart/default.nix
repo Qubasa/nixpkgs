@@ -6,10 +6,9 @@
 , makeWrapper
 , boost
 , llvmPackages
-, llvmPackages_4
+, llvmPackages_5
 , gmp
 , emacs
-, emacs25-nox
 , jre_headless
 , tcl
 , tk
@@ -48,7 +47,7 @@ in stdenv.mkDerivation rec {
     "-DCMAKE_C_COMPILER=${llvmPackages.clang}/bin/clang"
     "-DBoost_USE_STATIC_LIBS=OFF"
     "-DMOZART_BOOST_USE_STATIC_LIBS=OFF"
-    "-DCMAKE_PROGRAM_PATH=${llvmPackages_4.clang}/bin"
+    "-DCMAKE_PROGRAM_PATH=${llvmPackages_5.clang}/bin"
     # Rationale: Nix's cc-wrapper needs to see a compile flag (like -c) to
     # infer that it is not a linking call, and stop trashing the command line
     # with linker flags.
@@ -61,7 +60,7 @@ in stdenv.mkDerivation rec {
     # gcc together as compilers and we need clang for the sources generation.
     # However, clang emits tons of warnings about gcc's atomic-base library.
     "-DCMAKE_CXX_FLAGS=-Wno-braced-scalar-init"
-  ] ++ lib.optional stdenv.isDarwin "-DCMAKE_FIND_FRAMEWORK=LAST";
+  ];
 
   fixupPhase = ''
     wrapProgram $out/bin/oz --set OZEMACS ${emacs}/bin/emacs
@@ -69,18 +68,18 @@ in stdenv.mkDerivation rec {
 
   buildInputs = [
     boost
-    llvmPackages_4.llvm
-    llvmPackages_4.clang
-    llvmPackages_4.clang-unwrapped
+    llvmPackages_5.llvm
+    llvmPackages_5.clang
+    llvmPackages_5.clang-unwrapped
     gmp
-    emacs25-nox
+    emacs
     jre_headless
     tcl
     tk
   ];
 
   meta = {
-    description = "An open source implementation of Oz 3.";
+    description = "An open source implementation of Oz 3";
     maintainers = [ lib.maintainers.layus ];
     license = lib.licenses.bsd2;
     homepage = "https://mozart.github.io";

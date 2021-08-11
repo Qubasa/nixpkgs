@@ -1,16 +1,29 @@
-{ stdenv, fetchFromGitHub, cmake, SDL2, SDL2_mixer, SDL2_ttf, libsodium, pkg-config }:
+{ lib, stdenv, fetchFromGitHub, cmake, SDL2, SDL2_mixer, SDL2_ttf, libsodium, pkg-config }:
+
 stdenv.mkDerivation rec {
-  version = "0.5.0";
   pname = "devilutionx";
+  version = "1.2.1";
 
   src = fetchFromGitHub {
     owner = "diasurgical";
     repo = "devilutionX";
     rev = version;
-    sha256 = "010hxj129zmsynvizk89vm2y29dcxsfi585czh3f03wfr38rxa6b";
+    sha256 = "sha256-PgYlNO1p78d0uiL474bDJOL++SxJfeBLK65czdaylHU=";
   };
 
-  NIX_CFLAGS_COMPILE = "-I${SDL2_ttf}/include/SDL2";
+  postPatch = ''
+    substituteInPlace Source/init.cpp --replace "/usr/share/diasurgical/devilutionx/" "${placeholder "out"}/share/diasurgical/devilutionx/"
+  '';
+
+  NIX_CFLAGS_COMPILE = [
+    "-I${SDL2_ttf}/include/SDL2"
+    ''-DTTF_FONT_PATH="${placeholder "out"}/share/fonts/truetype/CharisSILB.ttf"''
+  ];
+
+  cmakeFlags = [
+    "-DBINARY_RELEASE=ON"
+    "-DVERSION_NUM=${version}"
+  ];
 
   nativeBuildInputs = [ pkg-config cmake ];
   buildInputs = [ libsodium SDL2 SDL2_mixer SDL2_ttf ];
@@ -22,19 +35,22 @@ stdenv.mkDerivation rec {
     mkdir -p $out/Applications
     mv devilutionx.app $out/Applications
   '' else ''
-    mkdir -p $out/bin
-    cp devilutionx $out/bin
+    install -Dm755 -t $out/bin devilutionx
+    install -Dt $out/share/fonts/truetype ../Packaging/resources/CharisSILB.ttf
+    install -Dt $out/share/diasurgical/devilutionx ../Packaging/resources/devilutionx.mpq
+
+    # TODO: icons and .desktop (see Packages/{debian,fedora}/*)
   '') + ''
 
     runHook postInstall
   '';
 
-  meta = with stdenv.lib; {
+  meta = with lib; {
     homepage = "https://github.com/diasurgical/devilutionX";
     description = "Diablo build for modern operating systems";
     longDescription = "In order to play this game a copy of diabdat.mpq is required. Place a copy of diabdat.mpq in ~/.local/share/diasurgical/devilution before executing the game.";
     license = licenses.unlicense;
     maintainers = [ maintainers.karolchmist ];
-    platforms = platforms.linux ++ platforms.darwin ++ platforms.windows;
+    platforms = platforms.linux ++ platforms.windows;
   };
 }

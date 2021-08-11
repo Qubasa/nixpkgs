@@ -1,12 +1,12 @@
-{ stdenv, fetchurl, fetchpatch, m4, ncurses, ocaml, writeText }:
+{ lib, stdenv, fetchurl, fetchpatch, m4, ncurses, ocaml, writeText }:
 
 stdenv.mkDerivation rec {
   pname = "ocaml-findlib";
-  version = "1.8.1";
+  version = "1.9.1";
 
   src = fetchurl {
     url = "http://download.camlcity.org/download/findlib-${version}.tar.gz";
-    sha256 = "00s3sfb02pnjmkax25pcnljcnhcggiliccfz69a72ic7gsjwz1cf";
+    sha256 = "sha256-K0K4vVRIjWTEvzy3BUtLN70wwdwSvUMeoeTXrYqYD+I=";
   };
 
   buildInputs = [m4 ncurses ocaml];
@@ -32,13 +32,13 @@ stdenv.mkDerivation rec {
   setupHook = writeText "setupHook.sh" ''
     addOCamlPath () {
         if test -d "''$1/lib/ocaml/${ocaml.version}/site-lib"; then
-            export OCAMLPATH="''${OCAMLPATH}''${OCAMLPATH:+:}''$1/lib/ocaml/${ocaml.version}/site-lib/"
+            export OCAMLPATH="''${OCAMLPATH-}''${OCAMLPATH:+:}''$1/lib/ocaml/${ocaml.version}/site-lib/"
         fi
         if test -d "''$1/lib/ocaml/${ocaml.version}/site-lib/stublibs"; then
-            export CAML_LD_LIBRARY_PATH="''${CAML_LD_LIBRARY_PATH}''${CAML_LD_LIBRARY_PATH:+:}''$1/lib/ocaml/${ocaml.version}/site-lib/stublibs"
+            export CAML_LD_LIBRARY_PATH="''${CAML_LD_LIBRARY_PATH-}''${CAML_LD_LIBRARY_PATH:+:}''$1/lib/ocaml/${ocaml.version}/site-lib/stublibs"
         fi
         export OCAMLFIND_DESTDIR="''$out/lib/ocaml/${ocaml.version}/site-lib/"
-        if test -n "$createFindlibDestdir"; then
+        if test -n "''${createFindlibDestdir-}"; then
           mkdir -p $OCAMLFIND_DESTDIR
         fi
     }
@@ -47,13 +47,13 @@ stdenv.mkDerivation rec {
   '';
 
   meta = {
-    homepage = http://projects.camlcity.org/projects/findlib.html;
+    homepage = "http://projects.camlcity.org/projects/findlib.html";
     description = "O'Caml library manager";
-    license = stdenv.lib.licenses.mit;
+    license = lib.licenses.mit;
     platforms = ocaml.meta.platforms or [];
     maintainers = [
-      stdenv.lib.maintainers.z77z
-      stdenv.lib.maintainers.vbmithr
+      lib.maintainers.maggesi
+      lib.maintainers.vbmithr
     ];
   };
 }

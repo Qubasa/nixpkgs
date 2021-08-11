@@ -1,25 +1,25 @@
-{ stdenv, buildPythonPackage, fetchPypi
-, pytest, pytestcov, mock, coverage, setuptools
-, Mako, sqlalchemy, python-editor, dateutil
+{ lib, buildPythonPackage, fetchPypi
+, pytest, pytest-cov, mock, coverage, setuptools
+, Mako, sqlalchemy, python-editor, python-dateutil
 }:
 
 buildPythonPackage rec {
   pname = "alembic";
-  version = "1.2.1";
+  version = "1.6.5";
 
   src = fetchPypi {
     inherit pname version;
-    sha256 = "9f907d7e8b286a1cfb22db9084f9ce4fde7ad7956bb496dc7c952e10ac90e36a";
+    sha256 = "a21fedebb3fb8f6bbbba51a11114f08c78709377051384c9c5ead5705ee93a51";
   };
 
-  buildInputs = [ pytest pytestcov mock coverage ];
-  propagatedBuildInputs = [ Mako sqlalchemy python-editor dateutil setuptools ];
+  buildInputs = [ pytest pytest-cov mock coverage ];
+  propagatedBuildInputs = [ Mako sqlalchemy python-editor python-dateutil setuptools ];
 
   # no traditional test suite
   doCheck = false;
 
-  meta = with stdenv.lib; {
-    homepage = https://bitbucket.org/zzzeek/alembic;
+  meta = with lib; {
+    homepage = "https://bitbucket.org/zzzeek/alembic";
     description = "A database migration tool for SQLAlchemy";
     license = licenses.mit;
   };

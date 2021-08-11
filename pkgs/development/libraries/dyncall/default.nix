@@ -1,13 +1,13 @@
-{ stdenv, fetchurl }:
+{ lib, stdenv, fetchurl }:
 
 stdenv.mkDerivation {
   pname = "dyncall";
-  version = "1.0";
+  version = "1.2";
 
   src = fetchurl {
-    url = http://www.dyncall.org/r1.0/dyncall-1.0.tar.gz;
-    # http://www.dyncall.org/r1.0/SHA256
-    sha256 = "d1b6d9753d67dcd4d9ea0708ed4a3018fb5bfc1eca5f37537fba2bc4f90748f2";
+    url = "https://www.dyncall.org/r1.2/dyncall-1.2.tar.gz";
+    # https://www.dyncall.org/r1.2/SHA256
+    sha256 = "sha256-6IFUwCQ0IVYHBPXHKUr73snpka+gYB1a3/UELqgYCNc=";
   };
 
   # XXX: broken tests, failures masked, lets avoid crashing a bunch for now :)
@@ -27,9 +27,9 @@ stdenv.mkDerivation {
     install -D -t $out/share/man/man3 ./*/*.3
   '';
 
-  meta = with stdenv.lib; {
+  meta = with lib; {
     description = "Highly dynamic multi-platform foreign function call interface library";
-    homepage = http://www.dyncall.org;
+    homepage = "https://www.dyncall.org";
     license = licenses.isc;
     maintainers = with maintainers; [ dtzWill ];
   };

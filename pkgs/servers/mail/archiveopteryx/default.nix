@@ -1,4 +1,4 @@
-{ stdenv, fetchurl, openssl, perl, zlib, jam }:
+{ lib, stdenv, fetchurl, openssl, perl, zlib, jam }:
 stdenv.mkDerivation rec {
   version = "3.2.0";
   pname = "archiveopteryx";
@@ -20,10 +20,11 @@ stdenv.mkDerivation rec {
     sed -i 's:READMEDIR = $(PREFIX):READMEDIR = '$out'/share/doc/archiveopteryx:' ./Jamsettings
   '';
 
-  # fix build on gcc7
-  NIX_CFLAGS_COMPILE = [
+  # fix build on gcc7+
+  NIX_CFLAGS_COMPILE = builtins.toString [
     "-Wno-error=builtin-declaration-mismatch"
     "-Wno-error=implicit-fallthrough"
+    "-Wno-error=deprecated-copy"
   ];
 
   buildPhase = ''jam "-j$NIX_BUILD_CORES" '';
@@ -32,8 +33,8 @@ stdenv.mkDerivation rec {
     mv installroot/$out $out
   '';
 
-  meta = with stdenv.lib; {
-    homepage = http://archiveopteryx.org/;
+  meta = with lib; {
+    homepage = "http://archiveopteryx.org/";
     description = "An advanced PostgreSQL-based IMAP/POP server";
     license = licenses.postgresql;
     maintainers = [ maintainers.phunehehe ];

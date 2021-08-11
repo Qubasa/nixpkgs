@@ -1,7 +1,12 @@
-{ lib, fetchurl, fetchFromGitHub, fetchpatch, python3, protobuf3_6
+{ stdenv
+, lib
+, fetchFromGitHub
+, python3
+, inetutils
+, nixosTests
 
 # Look up dependencies of specified components in component-packages.nix
-, extraComponents ? []
+, extraComponents ? [ ]
 
 # Additional packages to add to propagatedBuildInputs
 , extraPackages ? ps: []
@@ -9,79 +14,100 @@
 # Override Python packages using
 # self: super: { pkg = super.pkg.overridePythonAttrs (oldAttrs: { ... }); }
 # Applied after defaultOverrides
-, packageOverrides ? self: super: {
-  # TODO: Remove this override after updating to cryptography 2.8:
-
-}
+, packageOverrides ? self: super: {}
 
 # Skip pip install of required packages on startup
 , skipPip ? true }:
 
 let
-
   defaultOverrides = [
-    # Override the version of some packages pinned in Home Assistant's setup.py
-#     (mkOverride "aiohttp" "3.5.4"
-#       "9c4c83f4fa1938377da32bc2d59379025ceeee8e24b89f72fcbccd8ca22dc9bf")
-#     (mkOverride "astral" "1.10.1"
-#       "d2a67243c4503131c856cafb1b1276de52a86e5b8a1d507b7e08bee51cb67bf1")
-#     (mkOverride "async-timeout" "3.0.1"
-#       "0c3c816a028d47f659d6ff5c745cb2acf1f966da1fe5c19c77a70282b25f4c5f")
-#     (mkOverride "bcrypt" "3.1.7"
-#       "0b0069c752ec14172c5f78208f1863d7ad6755a6fae6fe76ec2c80d13be41e42")
-#     (mkOverride "pyjwt" "1.7.1"
-#       "8d59a976fb773f3e6a39c85636357c4f0e242707394cadadd9814f5cbaa20e96")
-    (mkOverride "cryptography" "2.7" # TODO for 2.8: Remove the override below
-      "e6347742ac8f35ded4a46ff835c60e68c22a536a8ae5c4422966d06946b6d4c6")
-    (mkOverride "cryptography_vectors" "2.7" # required by cryptography==2.7
-      "f12dfb9bd669a68004074cb5b26df6e93ed1a95ebd1a999dff0a840212ff68bc")
-#     (mkOverride "importlib-metadata" "0.18"
-#       "cb6ee23b46173539939964df59d3d72c3e0c1b5d54b84f1d8a7e912fe43612db")
-    (mkOverride "python-slugify" "3.0.4"
-      "0dv97yi5fq074q5qyqbin09pmi8ixg36caf5nkpw2bqkd8jh6pap")
-#     (mkOverride "pyyaml" "5.1.1"
-#       "b4bb4d3f5e232425e25dda21c070ce05168a786ac9eda43768ab7f3ac2770955")
-#     (mkOverride "requests" "2.22.0"
-#       "11e007a8a2aa0323f5a921e9e6a2d7e4e67d9877e85773fba9ba6419025cbeb4")
-#     (mkOverride "ruamel_yaml" "0.15.97"
-#       "17dbf6b7362e7aee8494f7a0f5cffd44902a6331fe89ef0853b855a7930ab845")
-#     (mkOverride "voluptuous" "0.11.5"
-#       "567a56286ef82a9d7ae0628c5842f65f516abcb496e74f3f59f1d7b28df314ef")
-#     (mkOverride "voluptuous-serialize" "2.1.0"
-#       "d30fef4f1aba251414ec0b315df81a06da7bf35201dcfb1f6db5253d738a154f")
+    # Override the version of some packages pinned in Home Assistant's setup.py and requirements_all.txt
+    (mkOverride "python-slugify" "4.0.1" "69a517766e00c1268e5bbfc0d010a0a8508de0b18d30ad5a1ff357f8ae724270")
 
-    # used by auth.mfa_modules.totp
-    (mkOverride "pyotp" "2.2.7"
-      "be0ffeabddaa5ee53e7204e7740da842d070cf69168247a3d0c08541b84de602")
-
-    # used by check_config script
-    # can be unpinned once https://github.com/home-assistant/home-assistant/issues/11917 is resolved
-    (mkOverride "colorlog" "4.0.2"
-      "3cf31b25cbc8f86ec01fef582ef3b840950dea414084ed19ab922c8b493f9b42")
-
-    # required by aioesphomeapi
+    # Pinned due to API changes in iaqualink>=2.0, remove after
+    # https://github.com/home-assistant/core/pull/48137 was merged
     (self: super: {
-      protobuf = super.protobuf.override {
-        protobuf = protobuf3_6;
-      };
+      iaqualink = super.iaqualink.overridePythonAttrs (oldAttrs: rec {
+        version = "0.3.90";
+        src = fetchFromGitHub {
+          owner = "flz";
+          repo = "iaqualink-py";
+          rev = "v${version}";
+          sha256 = "0c8ckbbr1n8gx5k63ymgyfkbz3d0rbdvghg8fqdvbg4nrigrs5v0";
+        };
+        checkInputs = oldAttrs.checkInputs ++ [ python3.pkgs.asynctest ];
+      });
     })
 
+    # Pinned due to API changes in pyjwt>=2.0
     (self: super: {
-      # TODO: Remove this override after updating to cryptography 2.8
-      cryptography = super.cryptography.overridePythonAttrs (oldAttrs: {
-        propagatedBuildInputs = oldAttrs.propagatedBuildInputs ++ [ super.asn1crypto ];
-        patches = [
-          (fetchpatch {
-            url = "https://github.com/pyca/cryptography/commit/e575e3d482f976c4a1f3203d63ea0f5007a49a2a.patch";
-            sha256 = "0vg9prqsizd6gzh5j7lscsfxzxlhz7pacvzhgqmj1vhdhjwbblcp";
-          })
+      pyjwt = super.pyjwt.overridePythonAttrs (oldAttrs: rec {
+        version = "1.7.1";
+        src = oldAttrs.src.override {
+          inherit version;
+          sha256 = "15hflax5qkw1v6nssk1r0wkj83jgghskcmn875m3wgvpzdvajncd";
+        };
+        disabledTests = [
+          "test_ec_verify_should_return_false_if_signature_invalid"
         ];
       });
     })
 
-    # hass-frontend does not exist in python3.pkgs
+    # Pinned due to bug in ring-doorbell 0.7.0
+    # https://github.com/tchellomello/python-ring-doorbell/issues/240
+    (mkOverride "ring-doorbell" "0.6.2"
+      "fbd537722a27b3b854c26506d894b7399bb8dc57ff36083285971227a2d46560")
+
+    # Pinned due to API changes in pylast 4.2.1
+    (mkOverride "pylast" "4.2.0"
+      "0zd0dn2l738ndz62vpa751z0ldnm91dcz9zzbvxv53r08l0s9yf3")
+
+    # Pinned due to API changes in pyopenuv>=1.1.0
     (self: super: {
-      hass-frontend = self.callPackage ./frontend.nix { };
+      pyopenuv = super.pyopenuv.overridePythonAttrs (oldAttrs: rec {
+        version = "1.0.13";
+        src = fetchFromGitHub {
+          owner = "bachya";
+          repo = "pyopenuv";
+          rev = version;
+          sha256 = "1gx9xjkyvqqy8410lnbshq1j5y4cb0cdc4m505g17rwdzdwb01y8";
+        };
+        postPatch = ''
+          substituteInPlace pyproject.toml \
+            --replace "poetry.masonry.api" "poetry.core.masonry.api"
+        '';
+      });
+    })
+
+    # Pinned due to API changes in pyruckus>0.12
+    (self: super: {
+      pyruckus = super.pyruckus.overridePythonAttrs (oldAttrs: rec {
+        version = "0.12";
+        src = fetchFromGitHub {
+          owner = "gabe565";
+          repo = "pyruckus";
+          rev = version;
+          sha256 = "0ykv6r6blbj3fg9fplk9i7xclkv5d93rwvx0fm5s8ms9f2s9ih8z";
+        };
+      });
+    })
+
+    # Pinned due to API changes in eebrightbox>=0.0.5
+    (self: super: {
+      eebrightbox = super.eebrightbox.overridePythonAttrs (oldAttrs: rec {
+        version = "0.0.4";
+        src = fetchFromGitHub {
+          owner = "krygal";
+          repo = "eebrightbox";
+          rev = version;
+          sha256 = "0d8mmpwgrd7gymw5263r1v2wjv6dx6w6pq13d62fkfm4h2hya4a4";
+        };
+      });
+    })
+
+    # home-assistant-frontend does not exist in python3.pkgs
+    (self: super: {
+      home-assistant-frontend = self.callPackage ./frontend.nix { };
     })
   ];
 
@@ -112,60 +138,717 @@ let
   extraBuildInputs = extraPackages py.pkgs;
 
   # Don't forget to run parse-requirements.py after updating
-  hassVersion = "0.100.3";
+  hassVersion = "2021.8.5";
 
 in with py.pkgs; buildPythonApplication rec {
   pname = "homeassistant";
   version = assert (componentPackages.version == hassVersion); hassVersion;
 
-  disabled = pythonOlder "3.5";
+  # check REQUIRED_PYTHON_VER in homeassistant/const.py
+  disabled = pythonOlder "3.8";
 
-  inherit availableComponents;
+  # don't try and fail to strip 6600+ python files, it takes minutes!
+  dontStrip = true;
 
   # PyPI tarball is missing tests/ directory
   src = fetchFromGitHub {
     owner = "home-assistant";
-    repo = "home-assistant";
+    repo = "core";
     rev = version;
-    sha256 = "1rrv71h91qjq5sii4wfcdjvrcpid2aci1dwadrcd35363ff0w200";
+    sha256 = "0alyr87vm0szljw1lgdsv7085rl0m9r16nwdprwskhcjlwllk1bh";
   };
 
-  propagatedBuildInputs = [
-    # From setup.py
-    aiohttp astral async-timeout attrs bcrypt certifi importlib-metadata jinja2
-    pyjwt cryptography pip python-slugify pytz pyyaml requests ruamel_yaml
-    setuptools voluptuous voluptuous-serialize
-    # From http, frontend and recorder components and auth.mfa_modules.totp
-    sqlalchemy aiohttp-cors hass-frontend pyotp pyqrcode
-  ] ++ componentBuildInputs ++ extraBuildInputs;
-
-  checkInputs = [
-    asynctest pytest pytest-aiohttp requests-mock pydispatcher aiohue
+  # leave this in, so users don't have to constantly update their downstream patch handling
+  patches = [
+    ./0001-tests-ignore-OSErrors-in-hass-fixture.patch
   ];
 
   postPatch = ''
     substituteInPlace setup.py \
-      --replace "aiohttp==3.6.1" "aiohttp" \
-      --replace "attrs==19.2.0" "attrs" \
+      --replace "attrs==21.2.0" "attrs" \
+      --replace "awesomeversion==21.4.0" "awesomeversion" \
+      --replace "bcrypt==3.1.7" "bcrypt" \
+      --replace "cryptography==3.3.2" "cryptography" \
+      --replace "pip>=8.0.3,<20.3" "pip" \
       --replace "ruamel.yaml==0.15.100" "ruamel.yaml"
+    substituteInPlace tests/test_config.py --replace '"/usr"' '"/build/media"'
   '';
 
-  checkPhase = ''
-    # The components' dependencies are not included, so they cannot be tested
-    # test_webhook_create_cloudhook imports hass_nabucasa and is thus excluded
-    py.test --ignore tests/components -k "not test_webhook_create_cloudhook and not test_webhook_config_flow_registers_webhook"
-    # Some basic components should be tested however
-    py.test \
-      tests/components/{api,config,configurator,demo,discovery,frontend,group,history,history_graph} \
-      tests/components/{homeassistant,http,logger,script,shell_command,system_log,websocket_api}
-  '';
+  propagatedBuildInputs = [
+    # Only packages required in setup.py
+    aiohttp
+    astral
+    async-timeout
+    attrs
+    awesomeversion
+    bcrypt
+    certifi
+    ciso8601
+    cryptography
+    httpx
+    jinja2
+    pip
+    pyjwt
+    python-slugify
+    pytz
+    pyyaml
+    requests
+    ruamel_yaml
+    voluptuous
+    voluptuous-serialize
+    yarl
+    # Not in setup.py, but used in homeassistant/util/package.py
+    setuptools
+  ] ++ lib.optionals (pythonOlder "3.9") [
+    backports-zoneinfo
+  ] ++ componentBuildInputs ++ extraBuildInputs;
 
   makeWrapperArgs = lib.optional skipPip "--add-flags --skip-pip";
 
+  # upstream only tests on Linux, so do we.
+  doCheck = stdenv.isLinux;
+
+  checkInputs = [
+    # test infrastructure (selectively from requirement_test.txt)
+    pytest-aiohttp
+    pytest-mock
+    pytest-rerunfailures
+    pytest-xdist
+    pytestCheckHook
+    requests-mock
+    jsonpickle
+    respx
+    # required by tests/auth/mfa_modules
+    pyotp
+  ] ++ lib.concatMap (component: getPackages component py.pkgs) componentTests;
+
+  # We can reasonably test components that don't communicate with any network
+  # services. Before adding new components to this list make sure we have all
+  # its dependencies packaged and listed in ./component-packages.nix.
+  componentTests = [
+    "abode"
+    "accuweather"
+    "acmeda"
+    "adguard"
+    "advantage_air"
+    "aemet"
+    "agent_dvr"
+    "air_quality"
+    "airly"
+    "airnow"
+    "airvisual"
+    "alarm_control_panel"
+    "alarmdecoder"
+    "alert"
+    "alexa"
+    "almond"
+    "ambiclimate"
+    "ambient_station"
+    "analytics"
+    "androidtv"
+    "apache_kafka"
+    "api"
+    "apple_tv"
+    "apprise"
+    "aprs"
+    "arcam_fmj"
+    "arlo"
+    "asuswrt"
+    "atag"
+    "august"
+    "aurora"
+    "auth"
+    "automation"
+    "awair"
+    "aws"
+    "axis"
+    "azure_devops"
+    "azure_event_hub"
+    "bayesian"
+    "binary_sensor"
+    "blackbird"
+    "blebox"
+    "blink"
+    "blueprint"
+    "bluetooth_le_tracker"
+    "bmw_connected_drive"
+    "bond"
+    "bosch_shc"
+    "braviatv"
+    "broadlink"
+    "brother"
+    "bsblan"
+    "buienradar"
+    "caldav"
+    "calendar"
+    "camera"
+    "canary"
+    "cast"
+    "cert_expiry"
+    "climacell"
+    "climate"
+    "cloud"
+    "cloudflare"
+    "color_extractor"
+    "comfoconnect"
+    "command_line"
+    "compensation"
+    "config"
+    "configurator"
+    "control4"
+    "conversation"
+    "coolmaster"
+    "coronavirus"
+    "counter"
+    "cover"
+    "daikin"
+    "darksky"
+    "datadog"
+    "deconz"
+    "default_config"
+    "demo"
+    "denonavr"
+    "derivative"
+    "device_automation"
+    "device_sun_light_trigger"
+    "device_tracker"
+    "devolo_home_control"
+    "dexcom"
+    "dhcp"
+    "dialogflow"
+    "directv"
+    "discovery"
+    "doorbird"
+    "dsmr"
+    "dte_energy_bridge"
+    "duckdns"
+    "dunehd"
+    "dyson"
+    "eafm"
+    "ecobee"
+    "econet"
+    "ee_brightbox"
+    "efergy"
+    "elgato"
+    "emonitor"
+    "emulated_hue"
+    "emulated_kasa"
+    "emulated_roku"
+    "enocean"
+    "enphase_envoy"
+    "epson"
+    "esphome"
+    "everlights"
+    "ezviz"
+    "faa_delays"
+    "facebook"
+    "facebox"
+    "fail2ban"
+    "fan"
+    "feedreader"
+    "ffmpeg"
+    "fido"
+    "file"
+    "filesize"
+    "filter"
+    "fireservicerota"
+    "firmata"
+    "flick_electric"
+    "flo"
+    "flume"
+    "flunearyou"
+    "flux"
+    "folder"
+    "folder_watcher"
+    "foobot"
+    "foscam"
+    "freebox"
+    "freedns"
+    "fritz"
+    "fritzbox"
+    "fritzbox_callmonitor"
+    "frontend"
+    "garages_amsterdam"
+    "gdacs"
+    "generic"
+    "generic_thermostat"
+    "geo_json_events"
+    "geo_location"
+    "geo_rss_events"
+    "geofency"
+    "geonetnz_quakes"
+    "geonetnz_volcano"
+    "gios"
+    "glances"
+    "goalzero"
+    "gogogate2"
+    "google"
+    "google_assistant"
+    "google_domains"
+    "google_pubsub"
+    "google_translate"
+    "google_travel_time"
+    "google_wifi"
+    "gpslogger"
+    "graphite"
+    "gree"
+    "group"
+    "growatt_server"
+    "guardian"
+    "habitica"
+    "hangouts"
+    "harmony"
+    "hassio"
+    "hddtemp"
+    "heos"
+    "here_travel_time"
+    "hisense_aehw4a1"
+    "history"
+    "history_stats"
+    "hive"
+    "hlk_sw16"
+    "home_connect"
+    "home_plus_control"
+    "homeassistant"
+    # disable homekit tests because they fail in the network component
+    #"homekit"
+    "homekit_controller"
+    "homematic"
+    "homematicip_cloud"
+    "honeywell"
+    "html5"
+    "http"
+    "huawei_lte"
+    "hue"
+    "huisbaasje"
+    "humidifier"
+    "hvv_departures"
+    "hyperion"
+    "ialarm"
+    "iaqualink"
+    "icloud"
+    "ifttt"
+    "ign_sismologia"
+    "image"
+    "image_processing"
+    "imap_email_content"
+    "influxdb"
+    "input_boolean"
+    "input_datetime"
+    "input_number"
+    "input_select"
+    "input_text"
+    "insteon"
+    "integration"
+    "intent"
+    "intent_script"
+    "ios"
+    "ipma"
+    "ipp"
+    "iqvia"
+    "islamic_prayer_times"
+    "isy994"
+    "izone"
+    "jewish_calendar"
+    "juicenet"
+    "keenetic_ndms2"
+    "kira"
+    "kmtronic"
+    "knx"
+    "kodi"
+    "konnected"
+    "kraken"
+    "kulersky"
+    "lastfm"
+    "lcn"
+    "light"
+    "litterrobot"
+    "local_file"
+    "local_ip"
+    "locative"
+    "lock"
+    "logbook"
+    "logentries"
+    "logger"
+    "london_air"
+    "lovelace"
+    "luftdaten"
+    "lutron_caseta"
+    "lyric"
+    "mailbox"
+    "manual"
+    "manual_mqtt"
+    "mazda"
+    "media_player"
+    "media_source"
+    "meraki"
+    "met"
+    "met_eireann"
+    "meteoclimatic"
+    "mhz19"
+    "microsoft_face"
+    "microsoft_face_detect"
+    "microsoft_face_identify"
+    "mikrotik"
+    "mill"
+    "min_max"
+    "minecraft_server"
+    "minio"
+    "mobile_app"
+    "modbus"
+    "mold_indicator"
+    "moon"
+    "motioneye"
+    "mqtt"
+    "mqtt_eventstream"
+    "mqtt_json"
+    "mqtt_room"
+    "mqtt_statestream"
+    "mullvad"
+    "mutesync"
+    "my"
+    "myq"
+    "mysensors"
+    "nam"
+    "namecheapdns"
+    "neato"
+    "netatmo"
+    "nexia"
+    "no_ip"
+    "notify"
+    "notion"
+    "nsw_rural_fire_service_feed"
+    "nuki"
+    "number"
+    "nws"
+    "nx584"
+    "omnilogic"
+    "onboarding"
+    "ondilo_ico"
+    "openalpr_cloud"
+    "openalpr_local"
+    "openerz"
+    "openhardwaremonitor"
+    "opentherm_gw"
+    "openuv"
+    "openweathermap"
+    "opnsense"
+    "ovo_energy"
+    "owntracks"
+    "ozw"
+    "panel_custom"
+    "panel_iframe"
+    "persistent_notification"
+    "person"
+    "philips_js"
+    "pi_hole"
+    "picnic"
+    "ping"
+    "plaato"
+    "plant"
+    "plex"
+    "plugwise"
+    "point"
+    "poolsense"
+    "profiler"
+    "prometheus"
+    "proximity"
+    "push"
+    "pushbullet"
+    "pvpc_hourly_pricing"
+    "python_script"
+    "qld_bushfire"
+    "rachio"
+    "radarr"
+    "rainmachine"
+    "random"
+    "recollect_waste"
+    "recorder"
+    "reddit"
+    "remote"
+    "rest"
+    "rest_command"
+    "rflink"
+    "rfxtrx"
+    "ring"
+    "risco"
+    "rituals_perfume_genie"
+    "rmvtransport"
+    "roku"
+    "roomba"
+    "roon"
+    "rss_feed_template"
+    "ruckus_unleashed"
+    "safe_mode"
+    "samsungtv"
+    "scene"
+    "screenlogic"
+    "script"
+    "search"
+    "season"
+    "sense"
+    "sensor"
+    "sentry"
+    "sharkiq"
+    "shell_command"
+    "shelly"
+    "shopping_list"
+    "sia"
+    "sigfox"
+    "sighthound"
+    "simplisafe"
+    "simulated"
+    "slack"
+    "sleepiq"
+    "sma"
+    "smappee"
+    "smart_meter_texas"
+    "smarthab"
+    "smartthings"
+    "smarttub"
+    "smhi"
+    "smtp"
+    "snips"
+    "solaredge"
+    "soma"
+    "somfy"
+    "somfy_mylink"
+    "sonarr"
+    "songpal"
+    # disable sonos components test because they rely on ssdp, which doesn't work in our sandbox
+    # "sonos"
+    "soundtouch"
+    "spaceapi"
+    "speedtestdotnet"
+    "spider"
+    "spotify"
+    "sql"
+    "squeezebox"
+    "srp_energy"
+    "ssdp"
+    "starline"
+    "startca"
+    "statistics"
+    "statsd"
+    "stream"
+    "stt"
+    "subaru"
+    "sun"
+    "surepetcare"
+    "switch"
+    "switcher_kis"
+    "syncthing"
+    "syncthru"
+    "system_health"
+    "system_log"
+    "tado"
+    "tag"
+    "tasmota"
+    "tcp"
+    "telegram"
+    "tellduslive"
+    "template"
+    # disable tesla comonent tests while typer is incompatible with click>=8.0
+    # "tesla"
+    "threshold"
+    "tibber"
+    "tile"
+    "time_date"
+    "timer"
+    "tod"
+    "tomato"
+    "toon"
+    "totalconnect"
+    "tplink"
+    "trace"
+    "tradfri"
+    "transmission"
+    "trend"
+    "tts"
+    "tuya"
+    "twentemilieu"
+    "twilio"
+    "twinkly"
+    "twitch"
+    "uk_transport"
+    "unifi"
+    "unifi_direct"
+    "universal"
+    "upb"
+    "upcloud"
+    "updater"
+    # disabled, because it tries to join a multicast group and fails to find a usable network interface
+    # "upnp"
+    "uptime"
+    "usgs_earthquakes_feed"
+    "utility_meter"
+    "uvc"
+    "vacuum"
+    "velbus"
+    "venstar"
+    "vera"
+    "verisure"
+    "version"
+    "vesync"
+    "vilfo"
+    "vizio"
+    "voicerss"
+    "volumio"
+    # disabled, becaused AttributeError: <class 'vultr.vultr.Vultr'> does not have the attribute 'server_list'
+    # "vultr"
+    "wake_on_lan"
+    "wallbox"
+    "water_heater"
+    "waze_travel_time"
+    "weather"
+    "webhook"
+    "webostv"
+    "websocket_api"
+    "wemo"
+    "wiffi"
+    "wilight"
+    "wled"
+    "workday"
+    "worldclock"
+    "wsdot"
+    "xbox"
+    "xiaomi"
+    "xiaomi_aqara"
+    "xiaomi_miio"
+    "yamaha"
+    "yandex_transport"
+    "yandextts"
+    "yeelight"
+    # disabled, because it tries to join a multicast group and fails to find a usable network interface
+    # "zeroconf"
+    "zerproc"
+    "zha"
+    "zodiac"
+    "zone"
+    "zwave"
+    "zwave_js"
+  ] ++ lib.optionals (builtins.any (s: s == stdenv.hostPlatform.system) debugpy.meta.platforms) [
+    "debugpy"
+  ];
+
+  pytestFlagsArray = [
+    # parallelize test run
+    "--numprocesses auto"
+    # assign tests grouped by file to workers
+    "--dist loadfile"
+    # retry racy tests that end in "RuntimeError: Event loop is closed"
+    "--reruns 3"
+    "--only-rerun RuntimeError"
+    # enable full variable printing on error
+    "--showlocals"
+    # here_travel_time/test_sensor.py: Tries to access HERE API: herepy.error.HEREError: Error occured on __get
+    "--deselect tests/components/here_travel_time/test_sensor.py::test_invalid_credentials"
+    # screenlogic/test_config_flow.py: Tries to send out UDP broadcasts
+    "--deselect tests/components/screenlogic/test_config_flow.py::test_form_cannot_connect"
+    # abode/test_camera.py: Race condition in pickle file creationg
+    "--deselect tests/components/abode/test_camera.py::test_camera_off"
+    # asuswrt/test_config_flow.py: Sandbox network limitations, fails with unexpected error
+    "--deselect tests/components/asuswrt/test_config_flow.py::test_on_connect_failed"
+    # shelly/test_config_flow.py: Tries to join multicast group
+    "--deselect tests/components/shelly/test_config_flow.py::test_form"
+    "--deselect tests/components/shelly/test_config_flow.py::test_title_without_name"
+    "--deselect tests/components/shelly/test_config_flow.py::test_form_auth"
+    "--deselect tests/components/shelly/test_config_flow.py::test_form_errors_test_connection"
+    "--deselect tests/components/shelly/test_config_flow.py::test_user_setup_ignored_device"
+    "--deselect tests/components/shelly/test_config_flow.py::test_form_auth_errors_test_connection"
+    "--deselect tests/components/shelly/test_config_flow.py::test_form_auth_errors_test_connection"
+    "--deselect tests/components/shelly/test_config_flow.py::test_form_auth_errors_test_connection"
+    "--deselect tests/components/shelly/test_config_flow.py::test_zeroconf"
+    "--deselect tests/components/shelly/test_config_flow.py::test_zeroconf_sleeping_device"
+    "--deselect tests/components/shelly/test_config_flow.py::test_zeroconf_sleeping_device_error"
+    "--deselect tests/components/shelly/test_config_flow.py::test_zeroconf_sleeping_device_error"
+    "--deselect tests/components/shelly/test_config_flow.py::test_zeroconf_require_auth"
+    # prometheus/test_init.py: Spurious AssertionError regarding humidifier_target_humidity_percent metric
+    "--deselect tests/components/prometheus/test_init.py::test_view"
+    # smhi/test_init.py: Tries to fetch data from the network: socket.gaierror: [Errno -2] Name or service not known
+    "--deselect tests/components/smhi/test_init.py::test_remove_entry"
+    # wallbox/test_config_flow.py: Tries to connect to api.wall-box.cim: Failed to establish a new connection: [Errno -2] Name or service not known
+    "--deselect tests/components/wallbox/test_config_flow.py::test_form_invalid_auth"
+    "--deselect tests/components/wallbox/test_config_flow.py::test_form_cannot_connect"
+    # default_config/test_init.py: Tries to check for updates and fails ungracefully without network access
+    "--deselect tests/components/default_config/test_init.py::test_setup"
+    # local_ip/test_{init,config_flow}.py: tries to lookup a route towards a multicast address and fails
+    "--deselect tests/components/local_ip/test_init.py::test_basic_setup"
+    "--deselect tests/components/local_ip/test_config_flow.py::test_config_flow"
+    # netatmo/test_select.py: NoneType object has no attribute state
+    "--deselect tests/components/netatmo/test_select.py::test_select_schedule_thermostats"
+    # helpers/test_system_info.py: AssertionError: assert 'Unknown' == 'Home Assistant Container'
+    "--deselect tests/helpers/test_system_info.py::test_container_installationtype"
+    # tests are located in tests/
+    "tests"
+    # dynamically add packages required for component tests
+  ] ++ map (component: "tests/components/" + component) componentTests;
+
+  disabledTestPaths = [
+    # don't bulk test all components
+    "tests/components"
+    # pyotp since v2.4.0 complains about the short mock keys, hass pins v2.3.0
+    "tests/auth/mfa_modules/test_notify.py"
+  ];
+
+  disabledTests = [
+    # AssertionError: assert 1 == 0
+    "test_error_posted_as_event"
+    "test_merge"
+    # ModuleNotFoundError: No module named 'pyqwikswitch'
+    "test_merge_id_schema"
+    # keyring.errors.NoKeyringError: No recommended backend was available.
+    "test_secrets_from_unrelated_fails"
+    "test_secrets_credstash"
+    # generic/test_camera.py: AssertionError: 500 == 200
+    "test_fetching_without_verify_ssl"
+    "test_fetching_url_with_verify_ssl"
+    # util/test_package.py: AssertionError on package.is_installed('homeassistant>=999.999.999')
+    "test_check_package_version_does_not_match"
+    # homeassistant/util/thread.py:51: SystemError
+    "test_executor_shutdown_can_interrupt_threads"
+    # {'theme_color': '#03A9F4'} != {'theme_color': 'blue'}
+    "test_webhook_handle_get_config"
+    # onboarding tests rpi_power component, for which we are lacking rpi_bad_power library
+    "test_onboarding_core_sets_up_rpi_power"
+    "test_onboarding_core_no_rpi_power"
+    # hue/test_sensor_base.py: Race condition when counting events
+    "test_hue_events"
+    # august/test_lock.py: AssertionError: assert 'unlocked' == 'locked'
+    "test_lock_update_via_pubnub"
+  ];
+
+  preCheck = ''
+    export HOME="$TEMPDIR"
+
+    # the tests require the existance of a media dir
+    mkdir /build/media
+
+    # put ping binary into PATH, e.g. for wake_on_lan tests
+    export PATH=${inetutils}/bin:$PATH
+
+    # error out when component test directory is missing, otherwise hidden by xdist execution :(
+    for component in ${lib.concatStringsSep " " (map lib.escapeShellArg componentTests)}; do
+      test -d "tests/components/$component" || {
+        >2& echo "ERROR: Tests for component '$component' were enabled, but they do not exist!"
+        exit 1
+      }
+    done
+  '';
+
+  passthru = {
+    inherit availableComponents;
+    python = py;
+    tests = {
+      inherit (nixosTests) home-assistant;
+    };
+  };
+
   meta = with lib; {
-    homepage = https://home-assistant.io/;
-    description = "Open-source home automation platform running on Python 3";
+    homepage = "https://home-assistant.io/";
+    description = "Open source home automation that puts local control and privacy first";
     license = licenses.asl20;
-    maintainers = with maintainers; [ dotlambda globin ];
+    maintainers = teams.home-assistant.members;
+    platforms = platforms.linux;
   };
 }

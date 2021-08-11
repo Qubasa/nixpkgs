@@ -1,31 +1,64 @@
-{ stdenv, buildPythonPackage, fetchPypi, isPy27
-, dbus-python, setuptools_scm, entrypoints, secretstorage
-, pytest, pytest-flake8 }:
+{ lib
+, stdenv
+, buildPythonPackage
+, fetchPypi
+, pythonOlder
+, setuptools-scm
+, importlib-metadata
+, dbus-python
+, jeepney
+, secretstorage
+, pytestCheckHook
+}:
 
 buildPythonPackage rec {
   pname = "keyring";
-  version = "19.2.0";
-  disabled = isPy27;
+  version = "23.0.1";
+  disabled = pythonOlder "3.6";
 
   src = fetchPypi {
     inherit pname version;
-    sha256 = "1cvlm48fggl12m19j9vcnrlplidr2sjf8h3pdyki58f9y357q0wi";
+    sha256 = "045703609dd3fccfcdb27da201684278823b72af515aedec1a8515719a038cb8";
   };
 
-  nativeBuildInputs = [ setuptools_scm ];
+  nativeBuildInputs = [
+    setuptools-scm
+  ];
 
-  checkInputs = [ pytest pytest-flake8 ];
+  propagatedBuildInputs = [
+    # this should be optional, however, it has a different API
+    importlib-metadata # see https://github.com/jaraco/keyring/issues/503#issuecomment-798973205
 
-  propagatedBuildInputs = [ dbus-python entrypoints ] ++ stdenv.lib.optional stdenv.isLinux secretstorage;
+    dbus-python
+    jeepney
+    secretstorage
+  ];
 
-  # checks try to access a darwin path on linux
-  doCheck = false;
+  pythonImportsCheck = [
+    "keyring"
+    "keyring.backend"
+  ];
 
-  meta = with stdenv.lib; {
+  checkInputs = [
+    pytestCheckHook
+  ];
+
+  # Keychain communications isn't possible in our build environment
+  # keyring.errors.KeyringError: Can't get password from keychain: (-25307, 'Unknown Error')
+  disabledTests = lib.optionals (stdenv.isDarwin) [
+    "test_multiprocess_get"
+    "test_multiprocess_get_after_native_get"
+  ];
+
+  disabledTestPaths = [
+    "tests/backends/test_macOS.py"
+  ];
+
+  meta = with lib; {
     description = "Store and access your passwords safely";
-    homepage    = "https://pypi.python.org/pypi/keyring";
-    license     = licenses.psfl;
-    maintainers = with maintainers; [ lovek323 ];
+    homepage    = "https://github.com/jaraco/keyring";
+    license     = licenses.mit;
+    maintainers = with maintainers; [ lovek323 dotlambda ];
     platforms   = platforms.unix;
   };
 }

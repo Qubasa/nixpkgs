@@ -1,31 +1,52 @@
-{ stdenv, buildPythonPackage, fetchPypi
-, nose, chai, simplejson, backports_functools_lru_cache
-, dateutil, pytz, mock, dateparser
+{ lib
+, buildPythonPackage
+, fetchPypi
+, pythonOlder
+, python-dateutil
+, typing-extensions
+, pytestCheckHook
+, pytest-mock
+, pytz
+, simplejson
 }:
 
 buildPythonPackage rec {
   pname = "arrow";
-  version = "0.15.2";
+  version = "1.1.0";
+
+  disabled = pythonOlder "3.6";
 
   src = fetchPypi {
     inherit pname version;
-    sha256 = "10257c5daba1a88db34afa284823382f4963feca7733b9107956bed041aff24f";
+    sha256 = "1n2vzyrirfj7fp0zn6iipm3i8bch0g4m14z02nrvlyjiyfmi7zmq";
   };
 
-  checkPhase = ''
-    nosetests --cover-package=arrow
-  '';
-
-  checkInputs = [ nose chai simplejson pytz ];
-  propagatedBuildInputs = [ dateutil backports_functools_lru_cache mock dateparser];
-
   postPatch = ''
-    substituteInPlace setup.py --replace "==1.2.1" ""
+    # no coverage reports
+    sed -i "/addopts/d" tox.ini
   '';
 
-  meta = with stdenv.lib; {
+  propagatedBuildInputs = [ python-dateutil ]
+    ++ lib.optionals (pythonOlder "3.8") [ typing-extensions ];
+
+  checkInputs = [
+    pytestCheckHook
+    pytest-mock
+    pytz
+    simplejson
+  ];
+
+  # ParserError: Could not parse timezone expression "America/Nuuk"
+  disabledTests = [
+    "test_parse_tz_name_zzz"
+  ];
+
+  pythonImportsCheck = [ "arrow" ];
+
+  meta = with lib; {
     description = "Python library for date manipulation";
-    license     = "apache";
+    homepage = "https://github.com/crsmithdev/arrow";
+    license = licenses.asl20;
     maintainers = with maintainers; [ thoughtpolice ];
   };
 }

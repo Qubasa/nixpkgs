@@ -1,13 +1,24 @@
-{ lib, buildPythonPackage, fetchPypi, isPy27, substituteAll, git, gitdb2, mock, nose, ddt }:
+{ lib
+, buildPythonPackage
+, fetchFromGitHub
+, substituteAll
+, git
+, gitdb
+, ddt
+, pythonOlder
+, typing-extensions
+}:
 
 buildPythonPackage rec {
-  version = "3.0.4";
-  pname = "GitPython";
-  disabled = isPy27; # no longer supported
+  pname = "gitpython";
+  version = "3.1.20";
+  disabled = pythonOlder "3.7";
 
-  src = fetchPypi {
-    inherit pname version;
-    sha256 = "3237caca1139d0a7aa072f6735f5fd2520de52195e0fa1d8b83a9b212a2498b2";
+  src = fetchFromGitHub {
+    owner = "gitpython-developers";
+    repo = "GitPython";
+    rev = version;
+    sha256 = "1ygrxn8br2ff87j02ibijxzxa0ax9lgjdviwddslqxiarfggik9h";
   };
 
   patches = [
@@ -17,16 +28,22 @@ buildPythonPackage rec {
     })
   ];
 
-  checkInputs = [ nose ] ++ lib.optional isPy27 mock;
-  propagatedBuildInputs = [ gitdb2 ddt ];
+  propagatedBuildInputs = [
+    gitdb
+    ddt
+  ] ++ lib.optionals (pythonOlder "3.10") [
+    typing-extensions
+  ];
 
   # Tests require a git repo
   doCheck = false;
 
-  meta = {
+  pythonImportsCheck = [ "git" ];
+
+  meta = with lib; {
     description = "Python Git Library";
-    maintainers = [ ];
-    homepage = https://github.com/gitpython-developers/GitPython;
-    license = lib.licenses.bsd3;
+    homepage = "https://github.com/gitpython-developers/GitPython";
+    license = licenses.bsd3;
+    maintainers = with maintainers; [ fab ];
   };
 }

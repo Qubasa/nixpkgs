@@ -1,4 +1,4 @@
-{ stdenv
+{ lib
 , buildPythonPackage
 , fetchPypi
 , pytz
@@ -7,17 +7,17 @@
 
 buildPythonPackage rec {
   pname = "pg8000";
-  version = "1.13.2";
+  version = "1.12.5";
 
   src = fetchPypi {
     inherit pname version;
-    sha256 = "eebcb4176a7e407987e525a07454882f611985e0becb2b73f76efb93bbdc0aab";
+    sha256 = "1yc3knh28cx3rjb2ifg5kmqqa78yyyw2gzzslbm9fj0mzh5aq1sx";
   };
 
   propagatedBuildInputs = [ pytz six ];
 
-  meta = with stdenv.lib; {
-    homepage = https://github.com/tlocke/pg8000;
+  meta = with lib; {
+    homepage = "https://github.com/tlocke/pg8000";
     description = "PostgreSQL interface library, for asyncio";
     maintainers = with maintainers; [ domenkozar ];
     platforms = platforms.unix;

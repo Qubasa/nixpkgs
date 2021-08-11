@@ -1,27 +1,39 @@
-{ lib, fetchFromGitHub, crystal, zlib, openssl_1_0_2, duktape, which, libyaml }:
+{ lib, fetchFromGitHub, crystal_1_0, openssl }:
+
+let
+  crystal = crystal_1_0;
+
+in
 crystal.buildCrystalPackage rec {
-  version = "0.5.0";
+  version = "0.14.0";
   pname = "mint";
+
   src = fetchFromGitHub {
     owner = "mint-lang";
     repo = "mint";
     rev = version;
-    sha256 = "0vxbx38c390rd2ysvbwgh89v2232sh5rbsp3nk9wzb70jybpslvl";
+    sha256 = "1mf9d0jpdb21hkzaqvwyx2171dv3hr50zhl07p85wpf0d3n5wml8";
   };
 
-  buildInputs = [ openssl_1_0_2 ];
+  postPatch = ''
+    export HOME=$TMP
+  '';
+
+  format = "shards";
 
   # Update with
   #   nix-shell -p crystal2nix --run crystal2nix
   # with mint's shard.lock file in the current directory
   shardsFile = ./shards.nix;
-  crystalBinaries.mint.src = "src/mint.cr";
 
-  meta = {
+  buildInputs = [ openssl ];
+
+  meta = with lib; {
     description = "A refreshing language for the front-end web";
-    homepage = https://mint-lang.com/;
-    license = lib.licenses.bsd3;
-    maintainers = with lib.maintainers; [ manveru ];
+    homepage = "https://mint-lang.com/";
+    license = licenses.bsd3;
+    maintainers = with maintainers; [ manveru ];
     platforms = [ "x86_64-linux" "i686-linux" "x86_64-darwin" ];
+    broken = lib.versionOlder crystal.version "1.0";
   };
 }

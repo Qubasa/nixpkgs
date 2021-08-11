@@ -62,7 +62,7 @@ in rec {
   ];
 
   mkYarnModules = {
-    name, # safe name and version, e.g. testcompany-one-modules-1.0.0
+    name ? "${pname}-${version}", # safe name and version, e.g. testcompany-one-modules-1.0.0
     pname, # original name, e.g @testcompany/one
     version,
     packageJSON,
@@ -228,6 +228,7 @@ in rec {
     yarnNix ? mkYarnNix { inherit yarnLock; },
     yarnFlags ? defaultYarnFlags,
     yarnPreBuild ? "",
+    yarnPostBuild ? "",
     pkgConfig ? {},
     extraBuildInputs ? [],
     publishBinsFor ? null,
@@ -238,7 +239,7 @@ in rec {
       package = lib.importJSON packageJSON;
       pname = package.name;
       safeName = reformatPackageName pname;
-      version = package.version;
+      version = attrs.version or package.version;
       baseName = unlessNull name "${safeName}-${version}";
 
       workspaceDependenciesTransitive = lib.unique (
@@ -249,6 +250,7 @@ in rec {
       deps = mkYarnModules {
         name = "${safeName}-modules-${version}";
         preBuild = yarnPreBuild;
+        postBuild = yarnPostBuild;
         workspaceDependencies = workspaceDependenciesTransitive;
         inherit packageJSON pname version yarnLock yarnNix yarnFlags pkgConfig;
       };
@@ -284,7 +286,7 @@ in rec {
         '')
         workspaceDependenciesTransitive;
 
-    in stdenv.mkDerivation (builtins.removeAttrs attrs ["pkgConfig" "workspaceDependencies"] // {
+    in stdenv.mkDerivation (builtins.removeAttrs attrs ["yarnNix" "pkgConfig" "workspaceDependencies"] // {
       inherit src pname;
 
       name = baseName;
@@ -389,6 +391,11 @@ in rec {
     # yarn2nix is the only package that requires the yarnNix option.
     # All the other projects can auto-generate that file.
     yarnNix = ./yarn.nix;
+
+    # Using the filter above and importing package.json from the filtered
+    # source results in an error in restricted mode. To circumvent this,
+    # we import package.json from the unfiltered source
+    packageJSON = ./package.json;
 
     yarnFlags = defaultYarnFlags ++ ["--production=true"];
 

@@ -1,4 +1,4 @@
-import ./make-test.nix ({ lib, pkgs, ... }:
+import ./make-test-python.nix ({ lib, pkgs, ... }:
 
 let
   inherit (lib) mkMerge nameValuePair maintainers;
@@ -17,6 +17,10 @@ let
   };
 
   extraNodeConfs = {
+    declarativePlugins = {
+      services.grafana.declarativePlugins = [ pkgs.grafanaPlugins.grafana-clock-panel ];
+    };
+
     postgresql = {
       services.grafana.database = {
         host = "127.0.0.1:5432";
@@ -52,7 +56,7 @@ let
     nameValuePair dbName (mkMerge [
     baseGrafanaConf
     (extraNodeConfs.${dbName} or {})
-  ])) [ "sqlite" "postgresql" "mysql" ]);
+  ])) [ "sqlite" "declarativePlugins" "postgresql" "mysql" ]);
 
 in {
   name = "grafana";
@@ -64,28 +68,42 @@ in {
   inherit nodes;
 
   testScript = ''
-    startAll();
+    start_all()
 
-    subtest "Grafana sqlite", sub {
-      $sqlite->waitForUnit("grafana.service");
-      $sqlite->waitForOpenPort(3000);
-      $sqlite->succeed("curl -sSfN -u testadmin:snakeoilpwd http://127.0.0.1:3000/api/org/users | grep -q testadmin\@localhost");
-    };
+    with subtest("Declarative plugins installed"):
+        declarativePlugins.wait_for_unit("grafana.service")
+        declarativePlugins.wait_for_open_port(3000)
+        declarativePlugins.succeed(
+            "curl -sSfN -u testadmin:snakeoilpwd http://127.0.0.1:3000/api/plugins | grep grafana-clock-panel"
+        )
+        declarativePlugins.shutdown()
 
-    subtest "Grafana postgresql", sub {
-      $postgresql->waitForUnit("grafana.service");
-      $postgresql->waitForUnit("postgresql.service");
-      $postgresql->waitForOpenPort(3000);
-      $postgresql->waitForOpenPort(5432);
-      $postgresql->succeed("curl -sSfN -u testadmin:snakeoilpwd http://127.0.0.1:3000/api/org/users | grep -q testadmin\@localhost");
-    };
+    with subtest("Successful API query as admin user with sqlite db"):
+        sqlite.wait_for_unit("grafana.service")
+        sqlite.wait_for_open_port(3000)
+        sqlite.succeed(
+            "curl -sSfN -u testadmin:snakeoilpwd http://127.0.0.1:3000/api/org/users | grep testadmin\@localhost"
+        )
+        sqlite.shutdown()
 
-    subtest "Grafana mysql", sub {
-      $mysql->waitForUnit("grafana.service");
-      $mysql->waitForUnit("mysql.service");
-      $mysql->waitForOpenPort(3000);
-      $mysql->waitForOpenPort(3306);
-      $mysql->succeed("curl -sSfN -u testadmin:snakeoilpwd http://127.0.0.1:3000/api/org/users | grep -q testadmin\@localhost");
-    };
+    with subtest("Successful API query as admin user with postgresql db"):
+        postgresql.wait_for_unit("grafana.service")
+        postgresql.wait_for_unit("postgresql.service")
+        postgresql.wait_for_open_port(3000)
+        postgresql.wait_for_open_port(5432)
+        postgresql.succeed(
+            "curl -sSfN -u testadmin:snakeoilpwd http://127.0.0.1:3000/api/org/users | grep testadmin\@localhost"
+        )
+        postgresql.shutdown()
+
+    with subtest("Successful API query as admin user with mysql db"):
+        mysql.wait_for_unit("grafana.service")
+        mysql.wait_for_unit("mysql.service")
+        mysql.wait_for_open_port(3000)
+        mysql.wait_for_open_port(3306)
+        mysql.succeed(
+            "curl -sSfN -u testadmin:snakeoilpwd http://127.0.0.1:3000/api/org/users | grep testadmin\@localhost"
+        )
+        mysql.shutdown()
   '';
 })

@@ -1,38 +1,88 @@
-{ stdenv, fetchFromGitHub, glib, gtk3, json-glib, sqlite, libsoup, gettext, vala
-, meson, ninja, pkgconfig, gnome3, gst_all_1, wrapGAppsHook, gobject-introspection
-, glib-networking, python3, fetchpatch }:
+{ lib
+, stdenv
+, fetchFromGitHub
+, glib
+, gtk3
+, json-glib
+, sqlite
+, libsoup
+, liboauth
+, gettext
+, gspell
+, vala
+, meson
+, ninja
+, pkg-config
+, dconf
+, gst_all_1
+, wrapGAppsHook
+, gobject-introspection
+, glib-networking
+, librest
+, python3
+}:
 
 stdenv.mkDerivation rec {
-  version = "1.0.2";
+  version = "1.4.1";
   pname = "cawbird";
 
   src = fetchFromGitHub {
     owner = "IBBoard";
     repo = "cawbird";
     rev = "v${version}";
-    sha256 = "sha256:0b79ngwilicqkgacva93cir4rmk15yzgsih56yb3a4n6bqjispay";
+    sha256 = "0lmrgcj1ky1vhzynl36k6ba3ws089x4qdrnkjk3lbr334kicx9na";
   };
 
   nativeBuildInputs = [
-    meson ninja vala pkgconfig wrapGAppsHook python3
+    meson
+    ninja
+    vala
+    pkg-config
+    wrapGAppsHook
+    python3
     gobject-introspection # for setup hook
   ];
 
   buildInputs = [
-    glib gtk3 json-glib sqlite libsoup gettext gnome3.dconf gnome3.gspell glib-networking
-  ] ++ (with gst_all_1; [ gstreamer gst-plugins-base gst-plugins-bad (gst-plugins-good.override { gtkSupport = true; }) gst-libav ]);
+    glib
+    gtk3
+    json-glib
+    sqlite
+    libsoup
+    liboauth
+    gettext
+    dconf
+    gspell
+    glib-networking
+    librest
+  ] ++ (with gst_all_1; [
+    gstreamer
+    gst-plugins-base
+    gst-plugins-bad
+    (gst-plugins-good.override {
+      gtkSupport = true;
+    })
+    gst-libav
+  ]);
 
   postPatch = ''
     chmod +x data/meson_post_install.py # patchShebangs requires executable file
     patchShebangs data/meson_post_install.py
   '';
 
-  meta = with stdenv.lib; {
+  # supply Twitter API keys
+  # use default keys supplied by upstream, see https://github.com/IBBoard/cawbird/blob/master/README.md#preparation
+  mesonFlags = [
+    "-Dconsumer_key_base64=VmY5dG9yRFcyWk93MzJEZmhVdEk5Y3NMOA=="
+    "-Dconsumer_secret_base64=MThCRXIxbWRESDQ2Y0podzVtVU13SGUyVGlCRXhPb3BFRHhGYlB6ZkpybG5GdXZaSjI="
+  ];
+
+  meta = with lib; {
     description = "Native GTK Twitter client for the Linux desktop";
     longDescription = "Cawbird is a modern, easy and fun Twitter client. Fork of the discontinued Corebird.";
-    homepage = https://ibboard.co.uk/cawbird/;
-    license = licenses.gpl3;
+    homepage = "https://ibboard.co.uk/cawbird/";
+    license = licenses.gpl3Plus;
     platforms = platforms.linux;
-    maintainers = with stdenv.lib.maintainers; [ jonafato schmittlauch ];
+    maintainers = with lib.maintainers; [ jonafato schmittlauch ];
   };
 }

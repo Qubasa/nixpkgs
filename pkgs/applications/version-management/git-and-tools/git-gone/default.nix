@@ -1,24 +1,32 @@
-{ stdenv, fetchFromGitHub, rustPlatform, pkgconfig, openssl, curl, libiconv, Security }:
+{ lib, stdenv, fetchFromGitHub, rustPlatform, pkg-config, makeWrapper, openssl, git, libiconv, Security, installShellFiles }:
 
 rustPlatform.buildRustPackage rec {
   pname = "git-gone";
-  version = "0.1.2";
+  version = "0.3.7";
 
   src = fetchFromGitHub {
     owner = "lunaryorn";
     repo = pname;
     rev = "v${version}";
-    sha256 = "0vgkx227wpg9l2zza6446wzshjhnrhba3qhabibn4gg8wwcqmmxf";
+    sha256 = "0hhy1yazda9r4n753a5m9jf31fbzmm4v8wvl3pksspj2syglmll8";
   };
 
-  cargoSha256 = "11h2whlgjhg3j98a9w9k29njj89wx93w0dcyf981985flin709sx";
+  cargoSha256 = "0mbc1742szpxnqqah6q0yhkn4fyyxqzg830bd1vzr07v273wr06r";
 
-  nativeBuildInputs = [ pkgconfig ];
+  nativeBuildInputs = [ pkg-config makeWrapper installShellFiles ];
 
   buildInputs = [ openssl ]
-    ++ stdenv.lib.optionals stdenv.isDarwin [ curl libiconv Security ];
+    ++ lib.optionals stdenv.isDarwin [ libiconv Security ];
 
-  meta = with stdenv.lib; {
+  postInstall = ''
+    installManPage git-gone.1
+  '';
+
+  postFixup = ''
+    wrapProgram $out/bin/git-gone --prefix PATH : "${lib.makeBinPath [ git ]}"
+  '';
+
+  meta = with lib; {
     description = "Cleanup stale Git branches of pull requests";
     homepage = "https://github.com/lunaryorn/git-gone";
     license = licenses.asl20;

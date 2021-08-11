@@ -1,4 +1,4 @@
-{ stdenv, fetchFromGitHub, cmake
+{ lib, stdenv, fetchFromGitHub, cmake
 , libuuid, json_c
 , doxygen, perl, python2, python2Packages
 }:
@@ -20,6 +20,11 @@ stdenv.mkDerivation rec {
 
   doCheck = false;
 
+  NIX_CFLAGS_COMPILE = [
+    "-Wno-error=format-truncation"
+    "-Wno-error=address-of-packed-member"
+  ];
+
   nativeBuildInputs = [ cmake doxygen perl python2Packages.sphinx ];
   buildInputs = [ libuuid json_c python2 ];
 
@@ -32,11 +37,10 @@ stdenv.mkDerivation rec {
   '';
 
   cmakeFlags = [ "-DBUILD_ASE=1" ];
-  enableParallelBuilding = true;
 
-  meta = with stdenv.lib; {
+  meta = with lib; {
     description = "Open Programmable Acceleration Engine SDK";
-    homepage    = https://01.org/opae;
+    homepage    = "https://01.org/opae";
     license     = licenses.bsd3;
     platforms   = [ "x86_64-linux" ];
     maintainers = with maintainers; [ thoughtpolice ];

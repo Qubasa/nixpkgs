@@ -1,4 +1,5 @@
-{ stdenv
+{ lib
+, stdenv
 , autoconf
 , automake
 , c-ares
@@ -6,7 +7,7 @@
 , curl
 , doxygen
 , fetchFromGitHub
-, ffmpeg
+#, ffmpeg
 , libmediainfo
 , libraw
 , libsodium
@@ -15,24 +16,24 @@
 , libzen
 , lsb-release
 , mkDerivation
-, pkgconfig
+, pkg-config
 , qtbase
 , qttools
+, qtx11extras
 , sqlite
 , swig
 , unzip
 , wget
 }:
-
 mkDerivation rec {
   pname = "megasync";
-  version = "4.2.3.0";
+  version = "4.5.3.0";
 
   src = fetchFromGitHub {
     owner = "meganz";
     repo = "MEGAsync";
     rev = "v${version}_Linux";
-    sha256 = "0l4yfrxjb62vc9dnlzy8rjqi68ga1bys5x5rfzs40daw13yf1adv";
+    sha256 = "1lwjmdbqyxx5wd8nx4mc830fna37jad4h93viwfh5x7sxn104js7";
     fetchSubmodules = true;
   };
 
@@ -40,25 +41,27 @@ mkDerivation rec {
     autoconf
     automake
     doxygen
+    libtool
     lsb-release
-    pkgconfig
+    pkg-config
     qttools
     swig
+    unzip
   ];
   buildInputs = [
     c-ares
     cryptopp
     curl
-    ffmpeg
+    # temporarily disable until patched for ffmpeg 4.4
+    #ffmpeg
     libmediainfo
     libraw
     libsodium
-    libtool
     libuv
     libzen
     qtbase
+    qtx11extras
     sqlite
-    unzip
     wget
   ];
 
@@ -71,7 +74,7 @@ mkDerivation rec {
   ];
 
   postPatch = ''
-    for file in $(find src/ -type f \( -iname configure -o -iname \*.sh  \) ); do
+    for file in $(find src/ -type f \( -iname configure -o -iname \*.sh \) ); do
       substituteInPlace "$file" --replace "/bin/bash" "${stdenv.shell}"
     done
   '';
@@ -85,21 +88,22 @@ mkDerivation rec {
   '';
 
   configureFlags = [
-          "--disable-examples"
-          "--disable-java"
-          "--disable-php"
-          "--enable-chat"
-          "--with-cares"
-          "--with-cryptopp"
-          "--with-curl"
-          "--with-ffmpeg"
-          "--without-freeimage"  # unreferenced even when found
-          "--without-readline"
-          "--without-termcap"
-          "--with-sodium"
-          "--with-sqlite"
-          "--with-zlib"
-    ];
+    "--disable-examples"
+    "--disable-java"
+    "--disable-php"
+    "--enable-chat"
+    "--with-cares"
+    "--with-cryptopp"
+    "--with-curl"
+    # temporarily disable until patched for ffmpeg 4.4
+    #"--with-ffmpeg"
+    "--without-freeimage" # unreferenced even when found
+    "--without-readline"
+    "--without-termcap"
+    "--with-sodium"
+    "--with-sqlite"
+    "--with-zlib"
+  ];
 
   postConfigure = ''
     cd ../..
@@ -113,11 +117,12 @@ mkDerivation rec {
     popd
   '';
 
-  meta = with stdenv.lib; {
-    description = "Easy automated syncing between your computers and your MEGA Cloud Drive";
-    homepage    = https://mega.nz/;
-    license     = licenses.unfree;
-    platforms   = [ "i686-linux" "x86_64-linux" ];
+  meta = with lib; {
+    description =
+      "Easy automated syncing between your computers and your MEGA Cloud Drive";
+    homepage = "https://mega.nz/";
+    license = licenses.unfree;
+    platforms = [ "i686-linux" "x86_64-linux" ];
     maintainers = [ maintainers.michojel ];
   };
 }

@@ -1,23 +1,57 @@
-{ lib, buildPythonPackage, isPy3k, fetchPypi
-, urllib3, future, python-dateutil , pytz, faker, mock, nose }:
+{ lib
+, buildPythonPackage
+, certifi
+, configparser
+, faker
+, fetchFromGitHub
+, future
+, mock
+, nose
+, pytestCheckHook
+, python-dateutil
+, pythonOlder
+, pytz
+, urllib3
+}:
 
 buildPythonPackage rec {
   pname = "minio";
-  version = "5.0.1";
+  version = "7.1.0";
+  disabled = pythonOlder "3.6";
 
-  src = fetchPypi {
-    inherit pname version;
-    sha256 = "8f7ba1ca0750dfca3302cb03b14a92bf5f1c755ff84f9ba268079bf582e0f735";
+  src = fetchFromGitHub {
+    owner = "minio";
+    repo = "minio-py";
+    rev = version;
+    sha256 = "sha256-0N9hPjGGYHFyGzEWWDnW7KsPQtv0y/j/lCBLNC9IlpA=";
   };
 
-  disabled = !isPy3k;
+  propagatedBuildInputs = [
+    certifi
+    configparser
+    future
+    python-dateutil
+    pytz
+    urllib3
+  ];
 
-  checkInputs = [ faker mock nose ];
-  propagatedBuildInputs = [ urllib3 python-dateutil pytz future ];
+  checkInputs = [
+    faker
+    mock
+    nose
+    pytestCheckHook
+  ];
+
+  # example credentials aren't present
+  disabledTestPaths = [
+    "tests/unit/credentials_test.py"
+  ];
+
+  pythonImportsCheck = [ "minio" ];
 
   meta = with lib; {
     description = "Simple APIs to access any Amazon S3 compatible object storage server";
-    homepage = https://github.com/minio/minio-py;
+    homepage = "https://github.com/minio/minio-py";
     maintainers = with maintainers; [ peterromfeldhk ];
     license = licenses.asl20;
   };

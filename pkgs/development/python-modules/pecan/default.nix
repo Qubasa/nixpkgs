@@ -1,38 +1,68 @@
-{ stdenv
+{ lib
 , fetchPypi
+, fetchpatch
 , buildPythonPackage
+, isPy27
 # Python deps
-, singledispatch
 , logutils
-, webtest
 , Mako
+, singledispatch ? null
+, six
+, webtest
+# Test Inputs
+, pytestCheckHook
 , genshi
-, Kajiki
-, sqlalchemy
 , gunicorn
 , jinja2
-, virtualenv
+, Kajiki
 , mock
+, sqlalchemy
+, virtualenv
 }:
 
 buildPythonPackage rec {
   pname = "pecan";
-  version = "1.3.3";
+  version = "1.4.0";
 
   src = fetchPypi {
     inherit pname version;
-    sha256 = "b5461add4e3f35a7ee377b3d7f72ff13e93f40f3823b3208ab978b29bde936ff";
+    sha256 = "4b2acd6802a04b59e306d0a6ccf37701d24376f4dc044bbbafba3afdf9d3389a";
   };
 
-  propagatedBuildInputs = [ singledispatch logutils ];
-  buildInputs = [
-    webtest Mako genshi Kajiki sqlalchemy gunicorn jinja2 virtualenv
+  patches = [
+    (fetchpatch {
+      name = "Support-SQLAlchemy-1.4x.patch";
+      url = "https://github.com/pecan/pecan/commit/a520bd544c0b02a02dbf692b8d6e2f7a503ee6d4.patch";
+      sha256 = "sha256-QCHRjwnpy8ndCvcuyE5Y65BybKYthJXDySUtmpJD8gY=";
+    })
   ];
 
-  checkInputs = [ mock ];
+  propagatedBuildInputs = [
+    logutils
+    Mako
+    singledispatch
+    six
+    webtest
+  ];
 
-  meta = with stdenv.lib; {
-    description = "Pecan";
-    homepage = "https://github.com/pecan/pecan";
+  checkInputs = [
+    pytestCheckHook
+    genshi
+    gunicorn
+    jinja2
+    mock
+    sqlalchemy
+    virtualenv
+  ] ++ lib.optionals isPy27 [ Kajiki ];
+
+  pytestFlagsArray = [
+    "--pyargs pecan "
+  ];
+
+  meta = with lib; {
+    description = "WSGI object-dispatching web framework, designed to be lean and fast";
+    homepage = "https://www.pecanpy.org/";
+    changelog = "https://pecan.readthedocs.io/en/latest/changes.html";
+    maintainers = with maintainers; [ applePrincess ];
   };
 }

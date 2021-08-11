@@ -1,5 +1,5 @@
-{ stdenv, fetchzip, fetchpatch, atk, cairo, dmd, gdk-pixbuf, gnome3, gst_all_1, librsvg
-, glib, gtk3, gtksourceview4, libgda, libpeas, pango, pkgconfig, which, vte }:
+{ lib, stdenv, fetchzip, fetchpatch, atk, cairo, ldc, gdk-pixbuf, gnome, gst_all_1, librsvg
+, glib, gtk3, gtksourceview4, libgda, libpeas, pango, pkg-config, which, vte }:
 
 let
   inherit (gst_all_1) gstreamer gst-plugins-base gst-plugins-bad;
@@ -7,13 +7,15 @@ in stdenv.mkDerivation rec {
   pname = "gtkd";
   version = "3.9.0";
 
+  outputs = [ "out" "dev" ];
+
   src = fetchzip {
     url = "https://gtkd.org/Downloads/sources/GtkD-${version}.zip";
     sha256 = "12kc4s5gp6gn456d8pzhww1ggi9qbxldmcpp6855297g2x8xxy5p";
     stripRoot = false;
   };
 
-  nativeBuildInputs = [ dmd pkgconfig which ];
+  nativeBuildInputs = [ ldc pkg-config which ];
   propagatedBuildInputs = [
     atk cairo gdk-pixbuf glib gstreamer gst-plugins-base gtk3 gtksourceview4
     libgda libpeas librsvg pango vte
@@ -115,12 +117,21 @@ in stdenv.mkDerivation rec {
 
   makeFlags  = [
     "prefix=${placeholder "out"}"
-    "PKG_CONFIG=${pkgconfig}/bin/pkg-config"
+    "PKG_CONFIG=${pkg-config}/bin/${pkg-config.targetPrefix}pkg-config"
   ];
 
-  meta = with stdenv.lib; {
+  # The .pc files does not declare an `includedir=`, so the multiple
+  # outputs setup hook misses this.
+  postFixup = ''
+    for pc in $dev/lib/pkgconfig/*; do
+      substituteInPlace $pc \
+        --replace "$out/include" "$dev/include"
+    done
+  '';
+
+  meta = with lib; {
     description = "D binding and OO wrapper for GTK";
-    homepage = https://gtkd.org;
+    homepage = "https://gtkd.org";
     license = licenses.lgpl3Plus;
     platforms = platforms.linux ++ platforms.darwin;
   };

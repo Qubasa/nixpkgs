@@ -1,48 +1,64 @@
-{ stdenv, libsodium, fetchFromGitHub, wget, pkgconfig, autoreconfHook, openssl, db62, boost
-, zlib, gtest, gmock, callPackage, gmp, qt4, utillinux, protobuf, qrencode, libevent
-, libsnark, withGui }:
+{ rust, rustPlatform, stdenv, lib, fetchFromGitHub, autoreconfHook, makeWrapper
+, cargo, pkg-config, curl, coreutils, boost174, db62, hexdump, libsodium
+, libevent, utf8cpp, util-linux, withDaemon ? true, withMining ? true
+, withUtils ? true, withWallet ? true, withZmq ? true, zeromq
+}:
 
-let librustzcash = callPackage ./librustzcash {};
-in
-with stdenv.lib;
-stdenv.mkDerivation rec {
-
-  name = "zcash" + (toString (optional (!withGui) "d")) + "-" + version;
-  version = "1.0.13";
+rustPlatform.buildRustPackage.override { stdenv = stdenv; } rec {
+  pname = "zcash";
+  version = "4.4.1";
 
   src = fetchFromGitHub {
     owner = "zcash";
     repo  = "zcash";
     rev = "v${version}";
-    sha256 = "05y7wxs66anxr5akbf05r36mmjfzqpwawn6vyh3jhpva51hzzzyz";
+    sha256 = "0nhrjizx518khrl8aygag6a1ianzzqpchasggi963f807kv7ipb7";
   };
 
-  # Dependencies are underspecified: "make -C src gtest/zcash_gtest-test_merkletree.o"
-  # fails with "fatal error: test/data/merkle_roots.json.h: No such file or directory"
-  enableParallelBuilding = false;
+  cargoSha256 = "101j8cn2lg3l1gn53yg3svzwx783z331g9kzn9ici4azindyx903";
 
-  nativeBuildInputs = [ autoreconfHook pkgconfig ];
-  buildInputs = [ gtest gmock gmp openssl wget db62 boost zlib
-                  protobuf libevent libsodium librustzcash libsnark ]
-                  ++ optionals stdenv.isLinux [ utillinux ]
-                  ++ optionals withGui [ qt4 qrencode ];
+  nativeBuildInputs = [ autoreconfHook cargo hexdump makeWrapper pkg-config ];
+  buildInputs = [ boost174 libevent libsodium utf8cpp ]
+    ++ lib.optional withWallet db62
+    ++ lib.optional withZmq zeromq;
 
-  configureFlags = [ "--with-boost-libdir=${boost.out}/lib"
-                   ] ++ optionals withGui [ "--with-gui=qt4" ];
+  # Use the stdenv default phases (./configure; make) instead of the
+  # ones from buildRustPackage.
+  configurePhase = "configurePhase";
+  buildPhase = "buildPhase";
+  checkPhase = "checkPhase";
+  installPhase = "installPhase";
 
-  patchPhase = ''
-    sed -i"" 's,-lboost_system-mt,-lboost_system,' configure.ac
-    sed -i"" 's,-fvisibility=hidden,,g'            src/Makefile.am
+  postPatch = ''
+    # Have to do this here instead of in preConfigure because
+    # cargoDepsCopy gets unset after postPatch.
+    configureFlagsArray+=("RUST_VENDORED_SOURCES=$NIX_BUILD_TOP/$cargoDepsCopy")
   '';
+
+  configureFlags = [
+    "--disable-tests"
+    "--with-boost-libdir=${lib.getLib boost174}/lib"
+    "CXXFLAGS=-I${lib.getDev utf8cpp}/include/utf8cpp"
+    "RUST_TARGET=${rust.toRustTargetSpec stdenv.hostPlatform}"
+  ] ++ lib.optional (!withWallet) "--disable-wallet"
+    ++ lib.optional (!withDaemon) "--without-daemon"
+    ++ lib.optional (!withUtils) "--without-utils"
+    ++ lib.optional (!withMining) "--disable-mining";
+
+  enableParallelBuilding = true;
+
+  # Requires hundreds of megabytes of zkSNARK parameters.
+  doCheck = false;
 
   postInstall = ''
-    cp zcutil/fetch-params.sh $out/bin/zcash-fetch-params
+    wrapProgram $out/bin/zcash-fetch-params \
+        --set PATH ${lib.makeBinPath [ coreutils curl util-linux ]}
   '';
 
-  meta = {
+  meta = with lib; {
     description = "Peer-to-peer, anonymous electronic cash system";
-    homepage = https://z.cash/;
-    maintainers = with maintainers; [ rht ];
+    homepage = "https://z.cash/";
+    maintainers = with maintainers; [ rht tkerber ];
     license = licenses.mit;
     platforms = platforms.linux;
   };

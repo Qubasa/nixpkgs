@@ -2,7 +2,7 @@
 
 buildGoPackage rec {
   pname = "git-sizer";
-  version = "1.0.0";
+  version = "1.3.0";
 
   goPackagePath = "github.com/github/git-sizer";
 
@@ -10,13 +10,12 @@ buildGoPackage rec {
     owner = "github";
     repo = pname;
     rev = "v${version}";
-    sha256 = "11rvqpsyl41ph0fgm62k5q2p33zgnwj1jd91rd4lkaarpcd1sg5h";
+    sha256 = "0kmyvai5xfalm56ywa6mhdvvjnacdzwcyz28bw0pz9a4gyf1mgvh";
   };
 
   meta = with lib; {
     description = "Compute various size metrics for a Git repository";
     license = licenses.mit;
     maintainers = with maintainers; [ matthewbauer ];
-    platforms = platforms.all;
   };
 }

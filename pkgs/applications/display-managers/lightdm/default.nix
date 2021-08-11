@@ -1,9 +1,10 @@
-{ stdenv
+{ lib, stdenv
 , fetchFromGitHub
+, nix-update-script
 , substituteAll
 , plymouth
 , pam
-, pkgconfig
+, pkg-config
 , autoconf
 , automake
 , libtool
@@ -19,7 +20,7 @@
 , polkit
 , accountsservice
 , gtk-doc
-, gnome3
+, gnome
 , gobject-introspection
 , vala
 , fetchpatch
@@ -27,9 +28,10 @@
 , qt4
 , withQt5 ? false
 , qtbase
+, yelp-tools
 }:
 
-with stdenv.lib;
+with lib;
 
 stdenv.mkDerivation rec {
   pname = "lightdm";
@@ -47,14 +49,14 @@ stdenv.mkDerivation rec {
   nativeBuildInputs = [
     autoconf
     automake
-    gnome3.yelp-tools
-    gnome3.yelp-xsl
+    yelp-tools
+    gnome.yelp-xsl
     gobject-introspection
     gtk-doc
     intltool
     itstool
     libtool
-    pkgconfig
+    pkg-config
     vala
   ];
 
@@ -84,6 +86,12 @@ stdenv.mkDerivation rec {
       sha256 = "1zyx1qqajrmqcf9hbsapd39gmdanswd9l78rq7q6rdy4692il3yn";
     })
 
+    # https://github.com/canonical/lightdm/pull/104
+    (fetchpatch {
+      url = "https://github.com/canonical/lightdm/commit/03f218981733e50d810767f9d04e42ee156f7feb.patch";
+      sha256 = "07w18m2gpk29z6ym4y3lzsmg5dk3ffn39sq6lac26ap7narf4ma7";
+    })
+
     # Hardcode plymouth to fix transitions.
     # For some reason it can't find `plymouth`
     # even when it's in PATH in environment.systemPackages.
@@ -92,6 +100,8 @@ stdenv.mkDerivation rec {
       plymouth = "${plymouth}/bin/plymouth";
     })
   ];
+
+  dontWrapQtApps = true;
 
   preConfigure = "NOCONFIGURE=1 ./autogen.sh";
 
@@ -120,11 +130,18 @@ stdenv.mkDerivation rec {
     rm -rf $out/etc/apparmor.d $out/etc/init $out/etc/pam.d
   '';
 
+  passthru = {
+    updateScript = nix-update-script {
+      attrPath = pname;
+    };
+  };
+
+
   meta = {
-    homepage = https://github.com/CanonicalLtd/lightdm;
+    homepage = "https://github.com/CanonicalLtd/lightdm";
     description = "A cross-desktop display manager";
     platforms = platforms.linux;
     license = licenses.gpl3;
-    maintainers = with maintainers; [ ocharles worldofpeace ];
+    maintainers = with maintainers; [ ] ++ teams.pantheon.members;
   };
 }

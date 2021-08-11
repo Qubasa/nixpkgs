@@ -2,19 +2,19 @@
 , buildPythonPackage
 , fetchPypi
 , ruamel_base
-, ruamel_ordereddict
-, ruamel_yaml_clib
+, ruamel_ordereddict ? null
+, ruamel_yaml_clib ? null
 , isPy3k
 , isPyPy
 }:
 
 buildPythonPackage rec {
   pname = "ruamel.yaml";
-  version = "0.16.5";
+  version = "0.17.9";
 
   src = fetchPypi {
     inherit pname version;
-    sha256 = "412a6f5cfdc0525dee6a27c08f5415c7fd832a7afcb7a0ed7319628aed23d408";
+    sha256 = "374373b4743aee9f6d9f40bea600fe020a7ac7ae36b838b4a6a93f72b584a14c";
   };
 
   # Tests use relative paths
@@ -33,7 +33,7 @@ buildPythonPackage rec {
 
   meta = with lib; {
     description = "YAML parser/emitter that supports roundtrip preservation of comments, seq/map flow style, and map key order";
-    homepage = https://bitbucket.org/ruamel/yaml;
+    homepage = "https://sourceforge.net/projects/ruamel-yaml/";
     license = licenses.mit;
   };
 

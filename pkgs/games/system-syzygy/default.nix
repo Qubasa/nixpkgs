@@ -3,7 +3,7 @@
 let
   desktopFile = makeDesktopItem {
     name = "system-syzygy";
-    exec = "%out%/bin/syzygy";
+    exec = "@out@/bin/syzygy";
     comment = "A puzzle game";
     desktopName = "System Syzygy";
     categories = "Game;";
@@ -23,7 +23,7 @@ rustPlatform.buildRustPackage rec {
   nativeBuildInputs = [ makeWrapper ];
   buildInputs = [ SDL2 ];
 
-  cargoSha256 = "03724z33dqxbbrzpvz172qh45qrgnyb801algjdcm32v8xsx81qg";
+  cargoSha256 = "1jp9wnavq92w52ksj2q9fi3y58wq7ybfkx2kfbx2i2xv8d7y88ax";
 
   postInstall = ''
     mkdir -p $out/share/syzygy/

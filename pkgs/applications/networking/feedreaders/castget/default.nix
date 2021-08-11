@@ -1,6 +1,6 @@
 { lib, stdenv, fetchFromGitHub
 , autoreconfHook
-, pkgconfig
+, pkg-config
 , glib
 , ronn
 , curl
@@ -35,16 +35,16 @@ stdenv.mkDerivation rec {
     # See comment on locale above
     glibcLocales
     autoreconfHook
-    pkgconfig
+    pkg-config
   ];
 
-  meta = with stdenv.lib; {
+  meta = with lib; {
     description = "A simple, command-line based RSS enclosure downloader";
     longDescription = ''
       castget is a simple, command-line based RSS enclosure downloader. It is
       primarily intended for automatic, unattended downloading of podcasts.
     '';
-    homepage = "http://castget.johndal.com/";
+    homepage = "https://castget.johndal.com/";
     maintainers = with maintainers; [ doronbehar ];
     license = licenses.gpl2;
     platforms = platforms.linux;

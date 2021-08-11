@@ -1,21 +1,26 @@
-{ stdenv, buildGoPackage, fetchFromGitHub }:
+{ lib, buildGoModule, fetchFromGitHub }:
 
-buildGoPackage rec {
+buildGoModule rec {
   pname = "richgo";
-  version = "0.2.8";
-  goPackagePath = "github.com/kyoh86/richgo";
+  version = "0.3.6";
 
   src = fetchFromGitHub {
     owner = "kyoh86";
     repo = "richgo";
     rev = "v${version}";
-    sha256 = "0kbwl3a2gima23zmahk0jxp7wga91bs927a1rp5xl889ikng1n4j";
+    sha256 = "sha256-ehhrJlB0XzLHkspvP6vL8MtrjE12baBFkbqWMD41/Sg=";
   };
 
-  meta = with stdenv.lib; {
-    description = "Enrich `go test` outputs with text decorations.";
-    homepage = https://github.com/kyoh86/richgo;
-    license = licenses.unlicense; # NOTE: The project switched to MIT in https://git.io/fA1ik
+  vendorSha256 = "sha256-986Abeeb1MHB/0yN1oud6t8wHD5B5MisRHKZcwOq4tU=";
+
+  doCheck = false;
+
+  subPackages = [ "." ];
+
+  meta = with lib; {
+    description = "Enrich `go test` outputs with text decorations";
+    homepage = "https://github.com/kyoh86/richgo";
+    license = licenses.mit;
     maintainers = with maintainers; [ rvolosatovs ];
   };
 }

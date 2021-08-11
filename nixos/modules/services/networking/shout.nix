@@ -41,7 +41,7 @@ in {
     };
 
     port = mkOption {
-      type = types.int;
+      type = types.port;
       default = 9000;
       description = "TCP port to listen on for http connections.";
     };
@@ -82,8 +82,7 @@ in {
   };
 
   config = mkIf cfg.enable {
-    users.users = singleton {
-      name = "shout";
+    users.users.shout = {
       uid = config.ids.uids.shout;
       description = "Shout daemon user";
       home = shoutHome;

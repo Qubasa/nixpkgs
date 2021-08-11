@@ -1,14 +1,14 @@
-{ stdenv, fetchurl, unzip, makeWrapper , flex, bison, ncurses, buddy, tecla
-, libsigsegv, gmpxx, cln
+{ lib, stdenv, fetchurl, unzip, makeWrapper, flex, bison, ncurses, buddy, tecla
+, libsigsegv, gmpxx, cln, yices
 }:
 
 let
 
-  version = "2.7.1";
+  version = "3.1";
 
   fullMaude = fetchurl {
-    url = "http://maude.cs.illinois.edu/w/images/c/ca/Full-Maude-${version}.zip";
-    sha256 = "0y4gn7n8vh24r24vckhpkd46hb5hqsbrm4w9zr6dz4paafq12fjc";
+    url = "http://maude.cs.illinois.edu/w/images/0/0a/Full-Maude-${version}.zip";
+    sha256 = "8b13af02c6243116c2ef9592622ecaa06d05dbe1dd6b1e595551ff33855948f2";
   };
 
 in
@@ -18,16 +18,17 @@ stdenv.mkDerivation {
   inherit version;
 
   src = fetchurl {
-    url = "http://maude.cs.illinois.edu/w/images/d/d8/Maude-${version}.tar.gz";
-    sha256 = "0jskn5dm8vvbd3mlryjxdb6wfpkvyx174wk7ci9a31aylxzpr25i";
+    url = "http://maude.cs.illinois.edu/w/images/d/d3/Maude-${version}.tar.gz";
+    sha256 = "b112d7843f65217e3b5a9d40461698ef8dab7cbbe830af21216dfb924dc88a2f";
   };
 
+  nativeBuildInputs = [ unzip ];
   buildInputs = [
-    flex bison ncurses buddy tecla gmpxx libsigsegv makeWrapper unzip cln
+    flex bison ncurses buddy tecla gmpxx libsigsegv makeWrapper cln yices
   ];
 
   hardeningDisable = [ "stackprotector" ] ++
-    stdenv.lib.optionals stdenv.isi686 [ "pic" "fortify" ];
+    lib.optionals stdenv.isi686 [ "pic" "fortify" ];
 
   preConfigure = ''
     configureFlagsArray=(
@@ -35,7 +36,6 @@ stdenv.mkDerivation {
       TECLA_LIBS="-ltecla -lncursesw"
       LIBS="-lcln"
       CFLAGS="-O3" CXXFLAGS="-O3"
-      --without-cvc4    # Our version is too new for Maude to cope.
     )
   '';
 
@@ -44,7 +44,7 @@ stdenv.mkDerivation {
   postInstall = ''
     for n in "$out/bin/"*; do wrapProgram "$n" --suffix MAUDE_LIB ':' "$out/share/maude"; done
     unzip ${fullMaude}
-    install -D -m 444 full-maude.maude $out/share/maude/full-maude.maude
+    install -D -m 444 full-maude31.maude $out/share/maude/full-maude.maude
   '';
 
   # bison -dv surface.yy -o surface.c
@@ -53,9 +53,9 @@ stdenv.mkDerivation {
   enableParallelBuilding = false;
 
   meta = {
-    homepage = http://maude.cs.illinois.edu/;
+    homepage = "http://maude.cs.illinois.edu/";
     description = "High-level specification language";
-    license = stdenv.lib.licenses.gpl2;
+    license = lib.licenses.gpl2Plus;
 
     longDescription = ''
       Maude is a high-performance reflective language and system
@@ -67,7 +67,7 @@ stdenv.mkDerivation {
       rewriting logic computation.
     '';
 
-    platforms = stdenv.lib.platforms.unix;
-    maintainers = [ stdenv.lib.maintainers.peti ];
+    platforms = lib.platforms.unix;
+    maintainers = [ lib.maintainers.peti ];
   };
 }

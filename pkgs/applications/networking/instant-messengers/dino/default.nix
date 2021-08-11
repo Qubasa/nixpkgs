@@ -1,8 +1,9 @@
-{ stdenv, fetchFromGitHub
-, vala, cmake, ninja, wrapGAppsHook, pkgconfig, gettext
-, gobject-introspection, gnome3, glib, gdk-pixbuf, gtk3, glib-networking
+{ lib, stdenv, fetchFromGitHub
+, vala, cmake, ninja, wrapGAppsHook, pkg-config, gettext
+, gobject-introspection, gnome, glib, gdk-pixbuf, gtk3, glib-networking
 , xorg, libXdmcp, libxkbcommon
 , libnotify, libsoup, libgee
+, librsvg, libsignal-protocol-c
 , libgcrypt
 , epoxy
 , at-spi2-core
@@ -14,22 +15,22 @@
 , icu
  }:
 
-stdenv.mkDerivation {
-  name = "dino-unstable-2019-09-12";
+stdenv.mkDerivation rec {
+  pname = "dino";
+  version = "0.2.1";
 
   src = fetchFromGitHub {
     owner = "dino";
     repo = "dino";
-    rev = "c8f2b80978706c4c53deb7ddfb8188c751bcb291";
-    sha256 = "17lc6xiarb174g1hgjfh1yjrr0l2nzc3kba8xp5niwakbx7qicqr";
-    fetchSubmodules = true;
+    rev = "v${version}";
+    sha256 = "11m38syqzb1z92wmdaf45gryl6gjxwbcnk32j4p984ipqj2vdzd8";
   };
 
   nativeBuildInputs = [
     vala
     cmake
     ninja
-    pkgconfig
+    pkg-config
     wrapGAppsHook
     gettext
   ];
@@ -40,7 +41,7 @@ stdenv.mkDerivation {
     glib-networking
     glib
     libgee
-    gnome3.adwaita-icon-theme
+    gnome.adwaita-icon-theme
     sqlite
     gdk-pixbuf
     gtk3
@@ -49,23 +50,39 @@ stdenv.mkDerivation {
     libgcrypt
     libsoup
     pcre
-    xorg.libxcb
-    xorg.libpthreadstubs
-    libXdmcp
-    libxkbcommon
     epoxy
     at-spi2-core
     dbus
     icu
+    libsignal-protocol-c
+    librsvg
+  ] ++ lib.optionals (!stdenv.isDarwin) [
+    xorg.libxcb
+    xorg.libpthreadstubs
+    libXdmcp
+    libxkbcommon
   ];
 
-  enableParallelBuilding = true;
+  # Dino looks for plugins with a .so filename extension, even on macOS where
+  # .dylib is appropriate, and despite the fact that it builds said plugins with
+  # that as their filename extension
+  #
+  # Therefore, on macOS rename all of the plugins to use correct names that Dino
+  # will load
+  #
+  # See https://github.com/dino/dino/wiki/macOS
+  postFixup = lib.optionalString (stdenv.isDarwin) ''
+    cd "$out/lib/dino/plugins/"
+    for f in *.dylib; do
+      mv "$f" "$(basename "$f" .dylib).so"
+    done
+  '';
 
-  meta = with stdenv.lib; {
+  meta = with lib; {
     description = "Modern Jabber/XMPP Client using GTK/Vala";
-    homepage = https://github.com/dino/dino;
+    homepage = "https://github.com/dino/dino";
     license = licenses.gpl3;
-    platforms = platforms.linux;
-    maintainers = [ maintainers.mic92 ];
+    platforms = platforms.linux ++ platforms.darwin;
+    maintainers = with maintainers; [ mic92 qyliss ];
   };
 }

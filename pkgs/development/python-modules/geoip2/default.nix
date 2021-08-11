@@ -1,28 +1,39 @@
-{ buildPythonPackage, lib, fetchPypi, isPy27
-, ipaddress
+{ buildPythonPackage, lib, fetchPypi, pythonOlder
+, aiohttp
 , maxminddb
-, mock
+, mocket
 , requests
 , requests-mock
+, pytestCheckHook
 }:
 
 buildPythonPackage rec {
-  version = "2.9.0";
+  version = "4.2.0";
   pname = "geoip2";
+  disabled = pythonOlder "3.6";
 
   src = fetchPypi {
     inherit pname version;
-    sha256 = "1w7cay5q6zawjzivqbwz5cqx1qbdjw6kbriccb7l46p7b39fkzzp";
+    sha256 = "906a1dbf15a179a1af3522970e8420ab15bb3e0afc526942cc179e12146d9c1d";
   };
 
-  propagatedBuildInputs = [ requests maxminddb ]
-    ++ lib.optionals isPy27 [ ipaddress ];
+  patchPhase = ''
+    substituteInPlace requirements.txt --replace "requests>=2.24.0,<3.0.0" "requests"
+  '';
 
-  checkInputs = [ requests-mock ];
+  propagatedBuildInputs = [ aiohttp requests maxminddb ];
+
+  checkInputs = [
+    mocket
+    requests-mock
+    pytestCheckHook
+  ];
+
+  pythonImportsCheck = [ "geoip2" ];
 
   meta = with lib; {
-    description = "MaxMind GeoIP2 API";
-    homepage = "https://www.maxmind.com/en/home";
+    description = "Python client for GeoIP2 webservice client and database reader";
+    homepage = "https://github.com/maxmind/GeoIP2-python";
     license = licenses.asl20;
     maintainers = with maintainers; [ ];
   };

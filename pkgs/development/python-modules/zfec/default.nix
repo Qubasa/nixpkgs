@@ -1,29 +1,31 @@
-{ stdenv
+{ lib
 , buildPythonPackage
 , fetchPypi
-, setuptoolsDarcs
 , pyutil
+, setuptoolsTrial
+, twisted
 }:
 
 buildPythonPackage rec {
   pname = "zfec";
-  version = "1.5.3";
+  version = "1.5.5";
 
   src = fetchPypi {
     inherit pname version;
-    sha256 = "b41bd4b0af9c6b3a78bd6734e1e4511475944164375e6241b53df518a366922b";
+    sha256 = "6033b2f3cc3edacf3f7eeed5f258c1ebf8a1d7e5e35b623db352512ce564e5ca";
   };
 
-  buildInputs = [ setuptoolsDarcs ];
   propagatedBuildInputs = [ pyutil ];
+
+  checkInputs = [ setuptoolsTrial twisted ];
 
   # argparse is in the stdlib but zfec doesn't know that.
   postPatch = ''
     sed -i -e '/argparse/d' setup.py
   '';
 
-  meta = with stdenv.lib; {
-    homepage = http://allmydata.org/trac/zfec;
+  meta = with lib; {
+    homepage = "https://github.com/tahoe-lafs/zfec";
     description = "Zfec, a fast erasure codec which can be used with the command-line, C, Python, or Haskell";
     longDescription = ''
       Fast, portable, programmable erasure coding a.k.a. "forward
@@ -34,6 +36,7 @@ buildPythonPackage rec {
       and Haskell API.
     '';
     license = licenses.gpl2Plus;
+    maintainers = with maintainers; [ prusnak ];
   };
 
 }

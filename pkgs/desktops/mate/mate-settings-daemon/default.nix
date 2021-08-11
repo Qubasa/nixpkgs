@@ -1,29 +1,20 @@
-{ stdenv, fetchurl, pkgconfig, intltool, glib, dbus-glib, libxklavier,
-  libcanberra-gtk3, libnotify, nss, polkit, gnome3, gtk3, mate,
+{ lib, stdenv, fetchurl, pkg-config, gettext, glib, dbus-glib, libxklavier,
+  libcanberra-gtk3, libnotify, nss, polkit, dconf, gtk3, mate,
   pulseaudioSupport ? stdenv.config.pulseaudio or true, libpulseaudio,
-  wrapGAppsHook, fetchpatch, autoreconfHook }:
+  wrapGAppsHook, mateUpdateScript }:
 
 stdenv.mkDerivation rec {
   pname = "mate-settings-daemon";
-  version = "1.22.1";
+  version = "1.24.2";
 
   src = fetchurl {
-    url = "http://pub.mate-desktop.org/releases/${stdenv.lib.versions.majorMinor version}/${pname}-${version}.tar.xz";
-    sha256 = "0idw02z0iig0pfxvlhc4dq4sr7kl1w50xscvg0jzzswnxid2l4ip";
+    url = "https://pub.mate-desktop.org/releases/${lib.versions.majorMinor version}/${pname}-${version}.tar.xz";
+    sha256 = "051r7xrx1byllsszbwsk646sq4izyag9yxg8jw2rm6x6mgwb89cc";
   };
 
-  patches = [
-    # Don't use etc/dbus-1/system.d
-    (fetchpatch {
-      url = "https://patch-diff.githubusercontent.com/raw/mate-desktop/mate-settings-daemon/pull/296.patch";
-      sha256 = "00dfn8h47zw3wr7yya82vvp19wsw51whn8jwgayn4hkjd161s9nm";
-    })
-  ];
-
   nativeBuildInputs = [
-    autoreconfHook # drop with the above patch
-    intltool
-    pkgconfig
+    gettext
+    pkg-config
     wrapGAppsHook
   ];
 
@@ -35,20 +26,24 @@ stdenv.mkDerivation rec {
     nss
     polkit
     gtk3
-    gnome3.dconf
+    dconf
     mate.mate-desktop
     mate.libmatekbd
     mate.libmatemixer
-  ] ++ stdenv.lib.optional pulseaudioSupport libpulseaudio;
+  ] ++ lib.optional pulseaudioSupport libpulseaudio;
 
-  configureFlags = stdenv.lib.optional pulseaudioSupport "--enable-pulse";
+  configureFlags = lib.optional pulseaudioSupport "--enable-pulse";
 
   NIX_CFLAGS_COMPILE = "-I${glib.dev}/include/gio-unix-2.0";
 
-  meta = with stdenv.lib; {
+  enableParallelBuilding = true;
+
+  passthru.updateScript = mateUpdateScript { inherit pname version; };
+
+  meta = with lib; {
     description = "MATE settings daemon";
-    homepage = https://github.com/mate-desktop/mate-settings-daemon;
-    license = with licenses; [ gpl2 lgpl21 ];
+    homepage = "https://github.com/mate-desktop/mate-settings-daemon";
+    license = with licenses; [ gpl2Plus gpl3Plus lgpl2Plus mit ];
     platforms = platforms.unix;
     maintainers = [ maintainers.romildo ];
   };

@@ -1,25 +1,24 @@
-{ stdenv, fetchFromGitHub, autoreconfHook, cmake, libtool, pkgconfig
+{ lib, stdenv, fetchFromGitHub, autoreconfHook, cmake, libtool, pkg-config
 , zlib, openssl, libevent, ncurses, ruby, msgpack, libssh }:
 
 stdenv.mkDerivation rec {
   pname = "tmate";
-  version = "2.3.1";
+  version = "2.4.0";
 
   src = fetchFromGitHub {
     owner  = "tmate-io";
     repo   = "tmate";
     rev    = version;
-    sha256 = "183rvga8nvh9r7p8104vwcmzp3vrfdhnx73vh06m2fgdq9i5rz3l";
+    sha256 = "0x5c31yq7ansmiy20a0qf59wagba9v3pq97mlkxrqxn4n1gcc6vi";
   };
 
   dontUseCmakeConfigure = true;
 
   buildInputs = [ libtool zlib openssl libevent ncurses ruby msgpack libssh ];
-  nativeBuildInputs = [ autoreconfHook cmake pkgconfig ];
-  enableParallelBuilding = true;
+  nativeBuildInputs = [ autoreconfHook cmake pkg-config ];
 
-  meta = with stdenv.lib; {
-    homepage    = https://tmate.io/;
+  meta = with lib; {
+    homepage    = "https://tmate.io/";
     description = "Instant Terminal Sharing";
     license     = licenses.mit;
     platforms   = platforms.unix;

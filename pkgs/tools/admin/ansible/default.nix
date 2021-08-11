@@ -1,27 +1,14 @@
-{ python3Packages, fetchurl }:
+{ python3Packages, fetchurl, fetchFromGitHub }:
 
-{
-  ansible = with python3Packages; toPythonApplication ansible;
+rec {
+  ansible = ansible_2_11;
 
-  ansible_2_8 = with python3Packages; toPythonApplication ansible;
+  ansible_2_11 = python3Packages.toPythonApplication python3Packages.ansible-core;
 
-  ansible_2_7 = with python3Packages; toPythonApplication (ansible.overridePythonAttrs(old: rec {
-    pname = "ansible";
-    version = "2.7.11";
+  ansible_2_10 = python3Packages.toPythonApplication python3Packages.ansible-base;
 
-    src = fetchurl {
-      url = "https://releases.ansible.com/ansible/${pname}-${version}.tar.gz";
-      sha256 = "0zipzm9al6k74h88b6zkddpcbxqs4cms7lidid6wn1vx3d3dxrp7";
-    };
-  }));
+  # End of support 2021/10/02, End of life 2021/12/31
+  ansible_2_9 = python3Packages.toPythonApplication python3Packages.ansible;
 
-  ansible_2_6 = with python3Packages; toPythonApplication (ansible.overridePythonAttrs(old: rec {
-    pname = "ansible";
-    version = "2.6.17";
-
-    src = fetchurl {
-      url = "https://releases.ansible.com/ansible/${pname}-${version}.tar.gz";
-      sha256 = "0ixr3g1nb02xblqyk87bzag8sj8phy37m24xflabfl1k2zfh0313";
-    };
-  }));
+  ansible_2_8 = throw "Ansible 2.8 went end of life on 2021/01/03 and has subsequently been dropped";
 }

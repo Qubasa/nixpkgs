@@ -1,60 +1,109 @@
-{ lib, mkDerivation, fetchurl, poppler_utils, pkgconfig, libpng
-, imagemagick, libjpeg, fontconfig, podofo, qtbase, qmake, icu, sqlite
-, unrarSupport ? false, chmlib, python2Packages, libusb1, libmtp
-, xdg_utils, makeDesktopItem, removeReferencesTo
+{ lib
+, mkDerivation
+, fetchurl
+, fetchFromGitHub
+, poppler_utils
+, pkg-config
+, libpng
+, imagemagick
+, libjpeg
+, fontconfig
+, podofo
+, qtbase
+, qmake
+, icu
+, sqlite
+, hunspell
+, hyphen
+, unrarSupport ? false
+, chmlib
+, python3Packages
+, libusb1
+, libmtp
+, xdg-utils
+, removeReferencesTo
+, libstemmer
 }:
 
-let
-  pypkgs = python2Packages;
-
-in
 mkDerivation rec {
   pname = "calibre";
-  version = "3.48.0";
+  version = "5.24.0";
 
   src = fetchurl {
     url = "https://download.calibre-ebook.com/${version}/${pname}-${version}.tar.xz";
-    sha256 = "034m89h7j2088p324i1kya33dfldmqyynjxk3w98xiqkz7q2hi82";
+    hash = "sha256:18dr577nv7ijw3ar6mrk2xrc54mlrqkaj5jrc6s5sirl0710fdfg";
   };
 
   patches = [
-    # Patches from Debian that:
-    # - disable plugin installation (very insecure)
+    # Plugin installation (very insecure) disabled (from Debian)
     ./disable_plugins.patch
-    # - switches the version update from enabled to disabled by default
+    # Automatic version update disabled by default (from Debian)
     ./no_updates_dialog.patch
-    # the unrar patch is not from debian
-  ] ++ lib.optional (!unrarSupport) ./dont_build_unrar_plugin.patch;
+  ]
+  ++ lib.optional (!unrarSupport) ./dont_build_unrar_plugin.patch;
 
   prePatch = ''
-    sed -i "/pyqt_sip_dir/ s:=.*:= '${pypkgs.pyqt5_with_qtwebkit}/share/sip/PyQt5':"  \
-      setup/build_environment.py
+    sed -i "s@\[tool.sip.project\]@[tool.sip.project]\nsip-include-dirs = [\"${python3Packages.pyqt5}/${python3Packages.python.sitePackages}/PyQt5/bindings\"]@g" \
+      setup/build.py
+    sed -i "s/\[tool.sip.bindings.pictureflow\]/[tool.sip.bindings.pictureflow]\ntags = [\"${python3Packages.sip.platform_tag}\"]/g" \
+      setup/build.py
 
     # Remove unneeded files and libs
-    rm -rf resources/calibre-portable.* \
-           src/odf
+    rm -rf src/odf resources/calibre-portable.*
   '';
 
   dontUseQmakeConfigure = true;
 
-  enableParallelBuilding = true;
-
-  nativeBuildInputs = [ pkgconfig qmake removeReferencesTo ];
-
-  CALIBRE_PY3_PORT = builtins.toString pypkgs.isPy3k;
+  nativeBuildInputs = [ pkg-config qmake removeReferencesTo ];
 
   buildInputs = [
-    poppler_utils libpng imagemagick libjpeg
-    fontconfig podofo qtbase chmlib icu sqlite libusb1 libmtp xdg_utils
-  ] ++ (with pypkgs; [
-    apsw cssselect css-parser dateutil dnspython html5-parser lxml netifaces pillow
-    python pyqt5_with_qtwebkit sip
-    regex msgpack beautifulsoup4 html2text
-    # the following are distributed with calibre, but we use upstream instead
-    odfpy
-  ]) ++ lib.optionals (!pypkgs.isPy3k) (with pypkgs; [
-    mechanize
-  ]);
+    chmlib
+    fontconfig
+    hunspell
+    hyphen
+    icu
+    imagemagick
+    libjpeg
+    libmtp
+    libpng
+    libstemmer
+    libusb1
+    podofo
+    poppler_utils
+    qtbase
+    sqlite
+    xdg-utils
+  ] ++ (
+    with python3Packages; [
+      (apsw.overrideAttrs (oldAttrs: rec {
+        setupPyBuildFlags = [ "--enable=load_extension" ];
+      }))
+      beautifulsoup4
+      cchardet
+      css-parser
+      cssselect
+      python-dateutil
+      dnspython
+      feedparser
+      html2text
+      html5-parser
+      lxml
+      markdown
+      mechanize
+      msgpack
+      netifaces
+      pillow
+      pyqt-builder
+      pyqt5
+      pyqtwebengine
+      python
+      regex
+      sip
+      zeroconf
+      # the following are distributed with calibre, but we use upstream instead
+      odfpy
+    ] ++ lib.optional (unrarSupport) unrardll
+  );
 
   installPhase = ''
     runHook preInstall
@@ -68,8 +117,15 @@ mkDerivation rec {
     export FC_LIB_DIR=${fontconfig.lib}/lib
     export PODOFO_INC_DIR=${podofo.dev}/include/podofo
     export PODOFO_LIB_DIR=${podofo.lib}/lib
-    export SIP_BIN=${pypkgs.sip}/bin/sip
-    ${pypkgs.python.interpreter} setup.py install --prefix=$out
+    export XDG_DATA_HOME=$out/share
+    export XDG_UTILS_INSTALL_MODE="user"
+
+    ${python3Packages.python.interpreter} setup.py install --root=$out \
+      --prefix=$out \
+      --libdir=$out/lib \
+      --staging-root=$out \
+      --staging-libdir=$out/lib \
+      --staging-sharedir=$out/share
 
     PYFILES="$out/bin/* $out/lib/calibre/calibre/web/feeds/*.py
       $out/lib/calibre/calibre/ebooks/metadata/*.py
@@ -77,13 +133,6 @@ mkDerivation rec {
 
     sed -i "s/env python[0-9.]*/python/" $PYFILES
     sed -i "2i import sys; sys.argv[0] = 'calibre'" $out/bin/calibre
-
-    # Replace @out@ by the output path.
-    mkdir -p $out/share/applications/
-    cp {$calibreDesktopItem,$ebookEditDesktopItem,$ebookViewerDesktopItem}/share/applications/* $out/share/applications/
-    for entry in $out/share/applications/*.desktop; do
-      substituteAllInPlace $entry
-    done
 
     mkdir -p $out/share
     cp -a man-pages $out/share/man
@@ -99,7 +148,8 @@ mkDerivation rec {
   # 2018-11-06) was a single string like the following:
   #   /nix/store/xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx-podofo-0.9.6-dev/include/podofo/base/PdfVariant.h
   preFixup = ''
-    remove-references-to -t ${podofo.dev} $out/lib/calibre/calibre/plugins/podofo.so
+    remove-references-to -t ${podofo.dev} \
+      $out/lib/calibre/calibre/plugins/podofo.so
 
     for program in $out/bin/*; do
       wrapProgram $program \
@@ -112,82 +162,17 @@ mkDerivation rec {
 
   disallowedReferences = [ podofo.dev ];
 
-  calibreDesktopItem = makeDesktopItem {
-    name = "calibre-gui";
-    desktopName = "calibre";
-    exec = "@out@/bin/calibre --detach %F";
-    genericName = "E-book library management";
-    icon = "@out@/share/calibre/images/library.png";
-    comment = "Manage, convert, edit, and read e-books";
-    mimeType = lib.concatStringsSep ";" [
-      "application/x-mobipocket-subscription"
-      "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
-      "text/html"
-      "application/x-cbc"
-      "application/ereader"
-      "application/oebps-package+xml"
-      "image/vnd.djvu"
-      "application/x-sony-bbeb"
-      "application/vnd.ms-word.document.macroenabled.12"
-      "text/rtf"
-      "text/x-markdown"
-      "application/pdf"
-      "application/x-cbz"
-      "application/x-mobipocket-ebook"
-      "application/x-cbr"
-      "application/x-mobi8-ebook"
-      "text/fb2+xml"
-      "application/vnd.oasis.opendocument.text"
-      "application/epub+zip"
-      "text/plain"
-      "application/xhtml+xml"
-    ];
-    categories = "Office";
-    extraEntries = ''
-      Actions=Edit;Viewer;
-
-      [Desktop Action Edit]
-      Name=Edit E-book
-      Icon=@out@/share/calibre/images/tweak.png
-      Exec=@out@/bin/ebook-edit --detach %F
-
-      [Desktop Action Viewer]
-      Name=E-book Viewer
-      Icon=@out@/share/calibre/images/viewer.png
-      Exec=@out@/bin/ebook-viewer --detach %F
-    '';
-  };
-
-  ebookEditDesktopItem = makeDesktopItem {
-    name = "calibre-edit-book";
-    desktopName = "Edit E-book";
-    genericName = "E-book Editor";
-    comment = "Edit e-books";
-    icon = "@out@/share/calibre/images/tweak.png";
-    exec = "@out@/bin/ebook-edit --detach %F";
-    categories = "Office;Publishing";
-    mimeType = "application/epub+zip";
-    extraEntries = "NoDisplay=true";
-  };
-
-  ebookViewerDesktopItem = makeDesktopItem {
-    name = "calibre-ebook-viewer";
-    desktopName = "E-book Viewer";
-    genericName = "E-book Viewer";
-    comment = "Read e-books in all the major formats";
-    icon = "@out@/share/calibre/images/viewer.png";
-    exec = "@out@/bin/ebook-viewer --detach %F";
-    categories = "Office;Viewer";
-    mimeType = "application/epub+zip";
-    extraEntries = "NoDisplay=true";
-  };
-
   meta = with lib; {
-    description = "Comprehensive e-book software";
     homepage = "https://calibre-ebook.com";
-    license = with licenses; if unrarSupport then unfreeRedistributable else gpl3;
-    maintainers = with maintainers; [ domenkozar pSub AndersonTorres ];
+    description = "Comprehensive e-book software";
+    longDescription = ''
+      calibre is a powerful and easy to use e-book manager. Users say it’s
+      outstanding and a must-have. It’ll allow you to do nearly everything and
+      it takes things a step beyond normal e-book software. It’s also completely
+      free and open source and great for both casual users and computer experts.
+    '';
+    license = with licenses; if unrarSupport then unfreeRedistributable else gpl3Plus;
+    maintainers = with maintainers; [ pSub AndersonTorres ];
     platforms = platforms.linux;
-    inherit version;
   };
 }

@@ -1,40 +1,50 @@
-{ stdenv, fetchFromGitHub, ocaml, findlib, ocamlbuild, topkg
-, ppx_sexp_conv, result, x509, nocrypto, cstruct-sexp, ppx_cstruct, cstruct-unix, ounit
-, lwt     ? null}:
+{ lib, fetchurl, buildDunePackage
+, cstruct, cstruct-sexp, domain-name, fmt, ppx_cstruct, ppx_sexp_conv, logs, hkdf, mirage-crypto, mirage-crypto-ec, mirage-crypto-pk, mirage-crypto-rng, ocaml_lwt, ptime, rresult, sexplib, x509
+, alcotest, cstruct-unix, ounit2, randomconv
+}:
 
-with stdenv.lib;
+buildDunePackage rec {
+  pname = "tls";
+  version = "0.13.2";
 
-let withLwt = lwt != null; in
-
-if !versionAtLeast ocaml.version "4.04"
-then throw "tls is not available for OCaml ${ocaml.version}"
-else
-
-stdenv.mkDerivation rec {
-  version = "0.10.4";
-  name = "ocaml${ocaml.version}-tls-${version}";
-
-  src = fetchFromGitHub {
-    owner  = "mirleft";
-    repo   = "ocaml-tls";
-    rev    = version;
-    sha256 = "02wv4lia583imn3sfci4nqv6ac5nzig5j3yfdnlqa0q8bp9rfc6g";
+  src = fetchurl {
+    url = "https://github.com/mirleft/ocaml-tls/releases/download/v${version}/tls-v${version}.tbz";
+    sha256 = "sha256-IE6Fuvem8A3lZ/M8GLNYNwCG+v7BbPQ4QdYS+fKT50c=";
   };
 
-  buildInputs = [ ocaml ocamlbuild findlib topkg ppx_sexp_conv ppx_cstruct ]
-  ++ optionals doCheck [ ounit cstruct-unix ];
-  propagatedBuildInputs = [ cstruct-sexp nocrypto result x509 ] ++
-                          optional withLwt lwt;
+  minimumOCamlVersion = "4.08";
+  useDune2 = true;
 
-  buildPhase = "${topkg.run} build --tests ${boolToString doCheck} --with-mirage false --with-lwt ${boolToString withLwt}";
+  propagatedBuildInputs = [
+    cstruct
+    cstruct-sexp
+    domain-name
+    fmt
+    ppx_cstruct
+    ppx_sexp_conv
+    logs
+    hkdf
+    mirage-crypto
+    mirage-crypto-ec
+    mirage-crypto-pk
+    mirage-crypto-rng
+    ocaml_lwt
+    ptime
+    rresult
+    sexplib
+    x509
+  ];
 
-  doCheck = versionAtLeast ocaml.version "4.06";
-  checkPhase = "${topkg.run} test";
+  doCheck = true;
+  checkInputs = [
+    alcotest
+    cstruct-unix
+    ounit2
+    randomconv
+  ];
 
-  inherit (topkg) installPhase;
-
-  meta = with stdenv.lib; {
-    homepage = https://github.com/mirleft/ocaml-tls;
+  meta = with lib; {
+    homepage = "https://github.com/mirleft/ocaml-tls";
     description = "TLS in pure OCaml";
     license = licenses.bsd2;
     maintainers = with maintainers; [ sternenseemann ];

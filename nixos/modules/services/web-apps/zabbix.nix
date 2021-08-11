@@ -3,7 +3,7 @@
 let
 
   inherit (lib) mkDefault mkEnableOption mkForce mkIf mkMerge mkOption types;
-  inherit (lib) literalExample mapAttrs optionalString;
+  inherit (lib) literalExample mapAttrs optionalString versionAtLeast;
 
   cfg = config.services.zabbixWeb;
   fpm = config.services.phpfpm.pools.zabbix;
@@ -28,6 +28,8 @@ let
     $ZBX_SERVER_PORT = '${toString cfg.server.port}';
     $ZBX_SERVER_NAME = ''';
     $IMAGE_FORMAT_DEFAULT = IMAGE_FORMAT_PNG;
+
+    ${cfg.extraConfig}
   '';
 
 in
@@ -113,19 +115,15 @@ in
       };
 
       virtualHost = mkOption {
-        type = types.submodule ({
-          options = import ../web-servers/apache-httpd/per-server-options.nix {
-            inherit lib;
-            forMainServer = false;
-          };
-        });
-        example = {
-          hostName = "zabbix.example.org";
-          enableSSL = true;
-          adminAddr = "webmaster@example.org";
-          sslServerCert = "/var/lib/acme/zabbix.example.org/full.pem";
-          sslServerKey = "/var/lib/acme/zabbix.example.org/key.pem";
-        };
+        type = types.submodule (import ../web-servers/apache-httpd/vhost-options.nix);
+        example = literalExample ''
+          {
+            hostName = "zabbix.example.org";
+            adminAddr = "webmaster@example.org";
+            forceSSL = true;
+            enableACME = true;
+          }
+        '';
         description = ''
           Apache configuration can be done by adapting <literal>services.httpd.virtualHosts.&lt;name&gt;</literal>.
           See <xref linkend="opt-services.httpd.virtualHosts"/> for further information.
@@ -147,12 +145,24 @@ in
         '';
       };
 
+      extraConfig = mkOption {
+        type = types.lines;
+        default = "";
+        description = ''
+          Additional configuration to be copied verbatim into <filename>zabbix.conf.php</filename>.
+        '';
+      };
+
     };
   };
 
   # implementation
 
   config = mkIf cfg.enable {
+
+    services.zabbixWeb.extraConfig = optionalString ((versionAtLeast config.system.stateVersion "20.09") && (versionAtLeast cfg.package.version "5.0.0")) ''
+      $DB['DOUBLE_IEEE754'] = 'true';
+    '';
 
     systemd.tmpfiles.rules = [
       "d '${stateDir}' 0750 ${user} ${group} - -"
@@ -190,23 +200,21 @@ in
       enable = true;
       adminAddr = mkDefault cfg.virtualHost.adminAddr;
       extraModules = [ "proxy_fcgi" ];
-      virtualHosts = [ (mkMerge [
-        cfg.virtualHost {
-          documentRoot = mkForce "${cfg.package}/share/zabbix";
-          extraConfig = ''
-            <Directory "${cfg.package}/share/zabbix">
-              <FilesMatch "\.php$">
-                <If "-f %{REQUEST_FILENAME}">
-                  SetHandler "proxy:unix:${fpm.socket}|fcgi://localhost/"
-                </If>
-              </FilesMatch>
-              AllowOverride all
-              Options -Indexes
-              DirectoryIndex index.php
-            </Directory>
-          '';
-        }
-      ]) ];
+      virtualHosts.${cfg.virtualHost.hostName} = mkMerge [ cfg.virtualHost {
+        documentRoot = mkForce "${cfg.package}/share/zabbix";
+        extraConfig = ''
+          <Directory "${cfg.package}/share/zabbix">
+            <FilesMatch "\.php$">
+              <If "-f %{REQUEST_FILENAME}">
+                SetHandler "proxy:unix:${fpm.socket}|fcgi://localhost/"
+              </If>
+            </FilesMatch>
+            AllowOverride all
+            Options -Indexes
+            DirectoryIndex index.php
+          </Directory>
+        '';
+      } ];
     };
 
     users.users.${user} = mapAttrs (name: mkDefault) {

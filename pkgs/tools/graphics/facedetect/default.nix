@@ -1,4 +1,4 @@
-{ stdenv, fetchFromGitHub, python2Packages }:
+{ lib, stdenv, fetchFromGitHub, python2Packages }:
 
 stdenv.mkDerivation rec {
   pname = "facedetect";
@@ -12,13 +12,13 @@ stdenv.mkDerivation rec {
   };
 
   buildInputs = [ python2Packages.python python2Packages.wrapPython ];
-  pythonPath = [ python2Packages.numpy python2Packages.opencv ];
+  pythonPath = [ python2Packages.numpy python2Packages.opencv4 ];
 
-  phases = [ "unpackPhase" "patchPhase" "installPhase" ];
+  dontConfigure = true;
 
   patchPhase = ''
     substituteInPlace facedetect \
-      --replace /usr/share/opencv "${python2Packages.opencv}/share/OpenCV"
+      --replace /usr/share/opencv "${python2Packages.opencv4}/share/opencv4"
   '';
 
   installPhase = ''
@@ -27,8 +27,8 @@ stdenv.mkDerivation rec {
     wrapPythonPrograms
   '';
 
-  meta = with stdenv.lib; {
-    homepage = https://www.thregr.org/~wavexx/software/facedetect/;
+  meta = with lib; {
+    homepage = "https://www.thregr.org/~wavexx/software/facedetect/";
     description = "A simple face detector for batch processing";
     license = licenses.gpl2Plus;
     platforms = platforms.all;

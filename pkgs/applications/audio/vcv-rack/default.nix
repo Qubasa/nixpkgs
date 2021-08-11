@@ -1,23 +1,14 @@
-{ stdenv, makeWrapper, fetchFromBitbucket, fetchFromGitHub, pkgconfig
-, alsaLib, curl, glew, glfw, gtk2-x11, jansson, libjack2, libXext, libXi
+{ lib, stdenv, makeWrapper, fetchzip, fetchFromGitHub, pkg-config
+, alsa-lib, curl, glew, glfw, gtk2-x11, jansson, libjack2, libXext, libXi
 , libzip, rtaudio, rtmidi, speex, libsamplerate }:
 
 let
-  glfw-git = glfw.overrideAttrs (oldAttrs: rec {
-    name = "glfw-git-${version}";
-    version = "2019-06-30";
-    src = fetchFromGitHub {
-      owner = "glfw";
-      repo = "glfw";
-      rev = "d25248343e248337284dfbe5ecd1eddbd37ae66d";
-      sha256 = "0gbz353bfmqbpm0af2nqf5draz3k4f3lqwiqj68s8nwn7878aqm3";
-    };
-    buildInputs = oldAttrs.buildInputs ++ [ libXext libXi ];
-  });
-  pfft-source = fetchFromBitbucket {
-    owner = "jpommier";
-    repo = "pffft";
-    rev = "29e4f76ac53bef048938754f32231d7836401f79";
+  # The package repo vendors some of the package dependencies as submodules.
+  # Others are downloaded with `make deps`. Due to previous issues with the
+  # `glfw` submodule (see above) and because we can not access the network when
+  # building in a sandbox, we fetch the dependency source manually.
+  pfft-source = fetchzip {
+    url = "https://vcvrack.com/downloads/dep/pffft.zip";
     sha256 = "084csgqa6f1a270bhybjayrh3mpyi2jimc87qkdgsqcp8ycsx1l1";
   };
   nanovg-source = fetchFromGitHub {
@@ -45,26 +36,24 @@ let
     sha256 = "17kd0lh2x3x12bxkyhq6z8sg6vxln8m9qirf0basvcsmylr6rb64";
   };
 in
-with stdenv.lib; stdenv.mkDerivation rec {
+with lib; stdenv.mkDerivation rec {
   pname = "VCV-Rack";
-  version = "1.1.5";
+  version = "1.1.6";
 
   src = fetchFromGitHub {
     owner = "VCVRack";
     repo = "Rack";
     rev = "v${version}";
-    sha256 = "1g3mkghgiycbxyvzjhanc1b10jynkfkw03bpnha06qgd6gd9wv7k";
+    sha256 = "0ji64prr74qzxf5bx1sw022kbslx9nzll16lmk5in78hbl137b3i";
   };
 
   patches = [
     ./rack-minimize-vendoring.patch
-    # We patch out a call to a custom function, that is not needed on Linux.
-    # This avoids needing a patched version of glfw. The version we previously used disappeared
-    # on GitHub. See https://github.com/NixOS/nixpkgs/issues/71189
-    ./remove-custom-glfw-function.patch
   ];
 
   prePatch = ''
+    # As we can't use `make dep` to set up the dependencies (as explained
+    # above), we do it here manually
     mkdir -p dep/include
 
     cp -r ${pfft-source} dep/jpommier-pffft-source
@@ -85,10 +74,10 @@ with stdenv.lib; stdenv.mkDerivation rec {
 
   enableParallelBuilding = true;
 
-  nativeBuildInputs = [ makeWrapper pkgconfig ];
-  buildInputs = [ glfw-git alsaLib curl glew gtk2-x11 jansson libjack2 libzip rtaudio rtmidi speex libsamplerate ];
+  nativeBuildInputs = [ makeWrapper pkg-config ];
+  buildInputs = [ alsa-lib curl glew glfw gtk2-x11 jansson libjack2 libsamplerate libzip rtaudio rtmidi speex ];
 
-  buildFlags = "Rack";
+  buildFlags = [ "Rack" ];
 
   installPhase = ''
     install -D -m755 -t $out/bin Rack
@@ -100,9 +89,9 @@ with stdenv.lib; stdenv.mkDerivation rec {
     wrapProgram $out/bin/Rack --add-flags "-s $out/share/vcv-rack"
   '';
 
-  meta = with stdenv.lib; {
+  meta = with lib; {
     description = "Open-source virtual modular synthesizer";
-    homepage = http://vcvrack.com/;
+    homepage = "https://vcvrack.com/";
     # The source is BSD-3 licensed, some of the art is CC-BY-NC 4.0 or under a
     # no-derivatives clause
     license = with licenses; [ bsd3 cc-by-nc-40 unfreeRedistributable ];

@@ -21,7 +21,7 @@ let
     '' + optionalString config.services.nscd.enable ''
       # Invalidate the nscd cache whenever resolv.conf is
       # regenerated.
-      libc_restart='${pkgs.systemd}/bin/systemctl try-restart --no-block nscd.service 2> /dev/null'
+      libc_restart='/run/current-system/systemd/bin/systemctl try-restart --no-block nscd.service 2> /dev/null'
     '' + optionalString (length resolvconfOptions > 0) ''
       # Options as described in resolv.conf(5)
       resolv_conf_options='${concatStringsSep " " resolvconfOptions}'
@@ -33,6 +33,13 @@ let
 in
 
 {
+  imports = [
+    (mkRenamedOptionModule [ "networking" "dnsSingleRequest" ] [ "networking" "resolvconf" "dnsSingleRequest" ])
+    (mkRenamedOptionModule [ "networking" "dnsExtensionMechanism" ] [ "networking" "resolvconf" "dnsExtensionMechanism" ])
+    (mkRenamedOptionModule [ "networking" "extraResolvconfConf" ] [ "networking" "resolvconf" "extraConfig" ])
+    (mkRenamedOptionModule [ "networking" "resolvconfOptions" ] [ "networking" "resolvconf" "extraOptions" ])
+    (mkRemovedOptionModule [ "networking" "resolvconf" "useHostResolvConf" ] "This option was never used for anything anyways")
+  ];
 
   options = {
 
@@ -44,15 +51,6 @@ in
         internal = true;
         description = ''
           DNS configuration is managed by resolvconf.
-        '';
-      };
-
-      useHostResolvConf = mkOption {
-        type = types.bool;
-        default = false;
-        description = ''
-          In containers, whether to use the
-          <filename>resolv.conf</filename> supplied by the host.
         '';
       };
 

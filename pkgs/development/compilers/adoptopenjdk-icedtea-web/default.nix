@@ -1,18 +1,18 @@
-{ stdenv, fetchFromGitHub, cargo, rustc, autoreconfHook, jdk, glib, xulrunner, zip, pkgconfig, npapi_sdk, bash, bc }:
+{ lib, stdenv, fetchFromGitHub, cargo, rustc, autoreconfHook, jdk, glib, xulrunner, zip, pkg-config, npapi_sdk, bash, bc }:
 
 stdenv.mkDerivation rec {
   pname = "adoptopenjdk-icedtea-web";
 
-  version = "1.8.3";
+  version = "1.8.7";
 
   src = fetchFromGitHub {
     owner = "AdoptOpenJDK";
     repo = "IcedTea-Web";
     rev = "icedtea-web-${version}";
-    sha256 = "0bm5k11i2vgb54ch1bawsmjbwnqnp04saadwm2f2mggmmdc6b1qq";
+    sha256 = "sha256-XY6S1IvDqPxkYgFs7kB9AR0zQ4n3COVbS2lUT5mhTVc=";
   };
 
-  nativeBuildInputs = [ autoreconfHook pkgconfig bc ];
+  nativeBuildInputs = [ autoreconfHook pkg-config bc ];
   buildInputs = [ cargo rustc glib xulrunner zip npapi_sdk ];
 
   preConfigure = ''
@@ -57,7 +57,7 @@ stdenv.mkDerivation rec {
       programming language and an implementation of Java Web Start, originally
       based on the NetX project.
     '';
-    homepage = https://github.com/adoptopenjdk/icedtea-web;
-    platforms = stdenv.lib.platforms.linux;
+    homepage = "https://github.com/adoptopenjdk/icedtea-web";
+    platforms = lib.platforms.linux;
   };
 }

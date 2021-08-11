@@ -3,7 +3,8 @@
 , perl
 , buildPythonPackage
 , arb
-, openblasCompat
+, blas
+, lapack
 , brial
 , cliquer
 , cypari2
@@ -14,6 +15,7 @@
 , ecm
 , flint
 , gd
+, giac
 , givaro
 , glpk
 , gsl
@@ -30,7 +32,7 @@
 , ntl
 , numpy
 , pari
-, pkgconfig
+, pkgconfig # the python module, not the pkg-config alias
 , pkg-config
 , planarity
 , ppl
@@ -50,7 +52,10 @@
 , libbraiding
 , gmpy2
 , pplpy
+, sqlite
 }:
+
+assert (!blas.isILP64) && (!lapack.isILP64);
 
 # This is the core sage python package. Everything else is just wrappers gluing
 # stuff together. It is not very useful on its own though, since it will not
@@ -58,7 +63,6 @@
 # `sage-tests` and will not have html docs without `sagedoc`.
 
 buildPythonPackage rec {
-  format = "other";
   version = src.version;
   pname = "sagelib";
   src = sage-src;
@@ -69,6 +73,7 @@ buildPythonPackage rec {
     jupyter_core
     pkg-config
     pip # needed to query installed packages
+    ecl
   ];
 
   buildInputs = [
@@ -91,6 +96,7 @@ buildPythonPackage rec {
     ecm
     fflas-ffpack
     flint
+    giac
     givaro
     glpk
     gsl
@@ -103,7 +109,8 @@ buildPythonPackage rec {
     m4rie
     mpfi
     ntl
-    openblasCompat
+    blas
+    lapack
     pari
     planarity
     ppl
@@ -120,9 +127,10 @@ buildPythonPackage rec {
     libbraiding
     gmpy2
     pplpy
+    sqlite
   ];
 
-  buildPhase = ''
+  preBuild = ''
     export SAGE_ROOT="$PWD"
     export SAGE_LOCAL="$SAGE_ROOT"
     export SAGE_SHARE="$SAGE_LOCAL/share"
@@ -138,15 +146,13 @@ buildPythonPackage rec {
     mkdir -p "$SAGE_SHARE/sage/ext/notebook-ipython"
     mkdir -p "var/lib/sage/installed"
 
-    source build/bin/sage-dist-helpers
-    cd src
-
-    ${python.interpreter} -u setup.py --no-user-cfg build
+    # src/setup.py should not be used, see https://trac.sagemath.org/ticket/31377#comment:124
+    cd build/pkgs/sagelib/src
   '';
 
-  installPhase = ''
-    ${python.interpreter} -u setup.py --no-user-cfg install --prefix=$out
-
+  postInstall = ''
     rm -r "$out/${python.sitePackages}/sage/cython_debug"
   '';
+
+  doCheck = false; # we will run tests in sage-tests.nix
 }

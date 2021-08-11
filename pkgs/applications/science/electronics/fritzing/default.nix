@@ -1,46 +1,75 @@
-{ stdenv, fetchpatch, fetchFromGitHub, qmake, pkgconfig
-, qtbase, qtsvg, qtserialport, boost, libgit2
+{ mkDerivation
+, lib
+, fetchFromGitHub
+, qmake
+, pkg-config
+, qtbase
+, qtsvg
+, qttools
+, qtserialport
+, boost
+, libgit2
 }:
 
-stdenv.mkDerivation rec {
+let
+  # build number corresponding to a release, has no further relation
+  # see https://github.com/fritzing/fritzing-app/releases/tag/CD-498
+  # fritzingBuild = "498";
+  # version 0.9.6 is properly tagged, hope it continues
+
+  # SHA256 of the fritzing-parts HEAD on the master branch,
+  # which contains the latest stable parts definitions
+  partsSha = "6f04697be286768bc9e4d64f8707e8e40cbcafcb";
+in
+
+mkDerivation rec {
   pname = "fritzing";
-  version = "0.9.3b";
+  version = "0.9.6";
 
   src = fetchFromGitHub {
-    owner = "fritzing";
+    owner = pname;
     repo = "fritzing-app";
     rev = version;
-    sha256 = "0hpyc550xfhr6gmnc85nq60w00rm0ljm0y744dp0z88ikl04f4s3";
+    sha256 = "083nz7vj7a334575smjry6257535h68gglh8a381xxa36dw96aqs";
   };
 
   parts = fetchFromGitHub {
-    owner = "fritzing";
+    owner = pname;
     repo = "fritzing-parts";
-    rev = version;
-    sha256 = "1d2v8k7p176j0lczx4vx9n9gbg3vw09n2c4b6w0wj5wqmifywhc1";
+    name = "fritzing-parts";
+    rev = partsSha;
+    sha256 = "1f4w0hz44n4iw1rc5vhcgzvlji54rf4yr8bvzkqv99hn2xf5pjgs";
   };
 
-  patches = [(fetchpatch {
-    name = "0001-Squashed-commit-of-the-following.patch";
-    url = "https://aur.archlinux.org/cgit/aur.git/plain/0001-Squashed-commit-of-the-following.patch?h=fritzing";
-    sha256 = "1cv6myidxhy28i8m8v13ghzkvx5978p9dcd8v7885y0l1h3108mf";
-  })];
-
   buildInputs = [ qtbase qtsvg qtserialport boost libgit2 ];
+  nativeBuildInputs = [ qmake pkg-config qttools ];
 
-  nativeBuildInputs = [ qmake pkgconfig ];
+  postPatch = ''
+    substituteInPlace phoenix.pro \
+      --replace 'LIBGIT_STATIC = true' 'LIBGIT_STATIC = false'
+
+    substituteInPlace src/fapplication.cpp \
+      --replace 'PartsChecker::getSha(dir.absolutePath());' '"${partsSha}";'
+
+    mkdir parts
+    cp -a ${parts}/* parts/
+  '';
+
+  postFixup = ''
+    # generate the parts.db file
+    QT_QPA_PLATFORM=offscreen "$out/bin/Fritzing" \
+      -db "$out/share/fritzing/parts/parts.db" \
+      -pp "$out/fritzing/parts" \
+      -folder "$out/share/fritzing"
+  '';
 
   qmakeFlags = [ "phoenix.pro" ];
 
-  preConfigure = ''
-    ln -s "$parts" parts
-  '';
-
-  meta = {
+  meta = with lib; {
     description = "An open source prototyping tool for Arduino-based projects";
-    homepage = http://fritzing.org/;
-    license = stdenv.lib.licenses.gpl3;
-    maintainers = [ stdenv.lib.maintainers.robberer ];
-    platforms = stdenv.lib.platforms.linux;
+    homepage = "https://fritzing.org/";
+    license = with licenses; [ gpl3 cc-by-sa-30 ];
+    maintainers = with maintainers; [ robberer ];
+    platforms = platforms.linux;
   };
 }

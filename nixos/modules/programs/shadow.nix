@@ -76,22 +76,18 @@ in
         config.users.defaultUserShell;
 
     environment.etc =
-      [ { # /etc/login.defs: global configuration for pwdutils.  You
-          # cannot login without it!
-          source = pkgs.writeText "login.defs" loginDefs;
-          target = "login.defs";
-        }
+      { # /etc/login.defs: global configuration for pwdutils.  You
+        # cannot login without it!
+        "login.defs".source = pkgs.writeText "login.defs" loginDefs;
 
-        { # /etc/default/useradd: configuration for useradd.
-          source = pkgs.writeText "useradd"
-            ''
-              GROUP=100
-              HOME=/home
-              SHELL=${utils.toShellPath config.users.defaultUserShell}
-            '';
-          target = "default/useradd";
-        }
-      ];
+        # /etc/default/useradd: configuration for useradd.
+        "default/useradd".source = pkgs.writeText "useradd"
+          ''
+            GROUP=100
+            HOME=/home
+            SHELL=${utils.toShellPath config.users.defaultUserShell}
+          '';
+      };
 
     security.pam.services =
       { chsh = { rootOK = true; };
@@ -118,8 +114,9 @@ in
       newgrp.source    = "${pkgs.shadow.out}/bin/newgrp";
       newuidmap.source = "${pkgs.shadow.out}/bin/newuidmap";
       newgidmap.source = "${pkgs.shadow.out}/bin/newgidmap";
-    } // (if config.users.mutableUsers then {
+    } // lib.optionalAttrs config.users.mutableUsers {
+      chsh.source      = "${pkgs.shadow.out}/bin/chsh";
       passwd.source    = "${pkgs.shadow.out}/bin/passwd";
-    } else {});
+    };
   };
 }

@@ -1,20 +1,21 @@
-{ stdenv, fetchFromGitHub, python, pythonPackages, gamin }:
+{ lib, stdenv, fetchFromGitHub, python3 }:
 
-let version = "0.10.4"; in
 
-pythonPackages.buildPythonApplication {
+python3.pkgs.buildPythonApplication rec {
   pname = "fail2ban";
-  inherit version;
+  version = "0.11.2";
 
   src = fetchFromGitHub {
-    owner  = "fail2ban";
-    repo   = "fail2ban";
-    rev    = version;
-    sha256 = "07ik6rm856q0ic2r7vbg6j3hsdcdgkv44hh5ck0c2y21fqwrck3l";
+    owner = "fail2ban";
+    repo = "fail2ban";
+    rev = version;
+    sha256 = "q4U9iWCa1zg8sA+6pPNejt6v/41WGIKN5wITJCrCqQE=";
   };
 
-  propagatedBuildInputs = [ gamin ]
-    ++ (stdenv.lib.optional stdenv.isLinux pythonPackages.systemd);
+  pythonPath = with python3.pkgs;
+    lib.optionals stdenv.isLinux [
+      systemd
+    ];
 
   preConfigure = ''
     for i in config/action.d/sendmail*.conf; do
@@ -33,21 +34,27 @@ pythonPackages.buildPythonApplication {
     substituteInPlace setup.py --replace /usr/share/doc/ share/doc/
 
     # see https://github.com/NixOS/nixpkgs/issues/4968
-    ${python}/bin/${python.executable} setup.py install_data --install-dir=$out --root=$out
+    ${python3.interpreter} setup.py install_data --install-dir=$out --root=$out
   '';
 
-  postInstall = let
-    sitePackages = "$out/lib/${python.libPrefix}/site-packages";
-  in ''
-    # see https://github.com/NixOS/nixpkgs/issues/4968
-    rm -rf ${sitePackages}/etc ${sitePackages}/usr ${sitePackages}/var;
+  postPatch = ''
+    ${stdenv.shell} ./fail2ban-2to3
   '';
 
-  meta = with stdenv.lib; {
-    homepage    = http://www.fail2ban.org/;
+  postInstall =
+    let
+      sitePackages = "$out/${python3.sitePackages}";
+    in
+    ''
+      # see https://github.com/NixOS/nixpkgs/issues/4968
+      rm -r ${sitePackages}/etc ${sitePackages}/usr
+    '';
+
+  meta = with lib; {
+    homepage = "https://www.fail2ban.org/";
     description = "A program that scans log files for repeated failing login attempts and bans IP addresses";
-    license     = licenses.gpl2Plus;
+    license = licenses.gpl2Plus;
     maintainers = with maintainers; [ eelco lovek323 fpletz ];
-    platforms   = platforms.linux ++ platforms.darwin;
+    platforms = platforms.unix;
   };
 }

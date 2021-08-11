@@ -1,13 +1,12 @@
-{stdenv, fetchurl, libaal}:
+{lib, stdenv, fetchurl, libaal}:
 
-let version = "1.2.1"; in
 stdenv.mkDerivation rec {
   pname = "reiser4progs";
-  inherit version;
+  version = "2.0.4";
 
   src = fetchurl {
     url = "mirror://sourceforge/reiser4/reiser4-utils/${pname}-${version}.tar.gz";
-    sha256 = "03vdqvpyd48wxrpqpb9kg76giaffw9b8k334kr4wc0zxgybknhl7";
+    sha256 = "sha256-WmIkISnRp5BngSfPEKY95HVEt5TBtPKu+RMBwlLsnuA=";
   };
 
   buildInputs = [libaal];
@@ -22,9 +21,9 @@ stdenv.mkDerivation rec {
     substituteInPlace Makefile --replace ./run-ldconfig true
   '';
 
-  meta = with stdenv.lib; {
+  meta = with lib; {
     inherit version;
-    homepage = https://sourceforge.net/projects/reiser4/;
+    homepage = "https://sourceforge.net/projects/reiser4/";
     description = "Reiser4 utilities";
     license = licenses.gpl2;
     platforms = platforms.linux;

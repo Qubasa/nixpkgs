@@ -2,13 +2,13 @@
 
 buildPythonPackage rec {
   pname = "mkl-service";
-  version = "2.1.0";
+  version = "2.4.0";
 
   src = fetchFromGitHub {
     owner = "IntelPython";
     repo = "mkl-service";
     rev = "v${version}";
-    sha256 = "1bnpgx629rxqf0yhn0jn68ypj3dqv6njc3981j1g8j8rsm5lycrn";
+    sha256 = "1x8j0ij582dyhay0gaqq45a2jz1m4fr8xw0v65ngviajj3cxmcpb";
   };
 
   MKLROOT = mkl;

@@ -5,9 +5,9 @@
 , hopcroftkarp
 , multiset
 , pytest
-, pytestrunner
+, pytest-runner
 , hypothesis
-, setuptools_scm
+, setuptools-scm
 , isPy27
 }:
 
@@ -36,13 +36,13 @@ buildPythonPackage rec {
        --replace "pytest>=3.0,<4.0" "pytest"
   '';
 
-  buildInputs = [ setuptools_scm pytestrunner ];
+  buildInputs = [ setuptools-scm pytest-runner ];
   checkInputs = [ pytest hypothesis ];
   propagatedBuildInputs = [ hopcroftkarp multiset ];
 
   meta = with lib; {
     description = "A library for pattern matching on symbolic expressions";
-    homepage = https://github.com/HPAC/matchpy;
+    homepage = "https://github.com/HPAC/matchpy";
     license = licenses.mit;
     maintainers = [ maintainers.costrouc ];
   };

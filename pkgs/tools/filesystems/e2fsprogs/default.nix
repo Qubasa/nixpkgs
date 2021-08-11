@@ -1,18 +1,20 @@
-{ stdenv, buildPackages, fetchurl, fetchpatch, pkgconfig, libuuid, gettext, texinfo }:
+{ lib, stdenv, buildPackages, fetchurl, fetchpatch, pkg-config, libuuid, gettext, texinfo
+, shared ? !stdenv.hostPlatform.isStatic
+}:
 
 stdenv.mkDerivation rec {
   pname = "e2fsprogs";
-  version = "1.45.4";
+  version = "1.46.2";
 
   src = fetchurl {
     url = "mirror://sourceforge/${pname}/${pname}-${version}.tar.gz";
-    sha256 = "0jsclghxfzj9qmdd3qqk0gdmkrgjv2gakf8qz9dba37qkj1nk776";
+    sha256 = "sha256-958mtPZb3AWfyhLh7GowQMPOGlA/tw65Fb7nGQOBXNU=";
   };
 
   outputs = [ "bin" "dev" "out" "man" "info" ];
 
   depsBuildBuild = [ buildPackages.stdenv.cc ];
-  nativeBuildInputs = [ pkgconfig texinfo ];
+  nativeBuildInputs = [ pkg-config texinfo ];
   buildInputs = [ libuuid gettext ];
 
   # Only use glibc's __GNUC_PREREQ(X,Y) (checks if compiler is gcc version >= X.Y) when using glibc
@@ -36,7 +38,9 @@ stdenv.mkDerivation rec {
 
   configureFlags =
     if stdenv.isLinux then [
-      "--enable-elf-shlibs"
+      # It seems that the e2fsprogs is one of the few packages that cannot be
+      # build with shared and static libs.
+      (if shared then "--enable-elf-shlibs" else "--disable-elf-shlibs")
       "--enable-symlink-install"
       "--enable-relative-symlinks"
       "--with-crond-dir=no"
@@ -61,10 +65,15 @@ stdenv.mkDerivation rec {
 
   enableParallelBuilding = true;
 
-  meta = with stdenv.lib; {
-    homepage = http://e2fsprogs.sourceforge.net/;
+  meta = with lib; {
+    homepage = "http://e2fsprogs.sourceforge.net/";
     description = "Tools for creating and checking ext2/ext3/ext4 filesystems";
-    license = licenses.gpl2;
+    license = with licenses; [
+      gpl2Plus
+      lgpl2Plus # lib/ext2fs, lib/e2p
+      bsd3      # lib/uuid
+      mit       # lib/et, lib/ss
+    ];
     platforms = platforms.unix;
     maintainers = [ maintainers.eelco ];
   };

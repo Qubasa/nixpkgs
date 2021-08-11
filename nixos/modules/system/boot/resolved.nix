@@ -136,12 +136,20 @@ in
       }
     ];
 
+    users.users.systemd-resolve.group = "systemd-resolve";
+
+    # add resolve to nss hosts database if enabled and nscd enabled
+    # system.nssModules is configured in nixos/modules/system/boot/systemd.nix
+    # added with order 501 to allow modules to go before with mkBefore
+    system.nssDatabases.hosts = (mkOrder 501 ["resolve [!UNAVAIL=return]"]);
+
     systemd.additionalUpstreamSystemUnits = [
       "systemd-resolved.service"
     ];
 
     systemd.services.systemd-resolved = {
       wantedBy = [ "multi-user.target" ];
+      aliases = [ "dbus-org.freedesktop.resolve1.service" ];
       restartTriggers = [ config.environment.etc."systemd/resolved.conf".source ];
     };
 

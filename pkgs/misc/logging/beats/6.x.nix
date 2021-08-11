@@ -1,4 +1,4 @@
-{ stdenv, fetchFromGitHub, elk6Version, buildGoPackage, libpcap, systemd }:
+{ lib, fetchFromGitHub, elk6Version, buildGoPackage, libpcap, nixosTests, systemd }:
 
 let beat = package : extraArgs : buildGoPackage (rec {
       name = "${package}-${version}";
@@ -15,17 +15,24 @@ let beat = package : extraArgs : buildGoPackage (rec {
 
       subPackages = [ package ];
 
-      meta = with stdenv.lib; {
-        homepage = https://www.elastic.co/products/beats;
+      meta = with lib; {
+        homepage = "https://www.elastic.co/products/beats";
         license = licenses.asl20;
         maintainers = with maintainers; [ fadenb basvandijk ];
         platforms = platforms.linux;
       };
     } // extraArgs);
-in {
+in rec {
   filebeat6   = beat "filebeat"   {meta.description = "Lightweight shipper for logfiles";};
   heartbeat6  = beat "heartbeat"  {meta.description = "Lightweight shipper for uptime monitoring";};
-  metricbeat6 = beat "metricbeat" {meta.description = "Lightweight shipper for metrics";};
+  metricbeat6 = beat "metricbeat" {
+    meta.description = "Lightweight shipper for metrics";
+    passthru.tests =
+      assert metricbeat6.drvPath == nixosTests.elk.ELK-6.elkPackages.metricbeat.drvPath;
+      {
+        elk = nixosTests.elk.ELK-6;
+      };
+  };
   packetbeat6 = beat "packetbeat" {
     buildInputs = [ libpcap ];
     meta.broken = true;
@@ -46,8 +53,8 @@ in {
       journal entries from Linuxes with systemd.
     '';
     buildInputs = [ systemd.dev ];
-    postFixup = let libPath = stdenv.lib.makeLibraryPath [ systemd.lib ]; in ''
-      patchelf --set-rpath ${libPath} "$bin/bin/journalbeat"
+    postFixup = let libPath = lib.makeLibraryPath [ (lib.getLib systemd) ]; in ''
+      patchelf --set-rpath ${libPath} "$out/bin/journalbeat"
     '';
   };
 }

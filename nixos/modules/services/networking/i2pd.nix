@@ -32,9 +32,9 @@ let
       description = "Bind address for ${name} endpoint.";
     };
     port = mkOption {
-      type = types.int;
+      type = types.port;
       default = port;
-      description = "Bind port for ${name} endoint.";
+      description = "Bind port for ${name} endpoint.";
     };
   };
 
@@ -159,7 +159,7 @@ let
       (strOpt "defaulturl" cfg.addressbook.defaulturl)
     ] ++ (optionalEmptyList "subscriptions" cfg.addressbook.subscriptions)
       ++ (flip map
-      (collect (proto: proto ? port && proto ? address && proto ? name) cfg.proto)
+      (collect (proto: proto ? port && proto ? address) cfg.proto)
       (proto: let protoOpts = [
         (sec proto.name)
         (boolOpt "enabled" proto.enable)
@@ -234,6 +234,10 @@ let
 in
 
 {
+
+  imports = [
+    (mkRenamedOptionModule [ "services" "i2pd" "extIp" ] [ "services" "i2pd" "address" ])
+  ];
 
   ###### interface
 
@@ -602,7 +606,7 @@ in
 
       outTunnels = mkOption {
         default = {};
-        type = with types; loaOf (submodule (
+        type = with types; attrsOf (submodule (
           { name, ... }: {
             options = {
               destinationPort = mkOption {
@@ -623,7 +627,7 @@ in
 
       inTunnels = mkOption {
         default = {};
-        type = with types; loaOf (submodule (
+        type = with types; attrsOf (submodule (
           { name, ... }: {
             options = {
               inPort = mkOption {

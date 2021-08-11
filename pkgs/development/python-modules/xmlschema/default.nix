@@ -1,34 +1,33 @@
 { lib, buildPythonPackage, fetchFromGitHub
 , elementpath
+, lxml
 , pytest
 }:
 
 buildPythonPackage rec {
-  version = "1.0.15";
+  version = "1.6.4";
   pname = "xmlschema";
 
   src = fetchFromGitHub {
     owner = "sissaschool";
     repo = "xmlschema";
     rev = "v${version}";
-    sha256 = "1s8ggvy2s7513cxcal3r37rn1bhpkxhq3hs5m9pgvmrysxjdz8lb";
+    sha256 = "sha256-0KVGu163t3stCgx7aWW/Ggf6CUW2ZhOOnPU6FfGHfKA=";
   };
 
   propagatedBuildInputs = [ elementpath ];
 
-  checkInputs = [ pytest ];
+  checkInputs = [ lxml pytest ];
 
   # Ignore broken fixtures, and tests for files which don't exist.
   # For darwin, we need to explicity say we can't reach network
   checkPhase = ''
-    substituteInPlace xmlschema/tests/__init__.py \
-      --replace "SKIP_REMOTE_TESTS = " "SKIP_REMOTE_TESTS = True #"
-    pytest . \
-      --ignore=xmlschema/tests/test_factory.py \
-      --ignore=xmlschema/tests/test_memory.py \
-      --ignore=xmlschema/tests/test_validators.py \
-      --ignore=xmlschema/tests/test_schemas.py \
-      -k 'not element_tree_import_script'
+    pytest tests \
+      --ignore=tests/test_factory.py \
+      --ignore=tests/test_schemas.py \
+      --ignore=tests/test_memory.py \
+      --ignore=tests/test_validation.py \
+      -k 'not element_tree_import_script and not export_remote'
   '';
 
   meta = with lib; {

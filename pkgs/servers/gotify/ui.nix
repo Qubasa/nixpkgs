@@ -3,18 +3,18 @@
 }:
 
 yarn2nix-moretea.mkYarnPackage rec {
-  name = "gotify-ui";
+  pname = "gotify-ui";
 
   packageJSON = ./package.json;
   yarnNix = ./yarndeps.nix;
 
-  version = "2.0.8";
+  version = import ./version.nix;
 
   src_all = fetchFromGitHub {
     owner = "gotify";
     repo = "server";
     rev = "v${version}";
-    sha256 = "17bxs3wcazrxippf3i9w7d2mq8lf0v5m4bn3nl2zb8v8dl3lsc9a";
+    sha256 = import ./source-sha.nix;
   };
   src = "${src_all}/ui";
 

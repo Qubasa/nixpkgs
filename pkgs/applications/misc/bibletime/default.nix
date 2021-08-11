@@ -1,34 +1,44 @@
-{stdenv, fetchurl, cmake, sword, qt4, boost, clucene_core}:
+{ lib, mkDerivation, fetchurl, cmake, pkg-config, sword, boost, clucene_core
+, qtbase, qttools, qtsvg, perlPackages, docbook_xml_dtd_45
+, docbook_xsl_ns }:
 
-stdenv.mkDerivation rec {
-
-  version = "2.10.1";
-
+mkDerivation rec {
   pname = "bibletime";
+  version = "3.0.1";
 
   src = fetchurl {
-    url = "mirror://sourceforge/bibletime/${pname}-${version}.tar.xz";
-    sha256 = "14fayy5h1ffjxin669q56fflxn4ij1irgn60cygwx2y02cwxbll6";
+    url = "https://github.com/bibletime/bibletime/releases/download/v${version}/${pname}-${version}.tar.xz";
+    sha256 = "sha256-ay4o8mfgj/m3BBoBMXVgw0NTlaFgJQvLlNYvEZRXSiA=";
   };
 
-  prePatch = ''
-    patchShebangs .;
-  '';
+  nativeBuildInputs = [ cmake pkg-config docbook_xml_dtd_45 ];
+  buildInputs = [
+    sword
+    boost
+    clucene_core
+    qtbase
+    qttools
+    qtsvg
+    perlPackages.Po4a
+  ];
 
-  preConfigure =  ''
+  preConfigure = ''
     export CLUCENE_HOME=${clucene_core};
     export SWORD_HOME=${sword};
   '';
 
-  buildInputs = [ cmake sword qt4 boost clucene_core ];
+  cmakeFlags = [
+    "-DBUILD_HOWTO_PDF=OFF"
+    "-DBUILD_HANDBOOK_PDF=OFF"
+    "-DBT_DOCBOOK_XSL_HTML_CHUNK_XSL=${docbook_xsl_ns}/share/xml/docbook-xsl-ns/html/chunk.xsl"
+    "-DBT_DOCBOOK_XSL_PDF_DOCBOOK_XSL=${docbook_xsl_ns}/share/xml/docbook-xsl-ns/html/chunk.xsl"
+  ];
 
-  cmakeFlags = "-DUSE_QT_WEBKIT=ON -DCMAKE_BUILD_TYPE=Debug";
-
-  meta = {
+  meta = with lib; {
     description = "A Qt4 Bible study tool";
-    homepage = http://www.bibletime.info/;
-    platforms = stdenv.lib.platforms.linux;
-    license = stdenv.lib.licenses.gpl2;
-    maintainers = [ stdenv.lib.maintainers.piotr ];
+    homepage = "http://www.bibletime.info/";
+    platforms = platforms.linux;
+    license = licenses.gpl2Plus;
+    maintainers = [ maintainers.piotr ];
   };
 }

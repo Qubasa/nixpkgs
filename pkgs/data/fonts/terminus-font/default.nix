@@ -1,4 +1,7 @@
-{ stdenv, fetchurl, python3, bdftopcf, mkfontdir, mkfontscale }:
+{ lib, stdenv, fetchurl, python3
+, libfaketime, fonttosfnt
+, bdftopcf, mkfontscale
+}:
 
 stdenv.mkDerivation rec {
   pname = "terminus-font";
@@ -9,17 +12,36 @@ stdenv.mkDerivation rec {
     sha256 = "1bwlkj39rqbyq57v5yssayav6hzv1n11b9ml2s0dpiyfsn6rqy9l";
   };
 
-  nativeBuildInputs = [ python3 bdftopcf mkfontdir mkfontscale ];
-
-  patchPhase = ''
-    substituteInPlace Makefile --replace 'fc-cache' '#fc-cache'
-  '';
+  nativeBuildInputs =
+    [ python3 bdftopcf libfaketime
+      fonttosfnt mkfontscale
+    ];
 
   enableParallelBuilding = true;
 
+  postPatch = ''
+    substituteInPlace Makefile --replace 'fc-cache' '#fc-cache'
+    substituteInPlace Makefile --replace 'gzip'     'gzip -n'
+  '';
+
+  postBuild = ''
+    # convert unicode bdf fonts to otb
+    for i in *.bdf; do
+      name=$(basename $i .bdf)
+      faketime -f "1970-01-01 00:00:01" \
+      fonttosfnt -v -o "$name.otb" "$i"
+    done
+  '';
+
+  postInstall = ''
+    # install otb fonts (for GTK applications)
+    install -m 644 -D *.otb -t "$out/share/fonts/misc";
+    mkfontdir "$out/share/fonts/misc"
+  '';
+
   installTargets = [ "install" "fontdir" ];
 
-  meta = with stdenv.lib; {
+  meta = with lib; {
     description = "A clean fixed width font";
     longDescription = ''
       Terminus Font is designed for long (8 and more hours per day) work
@@ -33,7 +55,7 @@ stdenv.mkDerivation rec {
       16x32. The styles are normal and bold (except for 6x12), plus
       EGA/VGA-bold for 8x14 and 8x16.
     '';
-    homepage = http://terminus-font.sourceforge.net/;
+    homepage = "http://terminus-font.sourceforge.net/";
     license = licenses.gpl2Plus;
     maintainers = with maintainers; [ astsmtl ];
   };

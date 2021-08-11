@@ -19,7 +19,7 @@ in
       extraFlags = mkOption {
         type = types.listOf types.str;
         default = [];
-        description = ''Extra flags to pass to <command>oa_ded</command>'';
+        description = "Extra flags to pass to <command>oa_ded</command>";
         example = [
           "+set dedicated 2"
           "+set sv_hostname 'My NixOS OpenArena Server'"
@@ -43,7 +43,7 @@ in
       serviceConfig = {
         DynamicUser = true;
         StateDirectory = "openarena";
-        ExecStart = "${pkgs.openarena}/bin/openarena-server +set fs_basepath ${pkgs.openarena}/openarena-0.8.8 +set fs_homepath /var/lib/openarena ${concatStringsSep " " cfg.extraFlags}";
+        ExecStart = "${pkgs.openarena}/bin/oa_ded +set fs_basepath ${pkgs.openarena}/openarena-0.8.8 +set fs_homepath /var/lib/openarena ${concatStringsSep " " cfg.extraFlags}";
         Restart = "on-failure";
 
         # Hardening

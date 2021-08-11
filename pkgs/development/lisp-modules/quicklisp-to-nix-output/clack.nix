@@ -1,15 +1,16 @@
+/* Generated file. */
 args @ { fetchurl, ... }:
 rec {
-  baseName = ''clack'';
-  version = ''20190710-git'';
+  baseName = "clack";
+  version = "20210411-git";
 
-  description = ''Web application environment for Common Lisp'';
+  description = "Web application environment for Common Lisp";
 
-  deps = [ args."alexandria" args."bordeaux-threads" args."ironclad" args."lack" args."lack-component" args."lack-middleware-backtrace" args."lack-util" args."nibbles" args."uiop" ];
+  deps = [ args."alexandria" args."bordeaux-threads" args."ironclad" args."lack" args."lack-component" args."lack-middleware-backtrace" args."lack-util" args."split-sequence" args."uiop" args."usocket" ];
 
   src = fetchurl {
-    url = ''http://beta.quicklisp.org/archive/clack/2019-07-10/clack-20190710-git.tgz'';
-    sha256 = ''1642myknfaajcyqllnhn9s17yb6dbj1yh9wmg1kbplwq9c3yjs7k'';
+    url = "http://beta.quicklisp.org/archive/clack/2021-04-11/clack-20210411-git.tgz";
+    sha256 = "0yai9cx1gha684ljr8k1s5n4mi6mpj2wmvv6b9iw7pw1vhw5m8mf";
   };
 
   packageName = "clack";
@@ -18,20 +19,21 @@ rec {
   overrides = x: x;
 }
 /* (SYSTEM clack DESCRIPTION Web application environment for Common Lisp SHA256
-    1642myknfaajcyqllnhn9s17yb6dbj1yh9wmg1kbplwq9c3yjs7k URL
-    http://beta.quicklisp.org/archive/clack/2019-07-10/clack-20190710-git.tgz
-    MD5 9d8869ca599652d68dd759c8a6adcd3d NAME clack FILENAME clack DEPS
+    0yai9cx1gha684ljr8k1s5n4mi6mpj2wmvv6b9iw7pw1vhw5m8mf URL
+    http://beta.quicklisp.org/archive/clack/2021-04-11/clack-20210411-git.tgz
+    MD5 c47deb6287b72fc9033055914787f3a5 NAME clack FILENAME clack DEPS
     ((NAME alexandria FILENAME alexandria)
      (NAME bordeaux-threads FILENAME bordeaux-threads)
      (NAME ironclad FILENAME ironclad) (NAME lack FILENAME lack)
      (NAME lack-component FILENAME lack-component)
      (NAME lack-middleware-backtrace FILENAME lack-middleware-backtrace)
-     (NAME lack-util FILENAME lack-util) (NAME nibbles FILENAME nibbles)
-     (NAME uiop FILENAME uiop))
+     (NAME lack-util FILENAME lack-util)
+     (NAME split-sequence FILENAME split-sequence) (NAME uiop FILENAME uiop)
+     (NAME usocket FILENAME usocket))
     DEPENDENCIES
     (alexandria bordeaux-threads ironclad lack lack-component
-     lack-middleware-backtrace lack-util nibbles uiop)
-    VERSION 20190710-git SIBLINGS
+     lack-middleware-backtrace lack-util split-sequence uiop usocket)
+    VERSION 20210411-git SIBLINGS
     (clack-handler-fcgi clack-handler-hunchentoot clack-handler-toot
      clack-handler-wookie clack-socket clack-test clack-v1-compat
      t-clack-handler-fcgi t-clack-handler-hunchentoot t-clack-handler-toot

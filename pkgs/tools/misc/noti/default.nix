@@ -3,13 +3,13 @@
 
 buildGoPackage rec {
   pname = "noti";
-  version = "3.3.0";
+  version = "3.5.0";
 
   src = fetchFromGitHub {
     owner = "variadico";
     repo = "noti";
     rev = version;
-    sha256 = "1644bivjcky07n3rrm83vsms7hw47p4hnp2536q0z3qca5jyri2f";
+    sha256 = "12r9wawwl6x0rfv1kahwkamfa0pjq24z60az9pn9nsi2z1rrlwkd";
   };
 
   buildInputs = lib.optional stdenv.isDarwin Cocoa;
@@ -26,15 +26,14 @@ buildGoPackage rec {
   '';
 
   meta = with lib; {
-    description = "Monitor a process and trigger a notification.";
+    description = "Monitor a process and trigger a notification";
     longDescription = ''
       Monitor a process and trigger a notification.
 
       Never sit and wait for some long-running process to finish. Noti can alert you when it's done. You can receive messages on your computer or phone.
     '';
-    homepage = https://github.com/variadico/noti;
+    homepage = "https://github.com/variadico/noti";
     license = licenses.mit;
     maintainers = with maintainers; [ stites marsam ];
-    platforms = platforms.all;
   };
 }

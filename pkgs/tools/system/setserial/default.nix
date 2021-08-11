@@ -1,4 +1,4 @@
-{ stdenv, fetchurl, groff }:
+{ lib, stdenv, fetchurl, groff }:
 
 stdenv.mkDerivation rec {
   pname = "setserial";
@@ -11,7 +11,7 @@ stdenv.mkDerivation rec {
 
   buildInputs = [ groff ];
 
-  installFlags = ''DESTDIR=$(out)'';
+  installFlags = [ "DESTDIR=$(out)" ];
 
   postConfigure = ''
     sed -e s@/usr/man/@/share/man/@ -i Makefile
@@ -21,7 +21,7 @@ stdenv.mkDerivation rec {
 
   meta = {
     description = "Serial port configuration utility";
-    platforms = stdenv.lib.platforms.linux;
-    license = stdenv.lib.licenses.gpl2;
+    platforms = lib.platforms.linux;
+    license = lib.licenses.gpl2;
   };
 }

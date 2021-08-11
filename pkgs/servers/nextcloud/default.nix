@@ -1,24 +1,62 @@
-{ stdenv, fetchurl }:
+{ lib, stdenv, fetchurl, nixosTests }:
 
-stdenv.mkDerivation rec {
-  pname = "nextcloud";
-  version = "17.0.0";
+let
+  generic = {
+    version, sha256,
+    eol ? false, extraVulnerabilities ? []
+  }: stdenv.mkDerivation rec {
+    pname = "nextcloud";
+    inherit version;
 
-  src = fetchurl {
-    url = "https://download.nextcloud.com/server/releases/${pname}-${version}.tar.bz2";
-    sha256 = "19j2l4qxkqsxcw75gvkinjqawia07wx2kcmzn8q33nzc6cdl50b0";
+    src = fetchurl {
+      url = "https://download.nextcloud.com/server/releases/${pname}-${version}.tar.bz2";
+      inherit sha256;
+    };
+
+    passthru.tests = nixosTests.nextcloud;
+
+    installPhase = ''
+      runHook preInstall
+      mkdir -p $out/
+      cp -R . $out/
+      runHook postInstall
+    '';
+
+    meta = with lib; {
+      description = "Sharing solution for files, calendars, contacts and more";
+      homepage = "https://nextcloud.com";
+      maintainers = with maintainers; [ schneefux bachp globin fpletz ma27 ];
+      license = licenses.agpl3Plus;
+      platforms = with platforms; unix;
+      knownVulnerabilities = extraVulnerabilities
+        ++ (optional eol "Nextcloud version ${version} is EOL");
+    };
   };
+in {
+  nextcloud19 = throw ''
+    Nextcloud v19 has been removed from `nixpkgs` as the support for it was dropped
+    by upstream in 2021-06. Please upgrade to at least Nextcloud v20 by
+    declaring
 
-  installPhase = ''
-    mkdir -p $out/
-    cp -R . $out/
+        services.nextcloud.package = pkgs.nextcloud20;
+
+    in your NixOS config.
   '';
 
-  meta = {
-    description = "Sharing solution for files, calendars, contacts and more";
-    homepage = https://nextcloud.com;
-    maintainers = with stdenv.lib.maintainers; [ schneefux bachp globin fpletz ];
-    license = stdenv.lib.licenses.agpl3Plus;
-    platforms = with stdenv.lib.platforms; unix;
+  nextcloud20 = generic {
+    version = "20.0.12";
+    sha256 = "sha256-gIIPuWVcWv/5nuXMWticcPBKMjJVsCmvs83tj8fdbgY=";
   };
+
+  nextcloud21 = generic {
+    version = "21.0.4";
+    sha256 = "sha256-Sg0w/r+6UxGLqZCgwtLBZ2e3eqZ2r8k30gGNaGXF/jo=";
+  };
+
+  nextcloud22 = generic {
+    version = "22.1.0";
+    sha256 = "sha256-SCCAj3mRRoU2BOH6J9fykkSQGKRNxzv5KKl7AgKDGLo=";
+  };
+  # tip: get she sha with:
+  # curl 'https://download.nextcloud.com/server/releases/nextcloud-${version}.tar.bz2.sha256'
 }

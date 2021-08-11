@@ -1,42 +1,45 @@
-{ stdenv, fetchFromGitHub, cmake
-, secureBuild ? true
+{ lib, stdenv, fetchFromGitHub, cmake, ninja
+, secureBuild ? false
 }:
 
 let
   soext = stdenv.hostPlatform.extensions.sharedLibrary;
 in
 stdenv.mkDerivation rec {
-  name    = "mimalloc-${version}";
-  version = "1.1.0";
+  pname   = "mimalloc";
+  version = "2.0.2";
 
   src = fetchFromGitHub {
     owner  = "microsoft";
-    repo   = "mimalloc";
-    rev    = "refs/tags/v${version}";
-    sha256 = "1i8pwzpcmbf7dxncb984xrnczn1737xqhf1jaizlyw0k1hpiam4v";
+    repo   = pname;
+    rev    = "v${version}";
+    sha256 = "sha256-n4FGld3bq6ZOSLTzXcVlucCGbQ5/eSFbijU0dfBD/T0=";
   };
 
-  nativeBuildInputs = [ cmake ];
-  enableParallelBuilding = true;
+  nativeBuildInputs = [ cmake ninja ];
+  cmakeFlags = [ "-DMI_INSTALL_TOPLEVEL=ON" ] ++ lib.optional secureBuild [ "-DMI_SECURE=ON" ];
 
-  cmakeFlags = stdenv.lib.optional secureBuild [ "-DMI_SECURE=ON" ];
+  postInstall = let
+    rel = lib.versions.majorMinor version;
+    suffix = if stdenv.isLinux then "${soext}.${rel}" else ".${rel}${soext}";
+  in ''
+    # first, move headers and cmake files, that's easy
+    mkdir -p $dev/lib
+    mv $out/include $dev/include
+    mv $out/cmake $dev/lib/
 
-  postInstall = ''
-    mkdir -p $dev
-    mv $out/lib/*/include $dev/include
-
-    rm -f $out/lib/libmimalloc*${soext} # weird duplicate
-
-    mv $out/lib/*/libmimalloc*${soext} $out/lib/libmimalloc${soext}
-    mv $out/lib/*/libmimalloc*.a       $out/lib/libmimalloc.a
-    mv $out/lib/*/mimalloc*.o          $out/lib/mimalloc.o
-
-    rm -rf $out/lib/mimalloc-*
-  '';
+    find $out/lib
+  '' + (lib.optionalString secureBuild ''
+    # pretend we're normal mimalloc
+    ln -sfv $out/lib/libmimalloc-secure${suffix} $out/lib/libmimalloc${suffix}
+    ln -sfv $out/lib/libmimalloc-secure${suffix} $out/lib/libmimalloc${soext}
+    ln -sfv $out/lib/libmimalloc-secure.a $out/lib/libmimalloc.a
+    ln -sfv $out/lib/mimalloc-secure.o $out/lib/mimalloc.o
+  '');
 
   outputs = [ "out" "dev" ];
 
-  meta = with stdenv.lib; {
+  meta = with lib; {
     description = "Compact, fast, general-purpose memory allocator";
     homepage    = "https://github.com/microsoft/mimalloc";
     license     = licenses.bsd2;

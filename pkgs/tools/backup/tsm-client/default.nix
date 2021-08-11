@@ -53,8 +53,8 @@
 let
 
   meta = {
-    homepage = https://www.ibm.com/us-en/marketplace/data-protection-and-recovery;
-    downloadPage = https://www-01.ibm.com/support/docview.wss?uid=swg21239415;
+    homepage = "https://www.ibm.com/us-en/marketplace/data-protection-and-recovery";
+    downloadPage = "https://www-01.ibm.com/support/docview.wss?uid=swg21239415";
     platforms = [ "x86_64-linux" ];
     license = lib.licenses.unfree;
     maintainers = [ lib.maintainers.yarny ];
@@ -152,7 +152,7 @@ buildEnv {
     ln --symbolic --no-target-directory opt/tivoli/tsm/client/api/bin64 $out/dsmi_dir
     ln --symbolic --no-target-directory "${dsmSysCli}" $out/dsm_dir/dsm.sys
     ln --symbolic --no-target-directory "${dsmSysApi}" $out/dsmi_dir/dsm.sys
-    ${lib.strings.optionalString (jdk8==null) "rm $out/bin/dsmj"}
+    ${lib.optionalString (jdk8==null) "rm $out/bin/dsmj"}
     for bin in $out/bin/*
     do
       target=$(readlink "$bin")

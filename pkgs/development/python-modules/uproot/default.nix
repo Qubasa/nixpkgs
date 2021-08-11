@@ -1,54 +1,61 @@
-{ lib, fetchPypi, buildPythonPackage, isPy27
+{ lib
+, fetchFromGitHub
+, buildPythonPackage
 , awkward
-, backports_lzma
-, cachetools
-, lz4
-, pytestrunner
-, pytest
-, pkgconfig
-, mock
 , numpy
-, requests
-, uproot-methods
+, lz4
 , xxhash
+, zstandard
+, pytestCheckHook
+, scikit-hep-testdata
 }:
 
 buildPythonPackage rec {
   pname = "uproot";
-  version = "3.10.8";
+  version = "4.0.8";
 
-  src = fetchPypi {
-    inherit pname version;
-    sha256 = "cf9b9a6824e82f2e45d44e2c9d8a230ce9f83972e74427543862fdff462fb121";
+  # fetch from github for tests
+  src = fetchFromGitHub {
+    owner = "scikit-hep";
+    repo = "uproot4";
+    rev = version;
+    sha256 = "sha256-E9BRgyMz+3Xl8Q1zsnVtvW44FXTqs29U1oK4te0myq4=";
   };
 
-  nativeBuildInputs = [ pytestrunner ];
-
-  checkInputs = [
-    lz4
-    mock
-    pkgconfig
-    pytest
-    requests
-    xxhash
-  ] ++ lib.optional isPy27 backports_lzma;
-
   propagatedBuildInputs = [
-    numpy
-    cachetools
-    uproot-methods
     awkward
+    numpy
+    lz4
+    xxhash
+    zstandard
   ];
 
-  # skip tests which do network calls
-  checkPhase = ''
-    pytest tests -k 'not hist_in_tree and not branch_auto_interpretation'
+  checkInputs = [
+    pytestCheckHook
+    scikit-hep-testdata
+  ];
+  preCheck = ''
+    export HOME="$(mktemp -d)"
   '';
+  disabledTests = [
+    # tests that try to download files
+    "test_http"
+    "test_no_multipart"
+    "test_fallback"
+    "test_pickle_roundtrip_http"
+  ];
+  disabledTestPaths = [
+    # tests that try to download files
+    "tests/test_0066-fix-http-fallback-freeze.py"
+    "tests/test_0088-read-with-http.py"
+    "tests/test_0220-contiguous-byte-ranges-in-http.py"
+  ];
+  pythonImportsCheck = [ "uproot" ];
 
   meta = with lib; {
-    homepage = https://github.com/scikit-hep/uproot;
+    homepage = "https://github.com/scikit-hep/uproot4";
     description = "ROOT I/O in pure Python and Numpy";
     license = licenses.bsd3;
-    maintainers = with maintainers; [ ktf ];
+    maintainers = with maintainers; [ veprbl ];
   };
 }

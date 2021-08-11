@@ -1,20 +1,26 @@
-{ lib, buildGoPackage, fetchFromGitHub }:
+{ lib, buildGoModule, fetchFromGitHub }:
 
-buildGoPackage rec {
+buildGoModule rec {
   pname = "mkcert";
-  version = "1.4.0";
+  version = "1.4.3";
 
   src = fetchFromGitHub {
     owner = "FiloSottile";
     repo = pname;
     rev = "v${version}";
-    sha256 = "0xcmvzh5lq8vs3b0f1zw645fxdr8471v7prl1656q02v38f58ly7";
+    sha256 = "0q0069ripnpb027krc4yk47552xl5rp0ymxf1j2mln9wdmfq65ba";
   };
 
-  goPackagePath = "github.com/FiloSottile/mkcert";
+  vendorSha256 = "133vlx825g4zay88ppylsz93q4gnd9ari12x1h57qvk45rwxqx95";
+
+  doCheck = false;
+
+  buildFlagsArray = ''
+    -ldflags=-s -w -X main.Version=v${version}
+  '';
 
   meta = with lib; {
-    homepage = https://github.com/FiloSottile/mkcert;
+    homepage = "https://github.com/FiloSottile/mkcert";
     description = "A simple tool for making locally-trusted development certificates";
     license = licenses.bsd3;
     maintainers = [ maintainers.marsam ];

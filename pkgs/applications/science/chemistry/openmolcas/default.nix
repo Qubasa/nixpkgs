@@ -1,12 +1,13 @@
-{ stdenv, fetchFromGitLab, cmake, gfortran, perl
+{ lib, stdenv, fetchFromGitLab, cmake, gfortran, perl
 , openblas, hdf5-cpp, python3, texlive
-, armadillo, openmpi, globalarrays, openssh
+, armadillo, mpi, globalarrays, openssh
 , makeWrapper
 } :
 
 let
-  version = "18.09";
-  gitLabRev = "v${version}";
+  version = "21.06";
+  # The tag keeps moving, fix a hash instead
+  gitLabRev = "dd982ad4bc94dec8ac1e3e99cb6a7dd249ff71de";
 
   python = python3.withPackages (ps : with ps; [ six pyparsing ]);
 
@@ -18,8 +19,13 @@ in stdenv.mkDerivation {
     owner = "Molcas";
     repo = "OpenMolcas";
     rev = gitLabRev;
-    sha256 = "1di1ygifx7ycfpwh25mv76xlv15wqfdmqzjsg5nani2d5z0arri2";
+    sha256 = "07dm73n0s7ckif561yb3s9yqxsv39a73kb9qwny4yp39wdvv52hz";
   };
+
+  patches = [
+    # Required to handle openblas multiple outputs
+    ./openblasPath.patch
+  ];
 
   nativeBuildInputs = [ perl cmake texlive.combined.scheme-minimal makeWrapper ];
   buildInputs = [
@@ -28,12 +34,10 @@ in stdenv.mkDerivation {
     hdf5-cpp
     python
     armadillo
-    openmpi
+    mpi
     globalarrays
     openssh
   ];
-
-  enableParallelBuilding = true;
 
   cmakeFlags = [
     "-DOPENMP=ON"
@@ -43,7 +47,7 @@ in stdenv.mkDerivation {
     "-DTOOLS=ON"
     "-DHDF5=ON"
     "-DFDE=ON"
-    "-DOPENBLASROOT=${openblas}"
+    "-DOPENBLASROOT=${openblas.dev}"
   ];
 
   GAROOT=globalarrays;
@@ -54,6 +58,10 @@ in stdenv.mkDerivation {
     export PATH=$PATH:$out/bin
   '';
 
+  postInstall = ''
+    mv $out/pymolcas $out/bin
+  '';
+
   postFixup = ''
     # Wrong store path in shebang (no Python pkgs), force re-patching
     sed -i "1s:/.*:/usr/bin/env python:" $out/bin/pymolcas
@@ -62,12 +70,12 @@ in stdenv.mkDerivation {
     wrapProgram $out/bin/pymolcas --set MOLCAS $out
   '';
 
-  meta = with stdenv.lib; {
+  meta = with lib; {
     description = "Advanced quantum chemistry software package";
-    homepage = https://gitlab.com/Molcas/OpenMolcas;
+    homepage = "https://gitlab.com/Molcas/OpenMolcas";
     maintainers = [ maintainers.markuskowa ];
-    license = licenses.lgpl21;
-    platforms = platforms.linux;
+    license = licenses.lgpl21Only;
+    platforms = [ "x86_64-linux" ];
   };
 }
 

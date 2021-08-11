@@ -1,4 +1,4 @@
-{ stdenv, fetchsvn, fetchurl, cups, cups-filters, jbigkit, zlib }:
+{ lib, stdenv, fetchsvn, fetchurl, cups, cups-filters, jbigkit, zlib }:
 
 let
 
@@ -9,8 +9,6 @@ let
       url = "http://splix.ap2c.org/samsung_cms.tar.bz2";
       sha256 = "1156flics5m9m7a4hdmcc2nphbdyary6dfmbcrmsp9xb7ivsypdl";
     };
-
-    phases = [ "unpackPhase" "installPhase" ];
 
     installPhase = ''
       mkdir -p $out/share/cups/profiles/samsung
@@ -45,9 +43,9 @@ in stdenv.mkDerivation rec {
 
   buildInputs = [ cups zlib jbigkit ];
 
-  meta = with stdenv.lib; {
+  meta = with lib; {
     description = "CUPS drivers for SPL (Samsung Printer Language) printers";
-    homepage = http://splix.ap2c.org;
+    homepage = "http://splix.ap2c.org";
     license = licenses.gpl2;
     platforms = platforms.linux;
     maintainers = with maintainers; [ jfrankenau peti ];

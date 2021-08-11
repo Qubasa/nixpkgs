@@ -1,13 +1,13 @@
-{ stdenv, fetchdarcs, pythonPackages, libvncserver, zlib
+{ lib, fetchdarcs, python2Packages, libvncserver, zlib
 , gnutls, libvpx, makeDesktopItem, mkDerivationWith }:
 
-mkDerivationWith pythonPackages.buildPythonApplication rec {
+mkDerivationWith python2Packages.buildPythonApplication rec {
 
   pname = "blink";
   version = "3.2.0";
 
   src = fetchdarcs {
-    url = http://devel.ag-projects.com/repositories/blink-qt;
+    url = "http://devel.ag-projects.com/repositories/blink-qt";
     rev = "release-${version}";
     sha256 = "19rcwr5scw48qnj79q1pysw95fz9h98nyc3161qy2kph5g7dwkc3";
   };
@@ -17,16 +17,16 @@ mkDerivationWith pythonPackages.buildPythonApplication rec {
     sed -i 's|@out@|'"''${out}"'|g' blink/resources.py
   '';
 
-  propagatedBuildInputs = with pythonPackages; [
+  propagatedBuildInputs = with python2Packages; [
     pyqt5_with_qtwebkit
     cjson
     sipsimple
     twisted
-    google_api_python_client
+    google-api-python-client
   ];
 
   buildInputs = [
-    pythonPackages.cython
+    python2Packages.cython
     zlib
     libvncserver
     libvpx
@@ -39,15 +39,10 @@ mkDerivationWith pythonPackages.buildPythonApplication rec {
     desktopName = "Blink";
     icon = "blink";
     genericName = "Instant Messaging";
-    categories = "Application;Internet;";
+    categories = "Internet;";
   };
 
   dontWrapQtApps = true;
-
-  makeWrapperArgs = [
-    "\${qtWrapperArgs[@]}"
-    "--prefix LD_LIBRARY_PATH: ${gnutls.out}/lib"
-  ];
 
   postInstall = ''
     mkdir -p "$out/share/applications"
@@ -56,8 +51,15 @@ mkDerivationWith pythonPackages.buildPythonApplication rec {
     cp "$out"/share/blink/icons/blink.* "$out/share/pixmaps"
   '';
 
-  meta = with stdenv.lib; {
-    homepage = http://icanblink.com/;
+  preFixup = ''
+    makeWrapperArgs+=(
+      --prefix "LD_LIBRARY_PATH" ":" "${gnutls.out}/lib"
+      "''${qtWrapperArgs[@]}"
+    )
+  '';
+
+  meta = with lib; {
+    homepage = "http://icanblink.com/";
     description = "A state of the art, easy to use SIP client for Voice, Video and IM";
     platforms = platforms.linux;
     license = licenses.gpl3;

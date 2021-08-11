@@ -3,46 +3,67 @@
 , pythonOlder
 , fetchFromGitHub
 , setuptools
-, setuptools_scm
+, setuptools-scm
 , pyvcd
-, bitarray
 , jinja2
+, importlib-resources
+, importlib-metadata
+, git
 
 # for tests
-, yosys
+, pytestCheckHook
 , symbiyosys
 , yices
+, yosys
 }:
 
 buildPythonPackage rec {
   pname = "nmigen";
-  version = "unstable-2019-10-17";
+  version = "unstable-2021-02-09";
   # python setup.py --version
-  realVersion = "0.1.rc2.dev5+g${lib.substring 0 7 src.rev}";
-
-  src = fetchFromGitHub {
-    owner = "m-labs";
-    repo = "nmigen";
-    rev = "9fba5ccb513cfbd53f884b1efca699352d2471b9";
-    sha256 = "02bjry4sqjsrhl0s42zl1zl06gk5na9i6br6vmz7fvxic29vl83v";
-  };
-
+  realVersion = "0.3.dev243+g${lib.substring 0 7 src.rev}";
   disabled = pythonOlder "3.6";
 
-  nativeBuildInputs = [ setuptools_scm ];
+  src = fetchFromGitHub {
+    owner = "nmigen";
+    repo = "nmigen";
+    rev = "f7c2b9419f9de450be76a0e9cf681931295df65f";
+    sha256 = "0cjs9wgmxa76xqmjhsw4fsb2mhgvd85jgs2mrjxqp6fwp8rlgnl1";
+  };
 
-  propagatedBuildInputs = [ setuptools pyvcd bitarray jinja2 ];
+  SETUPTOOLS_SCM_PRETEND_VERSION="${realVersion}";
 
-  checkInputs = [ yosys symbiyosys yices ];
+  nativeBuildInputs = [
+    git
+    setuptools-scm
+  ];
 
-  preBuild = ''
-    export SETUPTOOLS_SCM_PRETEND_VERSION="${realVersion}"
+  propagatedBuildInputs = [
+    jinja2
+    pyvcd
+    setuptools
+  ] ++
+    lib.optional (pythonOlder "3.9") importlib-resources ++
+    lib.optional (pythonOlder "3.8") importlib-metadata;
+
+  checkInputs = [
+    pytestCheckHook
+    symbiyosys
+    yices
+    yosys
+  ];
+
+  postPatch = ''
+    substituteInPlace setup.py \
+      --replace "Jinja2~=2.11" "Jinja2>=2.11"
   '';
+
+  pythonImportsCheck = [ "nmigen" ];
 
   meta = with lib; {
     description = "A refreshed Python toolbox for building complex digital hardware";
-    homepage = https://github.com/m-labs/nmigen;
-    license = licenses.bsd0;
+    homepage = "https://nmigen.info/nmigen";
+    license = licenses.bsd2;
     maintainers = with maintainers; [ emily ];
   };
 }

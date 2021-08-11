@@ -1,41 +1,42 @@
-{ stdenv
+{ lib
+, stdenv
 , fetchFromGitHub
-, meson
-, ninja
-, python3
-, gettext
-, pkgconfig
-, desktop-file-utils
-, wrapGAppsHook
 , appstream-glib
+, desktop-file-utils
 , epoxy
+, gettext
 , glib
 , gtk3
+, meson
 , mpv
+, ninja
+, nix-update-script
+, pkg-config
+, python3
+, wrapGAppsHook
 }:
 
 stdenv.mkDerivation rec {
   pname = "celluloid";
-  version = "0.17";
+  version = "0.21";
 
   src = fetchFromGitHub {
     owner = "celluloid-player";
     repo = "celluloid";
     rev = "v${version}";
-    sha256 = "0pnxjv6n2q6igxdr8wzbahcj7vccw4nfjdk8fjdnaivf2lyrpv2d";
+    hash = "sha256-1Jeg1uqWxURGKR/Xg4j4roZ9Pg5MR7geyttdzlOU+rA=";
   };
 
   nativeBuildInputs = [
+    appstream-glib
+    desktop-file-utils
+    gettext
     meson
     ninja
+    pkg-config
     python3
-    appstream-glib
-    gettext
-    pkgconfig
-    desktop-file-utils
     wrapGAppsHook
   ];
-
   buildInputs = [
     epoxy
     glib
@@ -45,20 +46,24 @@ stdenv.mkDerivation rec {
 
   postPatch = ''
     patchShebangs meson-post-install.py src/generate-authors.py
-    sed -i '/gtk-update-icon-cache/s/^/#/' meson-post-install.py
   '';
 
   doCheck = true;
 
-  meta = with stdenv.lib; {
+  meta = with lib; {
+    homepage = "https://github.com/celluloid-player/celluloid";
     description = "Simple GTK frontend for the mpv video player";
     longDescription = ''
-      GNOME MPV interacts with mpv via the client API exported by libmpv,
-      allowing access to mpv's powerful playback capabilities through an
-      easy-to-use user interface.
+      Celluloid (formerly GNOME MPV) is a simple GTK+ frontend for mpv.
+      Celluloid interacts with mpv via the client API exported by libmpv,
+      allowing access to mpv's powerful playback capabilities.
     '';
-    homepage = "https://github.com/celluloid-player/celluloid";
     license = licenses.gpl3Plus;
+    maintainers = with maintainers; [ AndersonTorres ];
     platforms = platforms.linux;
+  };
+
+  passthru.updateScript = nix-update-script {
+    attrPath = pname;
   };
 }

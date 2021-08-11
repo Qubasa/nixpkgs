@@ -1,31 +1,58 @@
-{ lib, buildPythonPackage, fetchFromGitHub
-, click, ecdsa, fido2, intelhex, pyserial, pyusb, requests}:
+{ lib
+, buildPythonPackage
+, fetchFromGitHub
+, pythonOlder
+, click
+, cryptography
+, ecdsa
+, fido2
+, intelhex
+, pyserial
+, pyusb
+, requests
+}:
 
  buildPythonPackage rec {
   pname = "solo-python";
-  version = "0.0.15";
+  version = "0.0.30";
   format = "flit";
+  disabled = pythonOlder "3.6"; # only python>=3.6 is supported
 
   src = fetchFromGitHub {
     owner = "solokeys";
     repo = pname;
     rev = version;
-    sha256 = "14na9s65hxzx141bdv0j7rx1wi3cv85jzpdivsq1rwp6hdhiazr1";
+    sha256 = "1i9kybp08qfcdx6m4wl7ij40y1v17mvvhcdg7zglwfakblf69w41";
   };
 
-  # TODO: remove ASAP
+  # replaced pinned fido, with unrestricted fido version
   patchPhase = ''
-    substituteInPlace pyproject.toml --replace "fido2 == 0.7.0" "fido2 >= 0.7.0"
+    sed -i '/fido2/c\"fido2",' pyproject.toml
   '';
 
   propagatedBuildInputs = [
     click
+    cryptography
     ecdsa
     fido2
     intelhex
     pyserial
     pyusb
     requests
+  ];
+
+  # allow for writable directory for darwin
+  preBuild = ''
+    export HOME=$TMPDIR
+  '';
+
+  # repo doesn't contain tests, ensure imports aren't broken
+  pythonImportsCheck = [
+    "solo"
+    "solo.cli"
+    "solo.commands"
+    "solo.fido2"
+    "solo.operations"
   ];
 
   meta = with lib; {

@@ -18,6 +18,14 @@ let
      in join config.networking.hostName config.networking.domain;
 
 in {
+  imports = [
+    (mkRenamedOptionModule [ "services" "piwik" "enable" ] [ "services" "matomo" "enable" ])
+    (mkRenamedOptionModule [ "services" "piwik" "webServerUser" ] [ "services" "matomo" "webServerUser" ])
+    (mkRemovedOptionModule [ "services" "piwik" "phpfpmProcessManagerConfig" ] "Use services.phpfpm.pools.<name>.settings")
+    (mkRemovedOptionModule [ "services" "matomo" "phpfpmProcessManagerConfig" ] "Use services.phpfpm.pools.<name>.settings")
+    (mkRenamedOptionModule [ "services" "piwik" "nginx" ] [ "services" "matomo" "nginx" ])
+  ];
+
   options = {
     services.matomo = {
       # NixOS PR for database setup: https://github.com/NixOS/nixpkgs/pull/6963
@@ -66,6 +74,16 @@ in {
           Before deleting visitor logs,
           make sure though that you run <literal>systemctl start matomo-archive-processing.service</literal>
           at least once without errors if you have already collected data before.
+        '';
+      };
+
+      periodicArchiveProcessingUrl = mkOption {
+        type = types.str;
+        default = "${user}.${fqdn}";
+        example = "matomo.yourdomain.org";
+        description = ''
+          URL of the host, without https prefix. By default, this is ${user}.${fqdn}, but you may want to change it if you
+          run Matomo on a different URL than matomo.yourdomain.
         '';
       };
 
@@ -182,7 +200,7 @@ in {
         UMask = "0007";
         CPUSchedulingPolicy = "idle";
         IOSchedulingClass = "idle";
-        ExecStart = "${cfg.package}/bin/matomo-console core:archive --url=https://${user}.${fqdn}";
+        ExecStart = "${cfg.package}/bin/matomo-console core:archive --url=https://${cfg.periodicArchiveProcessingUrl}";
       };
     };
 

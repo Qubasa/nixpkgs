@@ -16,7 +16,7 @@ buildGoPackage rec {
 
   goDeps = ./deps.nix;
 
-  buildInputs = [ go-bindata ];
+  nativeBuildInputs = [ go-bindata ];
 
   preConfigure = ''
     sed -e '/jteeuwen\/go-bindata/d' \
@@ -27,9 +27,9 @@ buildGoPackage rec {
     export sourceRoot=$sourceRoot/src/ngrok
   '';
 
-  buildFlags = [ "-tags release" ];
+  tags = [ "release" ];
 
   meta = {
-    homepage = https://ngrok.com/;
+    homepage = "https://ngrok.com/";
   };
 }

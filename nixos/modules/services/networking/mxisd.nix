@@ -41,8 +41,8 @@ in {
 
       package = mkOption {
         type = types.package;
-        default = pkgs.mxisd;
-        defaultText = "pkgs.mxisd";
+        default = pkgs.ma1sd;
+        defaultText = "pkgs.ma1sd";
         description = "The mxisd/ma1sd package to use";
       };
 
@@ -93,23 +93,19 @@ in {
   };
 
   config = mkIf cfg.enable {
-    users.users = [
+    users.users.mxisd =
       {
-        name = "mxisd";
         group = "mxisd";
         home = cfg.dataDir;
         createHome = true;
         shell = "${pkgs.bash}/bin/bash";
         uid = config.ids.uids.mxisd;
-      }
-    ];
+      };
 
-    users.groups = [
+    users.groups.mxisd =
       {
-        name = "mxisd";
         gid = config.ids.gids.mxisd;
-      }
-    ];
+      };
 
     systemd.services.mxisd = {
       description = "a federated identity server for the matrix ecosystem";

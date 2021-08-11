@@ -1,39 +1,52 @@
-{ stdenv
+{ lib, stdenv
 , fetchzip
-, alsaLib
+, alsa-lib
 , glib
 , gst_all_1
-, libGLU_combined
+, libGLU, libGL
 , xorg
 }:
 
 stdenv.mkDerivation rec {
   pname = "kodelife";
-  version = "0.8.6.101";
+  version = "0.9.8.143";
+
+  suffix = {
+    aarch64-linux = "linux-arm64";
+    armv7l-linux  = "linux-armhf";
+    x86_64-linux  = "linux-x86_64";
+  }.${stdenv.hostPlatform.system} or (throw "Unsupported system: ${stdenv.hostPlatform.system}");
 
   src = fetchzip {
-    url = "https://hexler.net/pub/${pname}/${pname}-${version}-linux-x86_64.zip";
-    sha256 = "1ldab1famdcby2djfys657g85d46s8k96m6mr71riw4v336ar238";
+    url = "https://hexler.net/pub/${pname}/${pname}-${version}-${suffix}.zip";
+    sha256 = {
+      aarch64-linux = "0ryjmpzpfqdqrvqpq851vvrjd8ld5g91gcigpv9rxp3z1b7qdand";
+      armv7l-linux  = "08nlwn8ixndqil4m7j6c8gjxmwx8zi3in86arnwf13shk6cds5nb";
+      x86_64-linux  = "0kbz7pvh4i4a3pj1vzbzzslha825i888isvsigcqsqvipjr4798q";
+    }.${stdenv.hostPlatform.system} or (throw "Unsupported system: ${stdenv.hostPlatform.system}");
   };
 
   dontConfigure = true;
   dontBuild = true;
   dontStrip = true;
   dontPatchELF = true;
+  preferLocalBuild = true;
 
   installPhase = ''
+    runHook preInstall
     mkdir -p $out/bin
     mv KodeLife $out/bin
+    runHook postInstall
   '';
 
   preFixup = let
-    libPath = stdenv.lib.makeLibraryPath [
+    libPath = lib.makeLibraryPath [
       stdenv.cc.cc.lib
-      alsaLib
+      alsa-lib
       glib
       gst_all_1.gstreamer
       gst_all_1.gst-plugins-base
-      libGLU_combined
+      libGLU libGL
       xorg.libX11
     ];
   in ''
@@ -43,11 +56,11 @@ stdenv.mkDerivation rec {
       $out/bin/KodeLife
   '';
 
-  meta = with stdenv.lib; {
+  meta = with lib; {
     homepage = "https://hexler.net/products/kodelife";
     description = "Real-time GPU shader editor";
     license = licenses.unfree;
     maintainers = with maintainers; [ prusnak ];
-    platforms = [ "x86_64-linux" ];
+    platforms = [ "aarch64-linux" "armv7l-linux" "x86_64-linux" ];
   };
 }

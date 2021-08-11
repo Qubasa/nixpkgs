@@ -1,4 +1,4 @@
-{ stdenv, bundlerEnv, ruby, bundlerUpdateScript, makeWrapper }:
+{ lib, stdenv, bundlerEnv, ruby, bundlerUpdateScript, makeWrapper }:
 
 stdenv.mkDerivation rec {
   pname = "fastlane";
@@ -6,15 +6,15 @@ stdenv.mkDerivation rec {
 
   nativeBuildInputs = [ makeWrapper ];
 
-  env = bundlerEnv {
-    name = "${pname}-${version}-gems";
-    inherit pname ruby;
-    gemdir = ./.;
-  };
+  dontUnpack = true;
 
-  phases = [ "installPhase" ];
-
-  installPhase = ''
+  installPhase = let
+    env = bundlerEnv {
+      name = "${pname}-${version}-gems";
+      inherit pname ruby;
+      gemdir = ./.;
+    };
+  in ''
     mkdir -p $out/bin
     makeWrapper ${env}/bin/fastlane $out/bin/fastlane \
      --set FASTLANE_SKIP_UPDATE_CHECK 1
@@ -22,14 +22,15 @@ stdenv.mkDerivation rec {
 
   passthru.updateScript = bundlerUpdateScript "fastlane";
 
-  meta = with stdenv.lib; {
+  meta = with lib; {
     description     = "A tool to automate building and releasing iOS and Android apps";
     longDescription = "fastlane is a tool for iOS and Android developers to automate tedious tasks like generating screenshots, dealing with provisioning profiles, and releasing your application.";
-    homepage        = https://github.com/fastlane/fastlane;
+    homepage        = "https://github.com/fastlane/fastlane";
     license         = licenses.mit;
     maintainers     = with maintainers; [
       peterromfeldhk
       nicknovitski
+      shahrukh330
     ];
   };
 }

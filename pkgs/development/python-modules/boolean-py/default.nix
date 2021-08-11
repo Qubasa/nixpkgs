@@ -3,13 +3,13 @@
 
 buildPythonPackage rec {
   pname = "boolean.py";
-  version = "3.6";
+  version = "3.8";
 
   src = fetchFromGitHub {
     owner = "bastikr";
     repo = "boolean.py";
     rev = "v${version}";
-    sha256 = "1wc89y73va58cj7dsx6c199zpxsy9q53dsffsdj6zmc90inqz6qs";
+    sha256 = "02jznrfrihhk69ai1vnh26s3rshl4kfc2id7li6xccavc2ws5y3b";
   };
 
   meta = with lib; {

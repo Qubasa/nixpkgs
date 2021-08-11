@@ -15,7 +15,7 @@ let
       ${ppdOptionsString p.ppdOptions}
   '';
   ensureDefaultPrinter = name: ''
-    ${pkgs.cups}/bin/lpoptions -d '${name}'
+    ${pkgs.cups}/bin/lpadmin -d '${name}'
   '';
 
   # "graph but not # or /" can't be implemented as regex alone due to missing lookahead support
@@ -84,7 +84,7 @@ in {
             model = mkOption {
               type = types.str;
               example = literalExample ''
-                gutenprint.''${lib.version.majorMinor (lib.getVersion pkgs.cups)}://brother-hl-5140/expert
+                gutenprint.''${lib.versions.majorMinor (lib.getVersion pkgs.gutenprint)}://brother-hl-5140/expert
               '';
               description = ''
                 Location of the ppd driver file for the printer.

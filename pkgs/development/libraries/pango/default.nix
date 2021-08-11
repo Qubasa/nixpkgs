@@ -1,74 +1,97 @@
-{ stdenv, fetchurl, fetchpatch, pkgconfig, cairo, harfbuzz
-, libintl, gobject-introspection, darwin, fribidi, gnome3
-, gtk-doc, docbook_xsl, docbook_xml_dtd_43, makeFontsConf, freefont_ttf
-, meson, ninja, glib
+{ lib
+, stdenv
+, fetchurl
+, pkg-config
+, cairo
+, harfbuzz
+, libintl
+, libthai
+, gobject-introspection
+, darwin
+, fribidi
+, gnome
+, gi-docgen
+, makeFontsConf
+, freefont_ttf
+, meson
+, ninja
+, glib
 , x11Support? !stdenv.isDarwin, libXft
 }:
 
-with stdenv.lib;
-
 let
+  withDocs = stdenv.buildPlatform == stdenv.hostPlatform;
+in
+stdenv.mkDerivation rec {
   pname = "pango";
-  version = "1.43.0";
-in stdenv.mkDerivation rec {
-  name = "${pname}-${version}";
+  version = "1.48.5";
+
+  outputs = [ "bin" "out" "dev" ]
+    ++ lib.optionals withDocs [ "devdoc" ];
 
   src = fetchurl {
-    url = "mirror://gnome/sources/${pname}/${stdenv.lib.versions.majorMinor version}/${name}.tar.xz";
-    sha256 = "1lnxldmv1a12dq5h0dlq5jyzl4w75k76dp8cn360x2ijlm9w5h6j";
+    url = "mirror://gnome/sources/${pname}/${lib.versions.majorMinor version}/${pname}-${version}.tar.xz";
+    sha256 = "0aivpd6l5687lj5293j859zd7vq97yxpzvad0b6jvh3kc54p87jh";
   };
-
-  # FIXME: docs fail on darwin
-  outputs = [ "bin" "dev" "out" ] ++ optional (!stdenv.isDarwin) "devdoc";
 
   nativeBuildInputs = [
     meson ninja
-    pkgconfig gobject-introspection gtk-doc docbook_xsl docbook_xml_dtd_43
+    glib # for glib-mkenum
+    pkg-config
+    gobject-introspection
+    gi-docgen
   ];
+
   buildInputs = [
-    harfbuzz fribidi
-  ] ++ optionals stdenv.isDarwin (with darwin.apple_sdk.frameworks; [
+    fribidi
+    libthai
+  ] ++ lib.optionals stdenv.isDarwin (with darwin.apple_sdk.frameworks; [
     ApplicationServices
     Carbon
     CoreGraphics
     CoreText
   ]);
-  propagatedBuildInputs = [ cairo glib libintl ] ++
-    optional x11Support libXft;
 
-  patches = [
-    (fetchpatch {
-      # Add gobject-2 to .pc file
-      url = "https://gitlab.gnome.org/GNOME/pango/commit/546f4c242d6f4fe312de3b7c918a848e5172e18d.patch";
-      sha256 = "1cqhy4xbwx3ad7z5d1ks7smf038b9as8c6qy84rml44h0fgiq4m2";
-    })
-    (fetchpatch {
-      # Fixes CVE-2019-1010238
-      url = "https://gitlab.gnome.org/GNOME/pango/commit/490f8979a260c16b1df055eab386345da18a2d54.diff";
-      sha256 = "1s0qclbaknkx3dkc3n6mlmx3fnhlr2pkncqjkywprpvahmmypr7k";
-    })
+  propagatedBuildInputs = [
+    cairo
+    glib
+    libintl
+    harfbuzz
+  ] ++ lib.optionals x11Support [
+    libXft
   ];
 
   mesonFlags = [
-    "-Denable_docs=${if stdenv.isDarwin then "false" else "true"}"
+    "-Dgtk_doc=${lib.boolToString withDocs}"
+  ] ++ lib.optionals (!x11Support) [
+    "-Dxft=disabled" # only works with x11
+  ] ++ lib.optionals (stdenv.buildPlatform != stdenv.hostPlatform) [
+    "-Dintrospection=disabled"
   ];
-
-  enableParallelBuilding = true;
 
   # Fontconfig error: Cannot load default config file
   FONTCONFIG_FILE = makeFontsConf {
     fontDirectories = [ freefont_ttf ];
   };
 
-  doCheck = false; # /layout/valid-1.markup: FAIL
+  doCheck = false; # test-font: FAIL
+
+  postInstall = lib.optionalString withDocs ''
+    # So that devhelp can find this.
+    # https://gitlab.gnome.org/GNOME/pango/merge_requests/293/diffs#note_1058448
+    mkdir -p "$devdoc/share/devhelp"
+    mv "$out/share/doc/pango/reference" "$devdoc/share/devhelp/books"
+    rmdir -p --ignore-fail-on-non-empty "$out/share/doc/pango"
+  '';
 
   passthru = {
-    updateScript = gnome3.updateScript {
+    updateScript = gnome.updateScript {
       packageName = pname;
+      versionPolicy = "odd-unstable";
     };
   };
 
-  meta = with stdenv.lib; {
+  meta = with lib; {
     description = "A library for laying out and rendering of text, with an emphasis on internationalization";
 
     longDescription = ''
@@ -79,10 +102,10 @@ in stdenv.mkDerivation rec {
       Pango forms the core of text and font handling for GTK.
     '';
 
-    homepage = https://www.pango.org/;
+    homepage = "https://www.pango.org/";
     license = licenses.lgpl2Plus;
 
-    maintainers = with maintainers; [ raskin ];
+    maintainers = with maintainers; [ raskin ] ++ teams.gnome.members;
     platforms = platforms.linux ++ platforms.darwin;
   };
 }

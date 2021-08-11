@@ -1,4 +1,4 @@
-{ stdenv, fetchFromGitHub, elk7Version, buildGoPackage, libpcap, systemd }:
+{ lib, fetchFromGitHub, elk7Version, buildGoPackage, libpcap, nixosTests, systemd }:
 
 let beat = package : extraArgs : buildGoPackage (rec {
       name = "${package}-${version}";
@@ -8,24 +8,31 @@ let beat = package : extraArgs : buildGoPackage (rec {
         owner = "elastic";
         repo = "beats";
         rev = "v${version}";
-        sha256 = "0715fgqw6mqms4zld8wyf6appvvpfb1hglcmcn852c66a8zwr2r2";
+        sha256 = "192ygz3ppfah8d2b811x67jfqhcr5ivz7qh4vwrd729rjfr0bbgb";
       };
 
       goPackagePath = "github.com/elastic/beats";
 
       subPackages = [ package ];
 
-      meta = with stdenv.lib; {
-        homepage = https://www.elastic.co/products/beats;
+      meta = with lib; {
+        homepage = "https://www.elastic.co/products/beats";
         license = licenses.asl20;
         maintainers = with maintainers; [ fadenb basvandijk ];
         platforms = platforms.linux;
       };
     } // extraArgs);
-in {
+in rec {
   filebeat7   = beat "filebeat"   {meta.description = "Lightweight shipper for logfiles";};
   heartbeat7  = beat "heartbeat"  {meta.description = "Lightweight shipper for uptime monitoring";};
-  metricbeat7 = beat "metricbeat" {meta.description = "Lightweight shipper for metrics";};
+  metricbeat7 = beat "metricbeat" {
+    meta.description = "Lightweight shipper for metrics";
+    passthru.tests =
+      assert metricbeat7.drvPath == nixosTests.elk.ELK-7.elkPackages.metricbeat.drvPath;
+      {
+        elk = nixosTests.elk.ELK-7;
+      };
+  };
   packetbeat7 = beat "packetbeat" {
     buildInputs = [ libpcap ];
     meta.description = "Network packet analyzer that ships data to Elasticsearch";
@@ -45,8 +52,8 @@ in {
       journal entries from Linuxes with systemd.
     '';
     buildInputs = [ systemd.dev ];
-    postFixup = let libPath = stdenv.lib.makeLibraryPath [ systemd.lib ]; in ''
-      patchelf --set-rpath ${libPath} "$bin/bin/journalbeat"
+    postFixup = let libPath = lib.makeLibraryPath [ (lib.getLib systemd) ]; in ''
+      patchelf --set-rpath ${libPath} "$out/bin/journalbeat"
     '';
   };
 }

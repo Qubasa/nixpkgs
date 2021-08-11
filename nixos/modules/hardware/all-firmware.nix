@@ -6,6 +6,14 @@ let
   cfg = config.hardware;
 in {
 
+  imports = [
+    (mkRenamedOptionModule [ "networking" "enableRT73Firmware" ] [ "hardware" "enableRedistributableFirmware" ])
+    (mkRenamedOptionModule [ "networking" "enableIntel3945ABGFirmware" ] [ "hardware" "enableRedistributableFirmware" ])
+    (mkRenamedOptionModule [ "networking" "enableIntel2100BGFirmware" ] [ "hardware" "enableRedistributableFirmware" ])
+    (mkRenamedOptionModule [ "networking" "enableRalinkFirmware" ] [ "hardware" "enableRedistributableFirmware" ])
+    (mkRenamedOptionModule [ "networking" "enableRTL8192cFirmware" ] [ "hardware" "enableRedistributableFirmware" ])
+  ];
+
   ###### interface
 
   options = {
@@ -27,6 +35,14 @@ in {
       '';
     };
 
+    hardware.wirelessRegulatoryDatabase = mkOption {
+      default = false;
+      type = types.bool;
+      description = ''
+        Load the wireless regulatory database at boot.
+      '';
+    };
+
   };
 
 
@@ -40,14 +56,18 @@ in {
         rtl8192su-firmware
         rt5677-firmware
         rtl8723bs-firmware
-        rtlwifi_new-firmware
+        rtl8761b-firmware
+        rtw88-firmware
+        rtw89-firmware
         zd1211fw
         alsa-firmware
+        sof-firmware
         openelec-dvb-firmware
       ] ++ optional (pkgs.stdenv.hostPlatform.isAarch32 || pkgs.stdenv.hostPlatform.isAarch64) raspberrypiWirelessFirmware
         ++ optionals (versionOlder config.boot.kernelPackages.kernel.version "4.13") [
         rtl8723bs-firmware
       ];
+      hardware.wirelessRegulatoryDatabase = true;
     })
     (mkIf cfg.enableAllFirmware {
       assertions = [{
@@ -64,6 +84,9 @@ in {
         b43Firmware_6_30_163_46
         b43FirmwareCutter
       ] ++ optional (pkgs.stdenv.hostPlatform.isi686 || pkgs.stdenv.hostPlatform.isx86_64) facetimehd-firmware;
+    })
+    (mkIf cfg.wirelessRegulatoryDatabase {
+      hardware.firmware = [ pkgs.wireless-regdb ];
     })
   ];
 }

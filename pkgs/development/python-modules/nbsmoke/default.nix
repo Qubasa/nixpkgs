@@ -4,6 +4,7 @@
 , pytest
 , jupyter_client
 , ipykernel
+, holoviews
 , nbformat
 , nbconvert
 , pyflakes
@@ -13,15 +14,16 @@
 
 buildPythonPackage rec {
   pname = "nbsmoke";
-  version = "0.2.8";
+  version = "0.5.0";
 
   src = fetchPypi {
     inherit pname version;
-    sha256 = "eeda6c59b61130b9116a3d935e7c80ec5f617d7db8918d23289b2426efa229eb";
+    sha256 = "2400d7878e97714e822ab200a71fc71ede487e671f42b4b411745dba95f9cb32";
   };
 
   propagatedBuildInputs = [
     pytest
+    holoviews
     jupyter_client
     ipykernel
     nbformat
@@ -33,10 +35,11 @@ buildPythonPackage rec {
 
   # tests not included with pypi release
   doCheck = false;
+  pythonImportsCheck = [ "nbsmoke" ];
 
   meta = with lib; {
     description = "Basic notebook checks and linting";
-    homepage = https://github.com/pyviz/nbsmoke;
+    homepage = "https://github.com/pyviz/nbsmoke";
     license = licenses.bsd3;
     maintainers = [ maintainers.costrouc ];
   };

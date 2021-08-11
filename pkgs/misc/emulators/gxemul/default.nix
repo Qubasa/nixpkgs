@@ -1,37 +1,47 @@
-{ stdenv, fetchurl }:
+{ lib
+, stdenv
+, fetchurl
+, libX11
+}:
 
 stdenv.mkDerivation rec {
   pname = "gxemul";
-  version = "0.6.0.1";
+  version = "0.7.0";
 
   src = fetchurl {
-    url = "http://gxemul.sourceforge.net/src/${pname}-${version}.tar.gz";
-    sha256 = "1afd9l0igyv7qgc0pn3rkdgrl5d0ywlyib0qhg4li23zilyq5407";
+    url = "http://gavare.se/gxemul/src/${pname}-${version}.tar.gz";
+    sha256 = "sha256-ecRDfG+MqQT0bTOsNgYqZf3PSpKiSEeOQIqxEpXPjoM=";
   };
 
-  configurePhase = "./configure";
+  buildInputs = [
+    libX11
+  ];
 
-  installPhase = ''
-    mkdir -p $out/bin;
-    mkdir -p $out/share/${pname}-${version};
-    cp gxemul $out/bin;
-    cp -r doc $out/share/${pname}-${version};
-    cp -r demos $out/share/${pname}-${version};
-    cp -r ./man $out/;
+  patches = [
+    # Fix compilation; remove when next release arrives
+    ./0001-fix-attributes.patch
+  ];
+
+  dontAddPrefix = true;
+
+  preConfigure = ''
+    export PREFIX=${placeholder "out"}
   '';
 
-  meta = {
-    license = stdenv.lib.licenses.bsd3;
+  meta = with lib; {
+    homepage = "http://gavare.se/gxemul/";
     description = "Gavare's experimental emulator";
     longDescription = ''
       GXemul is a framework for full-system computer architecture
       emulation. Several real machines have been implemented within the
-      framework, consisting of processors (ARM, MIPS, Motorola 88K,
-      PowerPC, and SuperH) and surrounding hardware components such as
-      framebuffers, interrupt controllers, busses, disk controllers,
-      and serial controllers. The emulation is working well enough to
-      allow several unmodified "guest" operating systems to run.
+      framework, consisting of processors (ARM, MIPS, Motorola 88K, PowerPC, and
+      SuperH) and surrounding hardware components such as framebuffers,
+      interrupt controllers, busses, disk controllers, and serial
+      controllers. The emulation is working well enough to allow several
+      unmodified "guest" operating systems to run.
     '';
-    homepage = http://gxemul.sourceforge.net/;
+    license = licenses.bsd3;
+    maintainers = with maintainers; [ AndersonTorres ];
+    platforms = platforms.unix;
   };
 }

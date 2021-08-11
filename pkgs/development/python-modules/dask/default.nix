@@ -1,9 +1,11 @@
 { lib
+, stdenv
 , bokeh
 , buildPythonPackage
-, fetchPypi
+, fetchFromGitHub
 , fsspec
-, pytest
+, pytestCheckHook
+, pytest-rerunfailures
 , pythonOlder
 , cloudpickle
 , numpy
@@ -11,34 +13,81 @@
 , dill
 , pandas
 , partd
+, pytest-xdist
+, withExtraComplete ? false
+, distributed
 }:
 
 buildPythonPackage rec {
   pname = "dask";
-  version = "2.6.0";
-
+  version = "2021.06.2";
   disabled = pythonOlder "3.5";
 
-  src = fetchPypi {
-    inherit pname version;
-    sha256 = "81c7891f0d2e7ac03d1f7fabf1f639360a1db52c03a7155ba9b08e9ee6280f2b";
+  src = fetchFromGitHub {
+    owner = "dask";
+    repo = pname;
+    rev = version;
+    sha256 = "sha256-qvfjdijzlqaJQrDztRAVr5PudTaVd3WOTBid2ElZQgg=";
   };
 
-  checkInputs = [ pytest ];
   propagatedBuildInputs = [
-    bokeh cloudpickle dill fsspec numpy pandas partd toolz ];
+    bokeh
+    cloudpickle
+    dill
+    fsspec
+    numpy
+    pandas
+    partd
+    toolz
+  ] ++ lib.optionals withExtraComplete [
+    distributed
+  ];
 
-  checkPhase = ''
-    py.test dask
+  doCheck = true;
+
+  checkInputs = [
+    pytestCheckHook
+    pytest-rerunfailures
+    pytest-xdist
+  ];
+
+  dontUseSetuptoolsCheck = true;
+
+  postPatch = ''
+    # versioneer hack to set version of github package
+    echo "def get_versions(): return {'dirty': False, 'error': None, 'full-revisionid': None, 'version': '${version}'}" > dask/_version.py
+
+    substituteInPlace setup.py \
+      --replace "version=versioneer.get_version()," "version='${version}'," \
+      --replace "cmdclass=versioneer.get_cmdclass()," ""
   '';
 
-  # URLError
-  doCheck = false;
+  pytestFlagsArray = [
+    "-n $NIX_BUILD_CORES"
+    "-m 'not network'"
+  ];
 
-  meta = {
+  disabledTests = lib.optionals stdenv.isDarwin [
+    # this test requires features of python3Packages.psutil that are
+    # blocked in sandboxed-builds
+    "test_auto_blocksize_csv"
+  ] ++ [
+    # A deprecation warning from newer sqlalchemy versions makes these tests
+    # to fail https://github.com/dask/dask/issues/7406
+    "test_sql"
+    # Test interrupt fails intermittently https://github.com/dask/dask/issues/2192
+    "test_interrupt"
+  ];
+
+  __darwinAllowLocalNetworking = true;
+
+  pythonImportsCheck = [ "dask.dataframe" "dask" "dask.array" ];
+
+  meta = with lib; {
     description = "Minimal task scheduling abstraction";
-    homepage = https://github.com/ContinuumIO/dask/;
-    license = lib.licenses.bsd3;
-    maintainers = with lib.maintainers; [ fridh ];
+    homepage = "https://dask.org/";
+    changelog = "https://docs.dask.org/en/latest/changelog.html";
+    license = licenses.bsd3;
+    maintainers = with maintainers; [ fridh ];
   };
 }

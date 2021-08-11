@@ -1,7 +1,7 @@
-{ stdenv, fetchurl, fetchFromGitHub, makeWrapper
+{ lib, stdenv, fetchurl, fetchFromGitHub, makeWrapper
 , meson
 , ninja
-, pkgconfig
+, pkg-config
 , fetchpatch
 
 , platform-tools
@@ -10,10 +10,10 @@
 }:
 
 let
-  version = "1.10";
+  version = "1.18";
   prebuilt_server = fetchurl {
-    url = "https://github.com/Genymobile/scrcpy/releases/download/v${version}/scrcpy-server-v${version}.jar";
-    sha256 = "144k25x6ha89l9p5a1dm6r3fqvgqszzwrhvkvk0r44vg0i71msyb";
+    url = "https://github.com/Genymobile/scrcpy/releases/download/v${version}/scrcpy-server-v${version}";
+    sha256 = "18si7k9hyqa77yy9w747kl2x2pivyigny49dwzx9sfd9xmmmq734";
   };
 in
 stdenv.mkDerivation rec {
@@ -24,7 +24,7 @@ stdenv.mkDerivation rec {
     owner = "Genymobile";
     repo = pname;
     rev = "v${version}";
-    sha256 = "0hhncqcs49n9g8sgvwbyvkaq4b1dhrpn7qgnaj6grjcb0i27vzaq";
+    sha256 = "019948v63qhmp742hmar7a98ss673m0wdycpphjhfl1kg4iihiya";
   };
 
   # postPatch:
@@ -36,15 +36,9 @@ stdenv.mkDerivation rec {
       --replace "SDL_RENDERER_ACCELERATED" "SDL_RENDERER_ACCELERATED || SDL_RENDERER_SOFTWARE"
   '';
 
-  nativeBuildInputs = [ makeWrapper meson ninja pkgconfig ];
+  nativeBuildInputs = [ makeWrapper meson ninja pkg-config ];
 
   buildInputs = [ ffmpeg SDL2 ];
-
-  # FIXME: remove on update to > 1.10
-  patches = [(fetchpatch {
-    url = "https://github.com/Genymobile/scrcpy/commit/c05056343b56be65ae887f8b7ead61a8072622b9.diff";
-    sha256 = "1xh24gr2g2i9rk0zyv19jx54hswrq12ssp227vxbhsbamin9ir5b";
-  })];
 
   # Manually install the server jar to prevent Meson from "fixing" it
   preConfigure = ''
@@ -54,15 +48,15 @@ stdenv.mkDerivation rec {
   mesonFlags = [ "-Doverride_server_path=${prebuilt_server}" ];
   postInstall = ''
     mkdir -p "$out/share/scrcpy"
-    ln -s "${prebuilt_server}" "$out/share/scrcpy/scrcpy-server.jar"
+    ln -s "${prebuilt_server}" "$out/share/scrcpy/scrcpy-server"
 
     # runtime dep on `adb` to push the server
     wrapProgram "$out/bin/scrcpy" --prefix PATH : "${platform-tools}/bin"
   '';
 
-  meta = with stdenv.lib; {
+  meta = with lib; {
     description = "Display and control Android devices over USB or TCP/IP";
-    homepage = https://github.com/Genymobile/scrcpy;
+    homepage = "https://github.com/Genymobile/scrcpy";
     license = licenses.asl20;
     platforms = platforms.unix;
     maintainers = with maintainers; [ deltaevo lukeadams ];

@@ -1,23 +1,33 @@
 { lib
+, stdenv
+, fetchpatch
 , python3Packages
 , wrapGAppsHook
-, xvfb_run
 , gtk3
 , gobject-introspection
 , libcanberra-gtk3
-, dbus
 , poppler_gi
-, python3
+, withGstreamer ? stdenv.isLinux
+, withVLC ? stdenv.isLinux
  }:
 
 python3Packages.buildPythonApplication rec {
   pname = "pympress";
-  version = "1.4.0";
+  version = "1.6.3";
 
   src = python3Packages.fetchPypi {
     inherit pname version;
-    sha256 = "101wj6m931bj0ah6niw79i8ywb5zlb2783g7n7dmkhw6ay3jj4vq";
+    sha256 = "sha256-f+OjE0x/3yfJYHCLB+on7TT7MJ2vNu87SHRi67qFDCM=";
   };
+
+  patches = [
+    # Should not be needed once v1.6.4 is released
+    (fetchpatch {
+      name = "fix-setuptools-version-parsing.patch";
+      url = "https://github.com/Cimbali/pympress/commit/474514d71396ac065e210fd846e07ed1139602d0.diff";
+      sha256 = "sha256-eiw54sjMrXrNrhtkAXxiSTatzoA0NDA03L+HpTDax58=";
+    })
+  ];
 
   nativeBuildInputs = [
     wrapGAppsHook
@@ -26,23 +36,22 @@ python3Packages.buildPythonApplication rec {
   buildInputs = [
     gtk3
     gobject-introspection
-    libcanberra-gtk3
     poppler_gi
-  ];
+  ] ++ lib.optional withGstreamer libcanberra-gtk3;
 
   propagatedBuildInputs = with python3Packages; [
     pycairo
     pygobject3
-    python-vlc
+    setuptools
     watchdog
-  ];
+  ] ++ lib.optional withVLC python-vlc;
 
   doCheck = false; # there are no tests
 
   meta = with lib; {
     description = "Simple yet powerful PDF reader designed for dual-screen presentations";
     license = licenses.gpl2Plus;
-    homepage = "https://pympress.xyz/";
+    homepage = "https://cimbali.github.io/pympress/";
     maintainers = [ maintainers.tbenst ];
   };
 }

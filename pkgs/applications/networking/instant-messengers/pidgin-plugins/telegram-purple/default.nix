@@ -1,4 +1,4 @@
-{ stdenv, fetchgit, pkgconfig, pidgin, libwebp, libgcrypt, gettext } :
+{ lib, stdenv, fetchgit, pkg-config, pidgin, libwebp, libgcrypt, gettext } :
 
 let
   version = "1.3.1";
@@ -13,9 +13,9 @@ stdenv.mkDerivation rec {
     sha256 = "0p93jpjpx7hszwffzgixw04zkrpsiyzz4za3gfr4j07krc4771fp";
   };
 
-  NIX_CFLAGS_COMPILE = [ "-Wno-error=cast-function-type" ];
+  NIX_CFLAGS_COMPILE = "-Wno-error=cast-function-type";
 
-  nativeBuildInputs = [ pkgconfig ];
+  nativeBuildInputs = [ pkg-config ];
   buildInputs = [ pidgin libwebp libgcrypt gettext ];
 
   preConfigure = ''
@@ -33,8 +33,8 @@ stdenv.mkDerivation rec {
     cp imgs/telegram48.png $out/pixmaps/pidgin/protocols/48
   '';
 
-  meta = with stdenv.lib; {
-    homepage = https://github.com/majn/telegram-purple;
+  meta = with lib; {
+    homepage = "https://github.com/majn/telegram-purple";
     description = "Telegram for Pidgin / libpurple";
     license = licenses.gpl2;
     maintainers = [ maintainers.jagajaga ];

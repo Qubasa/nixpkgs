@@ -1,26 +1,26 @@
-{ stdenv, fetchFromGitHub, qmake, qtbase, qtscript }:
+{ lib, stdenv, fetchFromGitHub, qmake, qtbase, qtscript }:
 
 stdenv.mkDerivation rec {
   pname = "qbs";
 
-  version = "1.13.1";
+  version = "1.19.1";
 
   src = fetchFromGitHub {
     owner = "qbs";
     repo = "qbs";
     rev = "v${version}";
-    sha256 = "1a9mydfsax5pzbnx8g8f9blc4xpk5rdjq8fvkdaiwapdczban1ya";
+    sha256 = "sha256-td+xXxpjty5jgorlVySG+8yUd9hujInXIlCfqCRUg9k=";
   };
 
   nativeBuildInputs = [ qmake ];
+
+  dontWrapQtApps = true;
 
   qmakeFlags = [ "QBS_INSTALL_PREFIX=$(out)" "qbs.pro" ];
 
   buildInputs = [ qtbase qtscript ];
 
-  enableParallelBuilding = true;
-
-  meta = with stdenv.lib; {
+  meta = with lib; {
     description = "A tool that helps simplify the build process for developing projects across multiple platforms";
     homepage = "https://wiki.qt.io/Qbs";
     license = licenses.lgpl3;

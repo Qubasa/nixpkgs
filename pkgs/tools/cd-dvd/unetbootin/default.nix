@@ -1,32 +1,48 @@
-{ stdenv, fetchFromGitHub, makeWrapper, qt4, utillinux, coreutils, which, qmake4Hook
-, p7zip, mtools, syslinux }:
+{ lib
+, stdenv
+, coreutils
+, fetchFromGitHub
+, libsForQt5
+, mtools
+, p7zip
+, qt5
+, syslinux
+, util-linux
+, which
+}:
 
 stdenv.mkDerivation rec {
   pname = "unetbootin";
-  version = "675";
+  version = "702";
 
   src = fetchFromGitHub {
-    owner  = "unetbootin";
-    repo   = "unetbootin";
-    rev    = version;
-    sha256 = "0b7z2amsf6i7b56a5sfs5di1vh30h6ybcqg23d5gx5zgn3w38w4a";
+    owner = pname;
+    repo = pname;
+    rev = version;
+    sha256 = "sha256-psX15XicPXAsd36BhuvK0G3GQS8hV/hazzO0HByCqV4=";
   };
 
   setSourceRoot = ''
     sourceRoot=$(echo */src/unetbootin)
   '';
 
-  buildInputs = [ qt4 ];
-  nativeBuildInputs = [ makeWrapper qmake4Hook ];
+  buildInputs = [
+    qt5.qtbase
+    qt5.qttools
+    libsForQt5.qmake
+  ];
+
+  nativeBuildInputs = [ qt5.wrapQtAppsHook ];
+
   enableParallelBuilding = true;
 
   # Lots of nice hard-coded paths...
   postPatch = ''
     substituteInPlace unetbootin.cpp \
       --replace /bin/df             ${coreutils}/bin/df \
-      --replace /sbin/blkid         ${utillinux}/sbin/blkid \
-      --replace /sbin/fdisk         ${utillinux}/sbin/fdisk \
-      --replace /sbin/sfdisk        ${utillinux}/sbin/sfdisk \
+      --replace /sbin/blkid         ${util-linux}/sbin/blkid \
+      --replace /sbin/fdisk         ${util-linux}/sbin/fdisk \
+      --replace /sbin/sfdisk        ${util-linux}/sbin/sfdisk \
       --replace /usr/bin/syslinux   ${syslinux}/bin/syslinux \
       --replace /usr/bin/extlinux   ${syslinux}/sbin/extlinux \
       --replace /usr/share/syslinux ${syslinux}/share/syslinux
@@ -50,18 +66,19 @@ stdenv.mkDerivation rec {
     install -Dm644 -t $out/share/unetbootin   unetbootin_*.qm
     install -Dm644 -t $out/share/applications unetbootin.desktop
 
-    wrapProgram $out/bin/unetbootin \
-      --prefix PATH : ${stdenv.lib.makeBinPath [ mtools p7zip which ]} \
-      --set QT_X11_NO_MITSHM 1
-
     runHook postInstall
   '';
 
-  meta = with stdenv.lib; {
-    homepage    = http://unetbootin.sourceforge.net/;
+  qtWrapperArgs = [
+    "--prefix PATH : ${lib.makeBinPath [ mtools p7zip which ]}"
+    "--set QT_X11_NO_MITSHM 1"
+  ];
+
+  meta = with lib; {
     description = "A tool to create bootable live USB drives from ISO images";
-    license     = licenses.gpl2Plus;
-    platforms   = platforms.linux;
+    homepage = "http://unetbootin.github.io/";
+    license = licenses.gpl2Plus;
     maintainers = with maintainers; [ ebzzry ];
+    platforms = platforms.linux;
   };
 }

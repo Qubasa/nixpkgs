@@ -1,5 +1,5 @@
-{ stdenv, lib, fetchurl, fetchpatch, pkgconfig, flex, bison, libxslt, autoconf, autoreconfHook
-, graphviz, glib, libiconv, libintl, libtool, expat, substituteAll
+{ stdenv, lib, fetchurl, fetchpatch, pkg-config, flex, bison, libxslt, autoconf, autoreconfHook
+, gnome, graphviz, glib, libiconv, libintl, libtool, expat, substituteAll
 }:
 
 let
@@ -36,6 +36,12 @@ let
 
         "0.46" = ./disable-graphviz-0.46.1.patch;
 
+        "0.48" = ./disable-graphviz-0.46.1.patch;
+
+        "0.50" = ./disable-graphviz-0.46.1.patch;
+
+        "0.52" = ./disable-graphviz-0.46.1.patch;
+
       }.${lib.versions.majorMinor version} or (throw "no graphviz patch for this version of vala");
 
     disableGraphviz = lib.versionAtLeast version "0.38" && !withGraphviz;
@@ -68,7 +74,7 @@ let
     outputs = [ "out" "devdoc" ];
 
     nativeBuildInputs = [
-      pkgconfig flex bison libxslt
+      pkg-config flex bison libxslt
     ] ++ lib.optional (stdenv.isDarwin && (lib.versionAtLeast version "0.38")) expat
       ++ lib.optional disableGraphviz autoreconfHook # if we changed our ./configure script, need to reconfigure
       ++ extraNativeBuildInputs;
@@ -82,43 +88,47 @@ let
 
     doCheck = false; # fails, requires dbus daemon
 
-    # Wait for PR #59372
-    # passthru = {
-    #  updateScript = gnome3.updateScript {
-    #    attrPath = "${pname}_${lib.versions.major version}_${lib.versions.minor version}";
-    #    packageName = pname;
-    #  };
-    # };
+    passthru = {
+     updateScript = gnome.updateScript {
+       attrPath = "${pname}_${lib.versions.major version}_${lib.versions.minor version}";
+       packageName = pname;
+     };
+    };
 
-    meta = with stdenv.lib; {
+    meta = with lib; {
       description = "Compiler for GObject type system";
-      homepage = https://wiki.gnome.org/Projects/Vala;
+      homepage = "https://wiki.gnome.org/Projects/Vala";
       license = licenses.lgpl21Plus;
       platforms = platforms.unix;
-      maintainers = with maintainers; [ antono jtojnar lethalman peterhoeg worldofpeace ];
+      maintainers = with maintainers; [ antono jtojnar peterhoeg maxeaubrey ] ++ teams.pantheon.members;
     };
   });
 
 in rec {
-  vala_0_36 = generic {
-    version = "0.36.20";
-    sha256 = "19v7zjhr9yxkh9lxg46n9gjr0lb7j6v0xqfhrdvgz18xhj3hm5my";
-  };
-
   vala_0_40 = generic {
-    version = "0.40.16";
-    sha256 = "0vv25fmr9jqiqf080vak1x4raa4w3cz3n5ysjglqsq9qfx304i7b";
-  };
-
-  vala_0_44 = generic {
-    version = "0.44.8";
-    sha256 = "0f7pc496zvxfhbkhg8ayxykjas6f55mgv452wsnh0bz5zbxm8xrl";
+    version = "0.40.25";
+    sha256 = "1pxpack8rrmywlf47v440hc6rv3vi8q9c6niwqnwikxvb2pwf3w7";
   };
 
   vala_0_46 = generic {
-    version = "0.46.2";
-    sha256 = "1g20fzcwh3j7ab46jalabyi005h2in0cp7xj0yga4b8hx29h61wj";
+    version = "0.46.13";
+    sha256 = "0d7l4vh2xra3q75kw3sy2d9bn5p6s3g3r7j37bdn6ir8l3wp2ivs";
   };
 
-  vala = vala_0_46;
+  vala_0_48 = generic {
+    version = "0.48.18";
+    sha256 = "1pbz4nyrrf9wp8rp953sczx545s4g0h5mars9ynkn788dzs2h3wy";
+  };
+
+  vala_0_50 = generic {
+    version = "0.50.9";
+    sha256 = "0w5ngs90rq7vy21nqfq8drqyb33kxm17j161qvakwpsbjsidv1mn";
+  };
+
+  vala_0_52 = generic {
+    version = "0.52.4";
+    sha256 = "0cfz3xshc9azxx4fn25x9gadnph6jvf1r2wzd7p5krk0a4755ppc";
+  };
+
+  vala = vala_0_52;
 }

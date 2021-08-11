@@ -1,20 +1,21 @@
-{buildPythonPackage, lib, nose, fetchPypi}:
+{ buildPythonPackage, lib, nose, fetchPypi, regex }:
 
 buildPythonPackage rec {
   pname = "titlecase";
-  version = "0.12.0";
+  version = "2.2.0";
 
   src = fetchPypi {
     inherit pname version;
-    sha256 = "0486i99wf8ssa7sgn81fn6fv6i4rhhq6n751bc740b3hzfbpmpl4";
+    sha256 = "5d97ee51da37fb57c8753b79efa8edfdf3f10c0060de926efee970081e28d52f";
   };
+
+  propagatedBuildInputs = [ regex ];
 
   checkInputs = [ nose ];
 
   meta = {
-    homepage = https://github.com/ppannuto/python-titlecase;
+    homepage = "https://github.com/ppannuto/python-titlecase";
     description = "Python Port of John Gruber's titlecase.pl";
     license = lib.licenses.mit;
   };
 }
-

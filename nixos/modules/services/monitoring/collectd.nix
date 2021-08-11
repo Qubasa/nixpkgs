@@ -129,8 +129,10 @@ in {
       };
     };
 
-    users.users = optional (cfg.user == "collectd") {
-      name = "collectd";
+    users.users = optionalAttrs (cfg.user == "collectd") {
+      collectd = {
+        isSystemUser = true;
+      };
     };
   };
 }

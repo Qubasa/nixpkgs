@@ -1,45 +1,86 @@
 { lib
 , stdenv
 , buildPythonPackage
+, pythonOlder
 , fetchPypi
-, pyopenssl
 , libuv
-, psutil
-, isPy27
 , CoreServices
 , ApplicationServices
+# Check Inputs
+, aiohttp
+, psutil
+, pyopenssl
+, pytestCheckHook
 }:
 
 buildPythonPackage rec {
   pname = "uvloop";
-  version = "0.13.0";
-  disabled = isPy27;
+  version = "0.15.2";
+  disabled = pythonOlder "3.7";
 
   src = fetchPypi {
     inherit pname version;
-    sha256 = "0blcnrd5vky2k1m1p1skx4516dr1jx76yyb0c6fi82si6mqd0b4l";
+    sha256 = "2bb0624a8a70834e54dde8feed62ed63b50bad7a1265c40d6403a2ac447bce01";
   };
-
-  patches = lib.optional stdenv.isDarwin ./darwin_sandbox.patch;
 
   buildInputs = [
     libuv
-  ] ++ lib.optionals stdenv.isDarwin [ CoreServices ApplicationServices ];
+  ] ++ lib.optionals stdenv.isDarwin [
+    CoreServices
+    ApplicationServices
+  ];
 
-  postPatch = ''
-    # Removing code linting tests, which we don't care about
-    rm tests/test_sourcecode.py
+  dontUseSetuptoolsCheck = true;
+  checkInputs = [
+    aiohttp
+    pytestCheckHook
+    pyopenssl
+    psutil
+  ];
+
+  pytestFlagsArray = [
+    # from pytest.ini, these are NECESSARY to prevent failures
+    "--capture=no"
+    "--assert=plain"
+    "--strict"
+    "--tb=native"
+  ] ++ lib.optionals (stdenv.isAarch64) [
+    # test gets stuck in epoll_pwait on hydras aarch64 builders
+    # https://github.com/MagicStack/uvloop/issues/412
+    "--deselect" "tests/test_tcp.py::Test_AIO_TCPSSL::test_remote_shutdown_receives_trailing_data"
+  ] ++ lib.optionals (stdenv.isDarwin && stdenv.isAarch64) [
+    # Flaky test: https://github.com/MagicStack/uvloop/issues/412
+    "--deselect" "tests/test_tcp.py::Test_UV_TCPSSL::test_shutdown_timeout_handler_not_set"
+  ];
+
+  disabledTestPaths = [
+    # ignore code linting tests
+    "tests/test_sourcecode.py"
+  ];
+
+  # force using installed/compiled uvloop vs source by moving tests to temp dir
+  preCheck = ''
+    export TEST_DIR=$(mktemp -d)
+    cp -r tests $TEST_DIR
+    pushd $TEST_DIR
   '';
 
-  checkInputs = [ pyopenssl psutil ];
+  postCheck = ''
+    popd
+  '';
+
+  pythonImportsCheck = [
+    "uvloop"
+    "uvloop.loop"
+  ];
 
   # Some of the tests use localhost networking.
   __darwinAllowLocalNetworking = true;
 
   meta = with lib; {
     description = "Fast implementation of asyncio event loop on top of libuv";
-    homepage = http://github.com/MagicStack/uvloop;
+    homepage = "https://github.com/MagicStack/uvloop";
     license = licenses.mit;
-    maintainers = [ maintainers.costrouc ];
+    maintainers = with maintainers; [ costrouc ];
   };
 }

@@ -1,4 +1,4 @@
-{ stdenv, fetchurl, pkgconfig
+{ lib, stdenv, fetchurl, pkg-config
 , libgcrypt, libgpgerror, libtasn1
 
 # Optional Dependencies
@@ -9,30 +9,31 @@ let
   mkFlag = trueStr: falseStr: cond: name: val: "--"
     + (if cond then trueStr else falseStr)
     + name
-    + stdenv.lib.optionalString (val != null && cond != false) "=${val}";
+    + lib.optionalString (val != null && cond != false) "=${val}";
   mkEnable = mkFlag "enable-" "disable-";
   mkWith = mkFlag "with-" "without-";
   mkOther = mkFlag "" "" true;
 
-  shouldUsePkg = pkg: if pkg != null && stdenv.lib.any (stdenv.lib.meta.platformMatch stdenv.hostPlatform) pkg.meta.platforms then pkg else null;
+  shouldUsePkg = pkg: if pkg != null && lib.meta.availableOn stdenv.hostPlatform pkg then pkg else null;
 
   optPam = shouldUsePkg pam;
   optLibidn = shouldUsePkg libidn;
   optGnutls = shouldUsePkg gnutls;
 in
-with stdenv.lib;
+with lib;
 stdenv.mkDerivation rec {
-  name = "shishi-1.0.2";
+  pname = "shishi";
+  version = "1.0.2";
 
   src = fetchurl {
-    url = "mirror://gnu/shishi/${name}.tar.gz";
+    url = "mirror://gnu/shishi/shishi-${version}.tar.gz";
     sha256 = "032qf72cpjdfffq1yq54gz3ahgqf2ijca4vl31sfabmjzq9q370d";
   };
 
   # Fixes support for gcrypt 1.6+
   patches = [ ./gcrypt-fix.patch ./freebsd-unistd.patch ];
 
-  nativeBuildInputs = [ pkgconfig ];
+  nativeBuildInputs = [ pkg-config ];
   buildInputs = [ libgcrypt libgpgerror libtasn1 optPam optLibidn optGnutls ];
 
   configureFlags = [
@@ -72,7 +73,7 @@ stdenv.mkDerivation rec {
   '';
 
   meta = {
-    homepage    = https://www.gnu.org/software/shishi/;
+    homepage    = "https://www.gnu.org/software/shishi/";
     description = "An implementation of the Kerberos 5 network security system";
     license     = licenses.gpl3Plus;
     maintainers = with maintainers; [ bjg lovek323 ];

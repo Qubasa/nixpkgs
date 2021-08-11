@@ -1,4 +1,4 @@
-{ stdenv
+{ lib, stdenv
 , fetchFromGitHub
 , zlib
 , expat
@@ -10,25 +10,21 @@
 , doxygen
 , graphviz
 , libxslt
+, libiconv
 }:
 
 stdenv.mkDerivation rec {
   pname = "exiv2";
-  version = "0.27.2";
+  version = "0.27.4";
+
+  outputs = [ "out" "dev" "doc" "man" ];
 
   src = fetchFromGitHub {
     owner = "exiv2";
     repo  = "exiv2";
     rev = "v${version}";
-    sha256 = "0n8il52yzbmvbkryrl8waz7hd9a2fdkw8zsrmhyh63jlvmmc31gf";
+    sha256 = "0m1x79q6i5fw3gr9k0dw0bbl7ym27g9vbmxiamks6yw028xqwc5a";
   };
-
-  cmakeFlags = [
-    "-DEXIV2_BUILD_PO=ON"
-    "-DEXIV2_BUILD_DOC=ON"
-  ];
-
-  outputs = [ "out" "dev" "doc" "man" ];
 
   nativeBuildInputs = [
     cmake
@@ -37,6 +33,8 @@ stdenv.mkDerivation rec {
     graphviz
     libxslt
   ];
+
+  buildInputs = lib.optional stdenv.isDarwin libiconv;
 
   propagatedBuildInputs = [
     expat
@@ -49,7 +47,13 @@ stdenv.mkDerivation rec {
     which
   ];
 
+  cmakeFlags = [
+    "-DEXIV2_ENABLE_NLS=ON"
+    "-DEXIV2_BUILD_DOC=ON"
+  ];
+
   buildFlags = [
+    "all"
     "doc"
   ];
 
@@ -61,27 +65,24 @@ stdenv.mkDerivation rec {
   preCheck = ''
     patchShebangs ../test/
     mkdir ../test/tmp
-    export LD_LIBRARY_PATH="$(realpath ../build/lib)"
 
-    # Fix tests on Aarch64
-    ${stdenv.lib.optionalString stdenv.isAarch64 ''
+    ${lib.optionalString (stdenv.isAarch64 || stdenv.isAarch32) ''
+      # Fix tests on arm
+      # https://github.com/Exiv2/exiv2/issues/933
       rm -f ../tests/bugfixes/github/test_CVE_2018_12265.py
     ''}
 
-    ${stdenv.lib.optionalString stdenv.isDarwin ''
-      export DYLD_LIBRARY_PATH=$DYLD_LIBRARY_PATH:`pwd`/lib
+    ${lib.optionalString stdenv.isDarwin ''
+      export DYLD_LIBRARY_PATH=$DYLD_LIBRARY_PATH''${DYLD_LIBRARY_PATH:+:}$PWD/lib
       # Removing tests depending on charset conversion
       substituteInPlace ../test/Makefile --replace "conversions.sh" ""
       rm -f ../tests/bugfixes/redmine/test_issue_460.py
       rm -f ../tests/bugfixes/redmine/test_issue_662.py
+      rm -f ../tests/bugfixes/github/test_issue_1046.py
      ''}
   '';
 
-  postCheck = ''
-    (cd ../tests/ && python3 runner.py)
-  '';
-
-  # With cmake we have to enable samples or there won't be
+  # With CMake we have to enable samples or there won't be
   # a tests target. This removes them.
   postInstall = ''
     ( cd "$out/bin"
@@ -91,12 +92,11 @@ stdenv.mkDerivation rec {
     )
   '';
 
-  enableParallelBuilding = true;
-
-  meta = with stdenv.lib; {
-    homepage = https://www.exiv2.org/;
+  meta = with lib; {
+    homepage = "https://www.exiv2.org/";
     description = "A library and command-line utility to manage image metadata";
     platforms = platforms.all;
     license = licenses.gpl2Plus;
+    maintainers = [ ];
   };
 }

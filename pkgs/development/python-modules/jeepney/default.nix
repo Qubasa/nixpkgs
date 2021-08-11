@@ -2,38 +2,56 @@
 , buildPythonPackage
 , fetchPypi
 , pythonOlder
+, dbus
 , pytest
+, pytest-trio
+, pytest-asyncio
 , testpath
-, tornado
+, trio
 }:
 
 buildPythonPackage rec {
   pname = "jeepney";
-  version = "0.4.1";
+  version = "0.7.0";
 
-  disabled = pythonOlder "3.5";
+  disabled = pythonOlder "3.6";
 
   src = fetchPypi {
     inherit pname version;
-    sha256 = "13806f91a96e9b2623fd2a81b950d763ee471454aafd9eb6d75dbe7afce428fb";
+    sha256 = "1237cd64c8f7ac3aa4b3f332c4d0fb4a8216f39eaa662ec904302d4d77de5a54";
   };
 
-  propagatedBuildInputs = [
-    tornado
-  ];
-
   checkInputs = [
+    dbus
     pytest
+    pytest-trio
+    pytest-asyncio
     testpath
+    trio
   ];
 
   checkPhase = ''
-    pytest
+    runHook preCheck
+
+    dbus-run-session --config-file=${dbus}/share/dbus-1/session.conf -- pytest
+
+    runHook postCheck
   '';
 
+  pythonImportsCheck = [
+    "jeepney"
+    "jeepney.auth"
+    "jeepney.io"
+    "jeepney.io.asyncio"
+    "jeepney.io.blocking"
+    "jeepney.io.threading"
+    "jeepney.io.trio"
+  ];
+
   meta = with lib; {
-    homepage = https://gitlab.com/takluyver/jeepney;
+    homepage = "https://gitlab.com/takluyver/jeepney";
     description = "Pure Python DBus interface";
     license = licenses.mit;
+    maintainers = with maintainers; [ dotlambda ];
   };
 }

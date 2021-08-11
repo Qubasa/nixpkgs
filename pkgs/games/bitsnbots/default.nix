@@ -1,10 +1,11 @@
-{ stdenv, fetchurl, SDL, lua, libGLU_combined }:
+{ lib, stdenv, fetchurl, SDL, lua, libGLU, libGL }:
 
 stdenv.mkDerivation rec {
-  name = "bitsnbots-20111230";
+  pname = "bitsnbots";
+  version = "20111230";
 
   src = fetchurl {
-    url = http://moikmellah.org/downloads/bitsnbots/bitsnbots.source.tgz;
+    url = "http://moikmellah.org/downloads/bitsnbots/bitsnbots.source.tgz";
     sha256 = "1iiclm6bfpp2p6d692hpnw25xyr48ki1xkcxa7fvh5b7m1519gsp";
   };
 
@@ -19,18 +20,18 @@ stdenv.mkDerivation rec {
   NIX_LDFLAGS = "-lGL";
 
   installPhase = ''
-    mkdir -p $out/share/${name}
-    cp -R bitsnbots resource scripts README $out/share/${name}
+    mkdir -p $out/share/${pname}-${version}
+    cp -R bitsnbots resource scripts README $out/share/${pname}-${version}
     mkdir -p $out/bin
-    ln -s $out/share/${name}/bitsnbots $out/bin
+    ln -s $out/share/${pname}-${version}/bitsnbots $out/bin
   '';
 
-  buildInputs = [ SDL lua libGLU_combined ];
+  buildInputs = [ SDL lua libGLU libGL ];
 
   meta = {
     description = "Simple puzzle game with moving robots";
-    homepage = http://moikmellah.org/blog/?page_id=19;
-    license = stdenv.lib.licenses.gpl3Plus;
-    platforms = with stdenv.lib.platforms; linux;
+    homepage = "http://moikmellah.org/blog/?page_id=19";
+    license = lib.licenses.gpl3Plus;
+    platforms = with lib.platforms; linux;
   };
 }

@@ -1,47 +1,60 @@
-{ stdenv, fetchgit
-, cmake, pkgconfig, git
-, boost, miniupnpc, openssl, unbound, cppzmq
+{ lib, stdenv, fetchFromGitHub, fetchpatch
+, cmake, pkg-config
+, boost, miniupnpc, openssl, unbound
 , zeromq, pcsclite, readline, libsodium, hidapi
-, python3Packages
+, randomx, rapidjson
 , CoreData, IOKit, PCSC
+, trezorSupport ? true, libusb1, protobuf, python3
 }:
-
-assert stdenv.isDarwin -> IOKit != null;
-
-with stdenv.lib;
 
 stdenv.mkDerivation rec {
   pname = "monero";
-  version = "0.14.1.0";
+  version = "0.17.2.0";
 
-  src = fetchgit {
-    url    = "https://github.com/monero-project/monero.git";
-    rev    = "v${version}";
-    sha256 = "1asa197fad81jfv12qgaa7y7pdr1r1pda96m9pvivkh4v30cx0nh";
+  src = fetchFromGitHub {
+    owner = "monero-project";
+    repo = "monero";
+    rev = "v${version}";
+    sha256 = "0jwlmrpzisvw1c06cvd5b3s3hd4w0pa1qmrypfwah67qj3x6hnb6";
+    fetchSubmodules = true;
   };
 
-  nativeBuildInputs = [ cmake pkgconfig git ];
+  patches = [
+    ./use-system-libraries.patch
+  ];
+
+  postPatch = ''
+    # remove vendored libraries
+    rm -r external/{miniupnp,randomx,rapidjson,unbound}
+    # export patched source for monero-gui
+    cp -r . $source
+  '';
+
+  nativeBuildInputs = [ cmake pkg-config ];
 
   buildInputs = [
     boost miniupnpc openssl unbound
-    cppzmq zeromq pcsclite readline
-    libsodium hidapi
-    python3Packages.protobuf
-  ] ++ optionals stdenv.isDarwin [ IOKit CoreData PCSC ];
+    zeromq pcsclite readline
+    libsodium hidapi randomx rapidjson
+    protobuf
+  ] ++ lib.optionals stdenv.isDarwin [ IOKit CoreData PCSC ]
+    ++ lib.optionals trezorSupport [ libusb1 protobuf python3 ];
 
   cmakeFlags = [
     "-DCMAKE_BUILD_TYPE=Release"
+    "-DUSE_DEVICE_TREZOR=ON"
     "-DBUILD_GUI_DEPS=ON"
     "-DReadline_ROOT_DIR=${readline.dev}"
-  ] ++ optional stdenv.isDarwin "-DBoost_USE_MULTITHREADED=OFF";
+    "-DRandomX_ROOT_DIR=${randomx}"
+  ] ++ lib.optional stdenv.isDarwin "-DBoost_USE_MULTITHREADED=OFF";
 
-  hardeningDisable = [ "fortify" ];
+  outputs = [ "out" "source" ];
 
-  meta = {
+  meta = with lib; {
     description = "Private, secure, untraceable currency";
-    homepage    = https://getmonero.org/;
+    homepage    = "https://getmonero.org/";
     license     = licenses.bsd3;
     platforms   = platforms.all;
-    maintainers = with maintainers; [ ehmry rnhmjoj ];
+    maintainers = with maintainers; [ rnhmjoj ];
   };
 }

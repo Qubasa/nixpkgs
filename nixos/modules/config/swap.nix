@@ -58,7 +58,7 @@ let
       device = mkOption {
         example = "/dev/sda3";
         type = types.str;
-        description = "Path of the device.";
+        description = "Path of the device or swap file.";
       };
 
       label = mkOption {
@@ -111,6 +111,28 @@ let
           WARNING #2: Do not use /dev/disk/by-uuid/… or /dev/disk/by-label/… as your swap device
           when using randomEncryption as the UUIDs and labels will get erased on every boot when
           the partition is encrypted. Best to use /dev/disk/by-partuuid/…
+        '';
+      };
+
+      discardPolicy = mkOption {
+        default = null;
+        example = "once";
+        type = types.nullOr (types.enum ["once" "pages" "both" ]);
+        description = ''
+          Specify the discard policy for the swap device. If "once", then the
+          whole swap space is discarded at swapon invocation. If "pages",
+          asynchronous discard on freed pages is performed, before returning to
+          the available pages pool. With "both", both policies are activated.
+          See swapon(8) for more information.
+        '';
+      };
+
+      options = mkOption {
+        default = [ "defaults" ];
+        example = [ "nofail" ];
+        type = types.listOf types.nonEmptyStr;
+        description = ''
+          Options used to mount the swap.
         '';
       };
 
@@ -185,7 +207,7 @@ in
           { description = "Initialisation of swap device ${sw.device}";
             wantedBy = [ "${realDevice'}.swap" ];
             before = [ "${realDevice'}.swap" ];
-            path = [ pkgs.utillinux ] ++ optional sw.randomEncryption.enable pkgs.cryptsetup;
+            path = [ pkgs.util-linux ] ++ optional sw.randomEncryption.enable pkgs.cryptsetup;
 
             script =
               ''
@@ -202,7 +224,7 @@ in
                   fi
                 ''}
                 ${optionalString sw.randomEncryption.enable ''
-                  cryptsetup plainOpen -c ${sw.randomEncryption.cipher} -d ${sw.randomEncryption.source} ${sw.device} ${sw.deviceName}
+                  cryptsetup plainOpen -c ${sw.randomEncryption.cipher} -d ${sw.randomEncryption.source} ${optionalString (sw.discardPolicy != null) "--allow-discards"} ${sw.device} ${sw.deviceName}
                   mkswap ${sw.realDevice}
                 ''}
               '';

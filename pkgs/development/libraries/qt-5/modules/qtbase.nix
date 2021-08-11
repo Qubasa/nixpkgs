@@ -2,13 +2,13 @@
   stdenv, lib,
   src, patches, version, qtCompatVersion,
 
-  coreutils, bison, flex, gdb, gperf, lndir, perl, pkgconfig, python2,
+  coreutils, bison, flex, gdb, gperf, lndir, perl, pkg-config, python3,
   which,
   # darwin support
   darwin, libiconv,
 
   dbus, fontconfig, freetype, glib, harfbuzz, icu, libX11, libXcomposite,
-  libXcursor, libXext, libXi, libXrender, libinput, libjpeg, libpng, libtiff,
+  libXcursor, libXext, libXi, libXrender, libinput, libjpeg, libpng,
   libxcb, libxkbcommon, libxml2, libxslt, openssl, pcre16, pcre2, sqlite, udev,
   xcbutil, xcbutilimage, xcbutilkeysyms, xcbutilrenderutil, xcbutilwm,
   zlib,
@@ -22,6 +22,7 @@
   libGL,
   buildExamples ? false,
   buildTests ? false,
+  debug ? false,
   developerBuild ? false,
   decryptSslTraffic ? false
 }:
@@ -33,12 +34,14 @@ let
   compareVersion = v: builtins.compareVersions version v;
   qmakeCacheName =
     if compareVersion "5.12.4" < 0 then ".qmake.cache" else ".qmake.stash";
+  debugSymbols = debug || developerBuild;
 in
 
 stdenv.mkDerivation {
 
   name = "qtbase-${version}";
   inherit qtCompatVersion src version;
+  debug = debugSymbols;
 
   propagatedBuildInputs =
     [
@@ -48,7 +51,7 @@ stdenv.mkDerivation {
       harfbuzz icu
 
       # Image formats
-      libjpeg libpng libtiff
+      libjpeg libpng
       (if compareVersion "5.9.0" < 0 then pcre16 else pcre2)
     ]
     ++ (
@@ -58,7 +61,7 @@ stdenv.mkDerivation {
           # TODO: move to buildInputs, this should not be propagated.
           AGL AppKit ApplicationServices Carbon Cocoa CoreAudio CoreBluetooth
           CoreLocation CoreServices DiskArbitration Foundation OpenGL
-          darwin.libobjc libiconv MetalKit
+          darwin.libobjc libiconv MetalKit IOKit
         ]
       else
         [
@@ -75,7 +78,8 @@ stdenv.mkDerivation {
     );
 
   buildInputs =
-    lib.optionals (!stdenv.isDarwin)
+    [ python3 ]
+    ++ lib.optionals (!stdenv.isDarwin)
     (
       [ libinput ]
       ++ lib.optional withGtk3 gtk3
@@ -86,7 +90,7 @@ stdenv.mkDerivation {
     ++ lib.optional (postgresql != null) postgresql;
 
   nativeBuildInputs =
-    [ bison flex gperf lndir perl pkgconfig python2 which ];
+    [ bison flex gperf lndir perl pkg-config which ];
 
   propagatedNativeBuildInputs = [ lndir ];
 
@@ -163,16 +167,11 @@ stdenv.mkDerivation {
 
   setOutputFlags = false;
   preConfigure = ''
-    export LD_LIBRARY_PATH="$PWD/lib:$PWD/plugins/platforms:$LD_LIBRARY_PATH"
+    export LD_LIBRARY_PATH="$PWD/lib:$PWD/plugins/platforms''${LD_LIBRARY_PATH:+:}$LD_LIBRARY_PATH"
     ${lib.optionalString (compareVersion "5.9.0" < 0) ''
     # We need to set LD to CXX or otherwise we get nasty compile errors
     export LD=$CXX
     ''}
-
-    configureFlags+="\
-        -plugindir $out/$qtPluginPrefix \
-        -qmldir $out/$qtQmlPrefix \
-        -docdir $out/$qtDocPrefix"
 
     NIX_CFLAGS_COMPILE+=" -DNIXPKGS_QT_PLUGIN_PREFIX=\"$qtPluginPrefix\""
   '';
@@ -199,20 +198,17 @@ stdenv.mkDerivation {
     done
   '';
 
-  NIX_CFLAGS_COMPILE =
-    [
-      "-Wno-error=sign-compare" # freetype-2.5.4 changed signedness of some struct fields
-      ''-DNIXPKGS_QTCOMPOSE="${libX11.out}/share/X11/locale"''
-      ''-D${if compareVersion "5.11.0" >= 0 then "LIBRESOLV_SO" else "NIXPKGS_LIBRESOLV"}="${stdenv.cc.libc.out}/lib/libresolv"''
-      ''-DNIXPKGS_LIBXCURSOR="${libXcursor.out}/lib/libXcursor"''
-    ]
-
-    ++ lib.optional libGLSupported ''-DNIXPKGS_MESA_GL="${libGL.out}/lib/libGL"''
+  NIX_CFLAGS_COMPILE = toString ([
+    "-Wno-error=sign-compare" # freetype-2.5.4 changed signedness of some struct fields
+    ''-DNIXPKGS_QTCOMPOSE="${libX11.out}/share/X11/locale"''
+    ''-D${if compareVersion "5.11.0" >= 0 then "LIBRESOLV_SO" else "NIXPKGS_LIBRESOLV"}="${stdenv.cc.libc.out}/lib/libresolv"''
+    ''-DNIXPKGS_LIBXCURSOR="${libXcursor.out}/lib/libXcursor"''
+  ] ++ lib.optional libGLSupported ''-DNIXPKGS_MESA_GL="${libGL.out}/lib/libGL"''
     ++ lib.optionals withGtk3 [
          ''-DNIXPKGS_QGTK3_XDG_DATA_DIRS="${gtk3}/share/gsettings-schemas/${gtk3.name}"''
          ''-DNIXPKGS_QGTK3_GIO_EXTRA_MODULES="${dconf.lib}/lib/gio/modules"''
        ]
-    ++ lib.optional decryptSslTraffic "-DQT_DECRYPT_SSL_TRAFFIC";
+    ++ lib.optional decryptSslTraffic "-DQT_DECRYPT_SSL_TRAFFIC");
 
   prefixKey = "-prefix ";
 
@@ -224,6 +220,10 @@ stdenv.mkDerivation {
   # TODO Remove obsolete and useless flags once the build will be totally mastered
   configureFlags =
     [
+      "-plugindir $(out)/$(qtPluginPrefix)"
+      "-qmldir $(out)/$(qtQmlPrefix)"
+      "-docdir $(out)/$(qtDocPrefix)"
+
       "-verbose"
       "-confirm-license"
       "-opensource"
@@ -244,6 +244,7 @@ stdenv.mkDerivation {
       "-I" "${icu.dev}/include"
       "-pch"
     ]
+    ++ lib.optional debugSymbols "-debug"
     ++ lib.optionals (compareVersion "5.11.0" < 0)
     [
       "-qml-debug"
@@ -258,18 +259,18 @@ stdenv.mkDerivation {
       "-no-warnings-are-errors"
     ]
     ++ (
-      if (!stdenv.hostPlatform.isx86_64)
-      then [ "-no-sse2" ]
-      else lib.optionals (compareVersion "5.9.0" >= 0) {
-        default        = [ "-sse2" "-no-sse3" "-no-ssse3" "-no-sse4.1" "-no-sse4.2" "-no-avx" "-no-avx2" ];
-        westmere       = [ "-sse2"    "-sse3"    "-ssse3"    "-sse4.1"    "-sse4.2" "-no-avx" "-no-avx2" ];
-        sandybridge    = [ "-sse2"    "-sse3"    "-ssse3"    "-sse4.1"    "-sse4.2"    "-avx" "-no-avx2" ];
-        ivybridge      = [ "-sse2"    "-sse3"    "-ssse3"    "-sse4.1"    "-sse4.2"    "-avx" "-no-avx2" ];
-        haswell        = [ "-sse2"    "-sse3"    "-ssse3"    "-sse4.1"    "-sse4.2"    "-avx"    "-avx2" ];
-        broadwell      = [ "-sse2"    "-sse3"    "-ssse3"    "-sse4.1"    "-sse4.2"    "-avx"    "-avx2" ];
-        skylake        = [ "-sse2"    "-sse3"    "-ssse3"    "-sse4.1"    "-sse4.2"    "-avx"    "-avx2" ];
-        skylake-avx512 = [ "-sse2"    "-sse3"    "-ssse3"    "-sse4.1"    "-sse4.2"    "-avx"    "-avx2" ];
-      }.${stdenv.hostPlatform.platform.gcc.arch or "default"}
+      if (!stdenv.hostPlatform.isx86_64) then [
+        "-no-sse2"
+      ] else if (compareVersion "5.9.0" >= 0) then [
+        "-sse2"
+        "${if stdenv.hostPlatform.sse3Support   then "" else "-no"}-sse3"
+        "${if stdenv.hostPlatform.ssse3Support  then "" else "-no"}-ssse3"
+        "${if stdenv.hostPlatform.sse4_1Support then "" else "-no"}-sse4.1"
+        "${if stdenv.hostPlatform.sse4_2Support then "" else "-no"}-sse4.2"
+        "${if stdenv.hostPlatform.avxSupport    then "" else "-no"}-avx"
+        "${if stdenv.hostPlatform.avx2Support   then "" else "-no"}-avx2"
+      ] else [
+      ]
     )
     ++ [
       "-no-mips_dsp"
@@ -298,8 +299,8 @@ stdenv.mkDerivation {
       "-make tools"
       ''-${lib.optionalString (!buildExamples) "no"}make examples''
       ''-${lib.optionalString (!buildTests) "no"}make tests''
-      "-v"
     ]
+    ++ lib.optional (compareVersion "5.15.0" < 0) "-v"
 
     ++ (
       if stdenv.isDarwin
@@ -314,8 +315,9 @@ stdenv.mkDerivation {
       else
         [
           "-${lib.optionalString (compareVersion "5.9.0" < 0) "no-"}rpath"
-
-          "-system-xcb"
+        ]
+        ++ lib.optional (compareVersion "5.15.0" < 0) "-system-xcb"
+        ++ [
           "-xcb"
           "-qpa xcb"
           "-L" "${libX11.out}/lib"
@@ -330,7 +332,9 @@ stdenv.mkDerivation {
           ''-${lib.optionalString (cups == null) "no-"}cups''
           "-dbus-linked"
           "-glib"
-          "-system-libjpeg"
+        ]
+        ++ lib.optional (compareVersion "5.15.0" < 0) "-system-libjpeg"
+        ++ [
           "-system-libpng"
         ]
         ++ lib.optional withGtk3 "-gtk"
@@ -355,8 +359,6 @@ stdenv.mkDerivation {
           "-I" "${libmysqlclient}/include"
         ]
     );
-
-  enableParallelBuilding = true;
 
   postInstall =
     # Move selected outputs.
@@ -399,10 +401,12 @@ stdenv.mkDerivation {
           -e "/^host_bins=/ c host_bins=$dev/bin"
     '';
 
+  dontStrip = debugSymbols;
+
   setupHook = ../hooks/qtbase-setup-hook.sh;
 
   meta = with lib; {
-    homepage = http://www.qt.io;
+    homepage = "http://www.qt.io";
     description = "A cross-platform application framework for C++";
     license = with licenses; [ fdl13 gpl2 lgpl21 lgpl3 ];
     maintainers = with maintainers; [ qknight ttuegel periklis bkchr ];

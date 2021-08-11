@@ -185,7 +185,7 @@ in
       };
       zkExtraCfg = mkOption {
         type = types.str;
-        default = ''initLimit=5&syncLimit=2&tickTime=2000'';
+        default = "initLimit=5&syncLimit=2&tickTime=2000";
         description = ''
           Extra options to pass into Zookeeper
         '';
@@ -410,8 +410,7 @@ in
         sed -i 's/'"$replace_what"'/'"$replace_with"'/g' ${cfg.baseDir}/zookeeper/bin/zk*.sh
       '';
     };
-    users.users = singleton {
-      name = "zookeeper";
+    users.users.zookeeper = {
       uid = config.ids.uids.zookeeper;
       description = "Zookeeper daemon user";
       home = cfg.baseDir;

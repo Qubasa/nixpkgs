@@ -1,18 +1,37 @@
-{ stdenv, fetchFromGitHub, cmake, boost, libevent, double-conversion, glog
-, gflags, libiberty, openssl }:
+{ lib, stdenv
+, fetchFromGitHub
+, cmake
+, boost
+, libevent
+, double-conversion
+, glog
+, gflags
+, libiberty
+, lz4
+, xz
+, zlib
+, jemalloc
+, openssl
+, pkg-config
+, libunwind
+, fmt
+}:
 
-stdenv.mkDerivation rec {
+stdenv.mkDerivation (rec {
   pname = "folly";
-  version = "2019.10.14.00";
+  version = "2021.08.02.00";
 
   src = fetchFromGitHub {
     owner = "facebook";
     repo = "folly";
     rev = "v${version}";
-    sha256 = "0d32cwwza3hqsr0z4kcrk1cj26ipbwkqm6nz5335rw4k9y5kyz16";
+    sha256 = "sha256-Y2CqPlhbfC++udbbURnI9mvRZswC8kmikp1HY0qJz4k=";
   };
 
-  nativeBuildInputs = [ cmake ];
+  nativeBuildInputs = [
+    cmake
+    pkg-config
+  ];
 
   # See CMake/folly-deps.cmake in the Folly source tree.
   buildInputs = [
@@ -23,16 +42,24 @@ stdenv.mkDerivation rec {
     libevent
     libiberty
     openssl
+    lz4
+    xz
+    zlib
+    jemalloc
+    libunwind
+    fmt
   ];
 
-  enableParallelBuilding = true;
+  cmakeFlags = [ "-DBUILD_SHARED_LIBS=ON" ];
 
-  meta = with stdenv.lib; {
+  meta = with lib; {
     description = "An open-source C++ library developed and used at Facebook";
-    homepage = https://github.com/facebook/folly;
+    homepage = "https://github.com/facebook/folly";
     license = licenses.asl20;
     # 32bit is not supported: https://github.com/facebook/folly/issues/103
     platforms = [ "x86_64-linux" "x86_64-darwin" ];
     maintainers = with maintainers; [ abbradar pierreis ];
   };
-}
+} // lib.optionalAttrs stdenv.isDarwin {
+  LDFLAGS = "-ljemalloc";
+})

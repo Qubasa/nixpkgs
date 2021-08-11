@@ -1,4 +1,4 @@
-{ stdenv, fetchurl, gettext, libsepol, libselinux, libsemanage }:
+{ lib, stdenv, fetchurl, gettext, libsepol, libselinux, libsemanage }:
 
 stdenv.mkDerivation rec {
   pname = "policycoreutils";
@@ -15,6 +15,8 @@ stdenv.mkDerivation rec {
     substituteInPlace po/Makefile \
        --replace /usr/bin/install install --replace /usr/share /share
     substituteInPlace newrole/Makefile --replace /usr/share /share
+
+    sed -i -e '39i#include <crypt.h>' run_init/run_init.c
   '';
 
   nativeBuildInputs = [ gettext ];
@@ -29,7 +31,7 @@ stdenv.mkDerivation rec {
     "MAN5DIR=$(out)/share/man/man5"
   ];
 
-  meta = with stdenv.lib; {
+  meta = with lib; {
     description = "SELinux policy core utilities";
     license = licenses.gpl2;
     inherit (libsepol.meta) homepage platforms maintainers;

@@ -1,11 +1,11 @@
-{ stdenv
+{ lib
 , buildPythonPackage
 , fetchPypi
 , pkgs
 , cffi
 , six
 , pytest
-, pytestrunner
+, pytest-runner
 }:
 
 buildPythonPackage rec {
@@ -17,15 +17,15 @@ buildPythonPackage rec {
     sha256 = "0px8k4fjbkjb717bg2v7rjhm4iclrxzq7sh0hfqs55f4ddqi0m8v";
   };
 
-  buildInputs = [ pkgs.ssdeep pytestrunner ];
+  buildInputs = [ pkgs.ssdeep pytest-runner ];
   checkInputs = [ pytest ];
   propagatedBuildInputs = [ cffi six ];
 
   # tests repository does not include required files
   doCheck = false;
 
-  meta = with stdenv.lib; {
-    homepage = https://github.com/DinoTools/python-ssdeep;
+  meta = with lib; {
+    homepage = "https://github.com/DinoTools/python-ssdeep";
     description = "Python wrapper for the ssdeep library";
     license = licenses.lgpl3;
   };

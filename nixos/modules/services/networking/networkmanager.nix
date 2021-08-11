@@ -6,7 +6,6 @@ let
   cfg = config.networking.networkmanager;
 
   basePackages = with pkgs; [
-    crda
     modemmanager
     networkmanager
     networkmanager-fortisslvpn
@@ -15,41 +14,58 @@ let
     networkmanager-openconnect
     networkmanager-openvpn
     networkmanager-vpnc
+    networkmanager-sstp
    ] ++ optional (!delegateWireless && !enableIwd) wpa_supplicant;
 
   delegateWireless = config.networking.wireless.enable == true && cfg.unmanaged != [];
 
   enableIwd = cfg.wifi.backend == "iwd";
 
-  configFile = pkgs.writeText "NetworkManager.conf" ''
-    [main]
-    plugins=keyfile
-    dhcp=${cfg.dhcp}
-    dns=${cfg.dns}
-    # If resolvconf is disabled that means that resolv.conf is managed by some other module.
-    rc-manager=${if config.networking.resolvconf.enable then "resolvconf" else "unmanaged"}
+  mkValue = v:
+    if v == true then "yes"
+    else if v == false then "no"
+    else if lib.isInt v then toString v
+    else v;
 
-    [keyfile]
-    ${optionalString (cfg.unmanaged != [])
-      ''unmanaged-devices=${lib.concatStringsSep ";" cfg.unmanaged}''}
-
-    [logging]
-    level=${cfg.logLevel}
-    audit=${lib.boolToString config.security.audit.enable}
-
-    [connection]
-    ipv6.ip6-privacy=2
-    ethernet.cloned-mac-address=${cfg.ethernet.macAddress}
-    wifi.cloned-mac-address=${cfg.wifi.macAddress}
-    ${optionalString (cfg.wifi.powersave != null)
-      ''wifi.powersave=${if cfg.wifi.powersave then "3" else "2"}''}
-
-    [device]
-    wifi.scan-rand-mac-address=${if cfg.wifi.scanRandMacAddress then "yes" else "no"}
-    wifi.backend=${cfg.wifi.backend}
-
-    ${cfg.extraConfig}
+  mkSection = name: attrs: ''
+    [${name}]
+    ${
+      lib.concatStringsSep "\n"
+        (lib.mapAttrsToList
+          (k: v: "${k}=${mkValue v}")
+          (lib.filterAttrs
+            (k: v: v != null)
+            attrs))
+    }
   '';
+
+  configFile = pkgs.writeText "NetworkManager.conf" (lib.concatStringsSep "\n" [
+    (mkSection "main" {
+      plugins = "keyfile";
+      dhcp = cfg.dhcp;
+      dns = cfg.dns;
+      # If resolvconf is disabled that means that resolv.conf is managed by some other module.
+      rc-manager =
+        if config.networking.resolvconf.enable then "resolvconf"
+        else "unmanaged";
+      firewall-backend = cfg.firewallBackend;
+    })
+    (mkSection "keyfile" {
+      unmanaged-devices =
+        if cfg.unmanaged == [] then null
+        else lib.concatStringsSep ";" cfg.unmanaged;
+    })
+    (mkSection "logging" {
+      audit = config.security.audit.enable;
+      level = cfg.logLevel;
+    })
+    (mkSection "connection" cfg.connectionConfig)
+    (mkSection "device" {
+      "wifi.scan-rand-mac-address" = cfg.wifi.scanRandMacAddress;
+      "wifi.backend" = cfg.wifi.backend;
+    })
+    cfg.extraConfig
+  ]);
 
   /*
     [network-manager]
@@ -131,6 +147,10 @@ let
 
 in {
 
+  meta = {
+    maintainers = teams.freedesktop.members;
+  };
+
   ###### interface
 
   options = {
@@ -146,6 +166,28 @@ in {
           configured. If enabled, a group <literal>networkmanager</literal>
           will be created. Add all users that should have permission
           to change network settings to this group.
+        '';
+      };
+
+      connectionConfig = mkOption {
+        type = with types; attrsOf (nullOr (oneOf [
+          bool
+          int
+          str
+        ]));
+        default = {};
+        description = ''
+          Configuration for the [connection] section of NetworkManager.conf.
+          Refer to
+          <link xlink:href="https://developer.gnome.org/NetworkManager/stable/NetworkManager.conf.html">
+            https://developer.gnome.org/NetworkManager/stable/NetworkManager.conf.html#id-1.2.3.11
+          </link>
+          or
+          <citerefentry>
+            <refentrytitle>NetworkManager.conf</refentrytitle>
+            <manvolnum>5</manvolnum>
+          </citerefentry>
+          for more information.
         '';
       };
 
@@ -199,6 +241,15 @@ in {
         default = "internal";
         description = ''
           Which program (or internal library) should be used for DHCP.
+        '';
+      };
+
+      firewallBackend = mkOption {
+        type = types.enum [ "iptables" "nftables" "none" ];
+        default = "iptables";
+        description = ''
+          Which firewall backend should be used for configuring masquerading with shared mode.
+          If set to none, NetworkManager doesn't manage the configuration at all.
         '';
       };
 
@@ -308,6 +359,7 @@ in {
 
                 if [ "$2" != "up" ]; then
                     logger "exit: event $2 != up"
+                    exit
                 fi
 
                 # coreutils and iproute are in PATH too
@@ -336,6 +388,7 @@ in {
   };
 
   imports = [
+    (mkRenamedOptionModule [ "networking" "networkmanager" "useDnsmasq" ] [ "networking" "networkmanager" "dns" ])
     (mkRemovedOptionModule ["networking" "networkmanager" "dynamicHosts"] ''
       This option was removed because allowing (multiple) regular users to
       override host entries affecting the whole system opens up a huge attack
@@ -360,62 +413,64 @@ in {
       }
     ];
 
-    environment.etc = with pkgs; [
-      { source = configFile;
-        target = "NetworkManager/NetworkManager.conf";
+    hardware.wirelessRegulatoryDatabase = true;
+
+    environment.etc = with pkgs; {
+      "NetworkManager/NetworkManager.conf".source = configFile;
+
+      "NetworkManager/VPN/nm-openvpn-service.name".source =
+        "${networkmanager-openvpn}/lib/NetworkManager/VPN/nm-openvpn-service.name";
+
+      "NetworkManager/VPN/nm-vpnc-service.name".source =
+        "${networkmanager-vpnc}/lib/NetworkManager/VPN/nm-vpnc-service.name";
+
+      "NetworkManager/VPN/nm-openconnect-service.name".source =
+        "${networkmanager-openconnect}/lib/NetworkManager/VPN/nm-openconnect-service.name";
+
+      "NetworkManager/VPN/nm-fortisslvpn-service.name".source =
+        "${networkmanager-fortisslvpn}/lib/NetworkManager/VPN/nm-fortisslvpn-service.name";
+
+      "NetworkManager/VPN/nm-l2tp-service.name".source =
+        "${networkmanager-l2tp}/lib/NetworkManager/VPN/nm-l2tp-service.name";
+
+      "NetworkManager/VPN/nm-iodine-service.name".source =
+        "${networkmanager-iodine}/lib/NetworkManager/VPN/nm-iodine-service.name";
+
+      "NetworkManager/VPN/nm-sstp-service.name".source =
+        "${networkmanager-sstp}/lib/NetworkManager/VPN/nm-sstp-service.name";
       }
-      { source = "${networkmanager-openvpn}/lib/NetworkManager/VPN/nm-openvpn-service.name";
-        target = "NetworkManager/VPN/nm-openvpn-service.name";
-      }
-      { source = "${networkmanager-vpnc}/lib/NetworkManager/VPN/nm-vpnc-service.name";
-        target = "NetworkManager/VPN/nm-vpnc-service.name";
-      }
-      { source = "${networkmanager-openconnect}/lib/NetworkManager/VPN/nm-openconnect-service.name";
-        target = "NetworkManager/VPN/nm-openconnect-service.name";
-      }
-      { source = "${networkmanager-fortisslvpn}/lib/NetworkManager/VPN/nm-fortisslvpn-service.name";
-        target = "NetworkManager/VPN/nm-fortisslvpn-service.name";
-      }
-      { source = "${networkmanager-l2tp}/lib/NetworkManager/VPN/nm-l2tp-service.name";
-        target = "NetworkManager/VPN/nm-l2tp-service.name";
-      }
-      { source = "${networkmanager-iodine}/lib/NetworkManager/VPN/nm-iodine-service.name";
-        target = "NetworkManager/VPN/nm-iodine-service.name";
-      }
-    ] ++ optional (cfg.appendNameservers != [] || cfg.insertNameservers != [])
-           { source = overrideNameserversScript;
-             target = "NetworkManager/dispatcher.d/02overridedns";
-           }
-      ++ lib.imap1 (i: s: {
-        inherit (s) source;
-        target = "NetworkManager/dispatcher.d/${dispatcherTypesSubdirMap.${s.type}}03userscript${lib.fixedWidthNumber 4 i}";
-        mode = "0544";
-      }) cfg.dispatcherScripts
-      ++ optional cfg.enableStrongSwan
-           { source = "${pkgs.networkmanager_strongswan}/lib/NetworkManager/VPN/nm-strongswan-service.name";
-             target = "NetworkManager/VPN/nm-strongswan-service.name";
-           };
+      // optionalAttrs (cfg.appendNameservers != [] || cfg.insertNameservers != [])
+         {
+           "NetworkManager/dispatcher.d/02overridedns".source = overrideNameserversScript;
+         }
+      // optionalAttrs cfg.enableStrongSwan
+         {
+           "NetworkManager/VPN/nm-strongswan-service.name".source =
+             "${pkgs.networkmanager_strongswan}/lib/NetworkManager/VPN/nm-strongswan-service.name";
+         }
+      // listToAttrs (lib.imap1 (i: s:
+         {
+            name = "NetworkManager/dispatcher.d/${dispatcherTypesSubdirMap.${s.type}}03userscript${lib.fixedWidthNumber 4 i}";
+            value = { mode = "0544"; inherit (s) source; };
+         }) cfg.dispatcherScripts);
 
     environment.systemPackages = cfg.packages;
 
-    users.groups = [{
-      name = "networkmanager";
-      gid = config.ids.gids.networkmanager;
-    }
-    {
-      name = "nm-openvpn";
-      gid = config.ids.gids.nm-openvpn;
-    }];
-    users.users = [{
-      name = "nm-openvpn";
-      uid = config.ids.uids.nm-openvpn;
-      extraGroups = [ "networkmanager" ];
-    }
-    {
-      name = "nm-iodine";
-      isSystemUser = true;
-      group = "networkmanager";
-    }];
+    users.groups = {
+      networkmanager.gid = config.ids.gids.networkmanager;
+      nm-openvpn.gid = config.ids.gids.nm-openvpn;
+    };
+
+    users.users = {
+      nm-openvpn = {
+        uid = config.ids.uids.nm-openvpn;
+        extraGroups = [ "networkmanager" ];
+      };
+      nm-iodine = {
+        isSystemUser = true;
+        group = "networkmanager";
+      };
+    };
 
     systemd.packages = cfg.packages;
 
@@ -446,25 +501,50 @@ in {
 
     systemd.services.ModemManager.aliases = [ "dbus-org.freedesktop.ModemManager1.service" ];
 
+    # override unit as recommended by upstream - see https://github.com/NixOS/nixpkgs/issues/88089
+    # TODO: keep an eye on modem-manager releases as this will eventually be added to the upstream unit
+    systemd.services.ModemManager.serviceConfig.ExecStart = [
+      ""
+      "${pkgs.modemmanager}/sbin/ModemManager --filter-policy=STRICT"
+    ];
+
     systemd.services.NetworkManager-dispatcher = {
       wantedBy = [ "network.target" ];
-      restartTriggers = [ configFile ];
+      restartTriggers = [ configFile overrideNameserversScript ];
 
       # useful binaries for user-specified hooks
-      path = [ pkgs.iproute pkgs.utillinux pkgs.coreutils ];
+      path = [ pkgs.iproute2 pkgs.util-linux pkgs.coreutils ];
       aliases = [ "dbus-org.freedesktop.nm-dispatcher.service" ];
     };
 
     # Turn off NixOS' network management when networking is managed entirely by NetworkManager
-    networking = (mkIf (!delegateWireless) {
-      useDHCP = false;
-      # Use mkDefault to trigger the assertion about the conflict above
-      wireless.enable = mkDefault false;
-    }) // (mkIf cfg.enableStrongSwan {
-      networkmanager.packages = [ pkgs.networkmanager_strongswan ];
-    }) // (mkIf enableIwd {
-      wireless.iwd.enable = true;
-    });
+    networking = mkMerge [
+      (mkIf (!delegateWireless) {
+        useDHCP = false;
+      })
+
+      (mkIf cfg.enableStrongSwan {
+        networkmanager.packages = [ pkgs.networkmanager_strongswan ];
+      })
+
+      (mkIf enableIwd {
+        wireless.iwd.enable = true;
+      })
+
+      {
+        networkmanager.connectionConfig = {
+          "ipv6.ip6-privacy" = 2;
+          "ethernet.cloned-mac-address" = cfg.ethernet.macAddress;
+          "wifi.cloned-mac-address" = cfg.wifi.macAddress;
+          "wifi.powersave" =
+            if cfg.wifi.powersave == null then null
+            else if cfg.wifi.powersave then 3
+            else 2;
+        };
+      }
+    ];
+
+    boot.kernelModules = [ "ctr" ];
 
     security.polkit.extraConfig = polkitConf;
 

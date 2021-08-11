@@ -1,36 +1,32 @@
-{ stdenv, python }:
+{ lib, python3Packages }:
 
-with python.pkgs;
+let
+  pypkgs = python3Packages;
 
-buildPythonApplication rec {
+in
+pypkgs.buildPythonApplication rec {
   pname = "tmuxp";
-  version = "1.5.3";
+  version = "1.9.2";
 
-  src = fetchPypi {
+  src = pypkgs.fetchPypi {
     inherit pname version;
-    sha256 = "0vxnq5r3h32dvznh4lal29q5ny70rd861r7435gn7sa6v5ajs2f1";
+    sha256 = "sha256-3RlTbIq7UGvEESMvncq97bhjJw8O4m+0aFVZgBQOwkM=";
   };
-
-  postPatch = ''
-    sed -i 's/==.*$//' requirements/base.txt requirements/test.txt
-  '';
-
-  checkInputs = [
-    pytest
-    pytest-rerunfailures
-  ];
 
   # No tests in archive
   doCheck = false;
 
-  propagatedBuildInputs = [
-    click colorama kaptan libtmux
+  propagatedBuildInputs = with pypkgs; [
+    click
+    colorama
+    kaptan
+    libtmux
   ];
 
-  meta = with stdenv.lib; {
+  meta = with lib; {
     description = "Manage tmux workspaces from JSON and YAML";
-    homepage = https://tmuxp.git-pull.com/;
+    homepage = "https://tmuxp.git-pull.com/";
     license = licenses.bsd3;
-    maintainers = with maintainers; [ ];
+    maintainers = with maintainers; [ peterhoeg ];
   };
 }

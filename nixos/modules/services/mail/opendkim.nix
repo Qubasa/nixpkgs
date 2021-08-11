@@ -18,6 +18,9 @@ let
          ] ++ optionals (cfg.configFile != null) [ "-x" cfg.configFile ];
 
 in {
+  imports = [
+    (mkRenamedOptionModule [ "services" "opendkim" "keyFile" ] [ "services" "opendkim" "keyPath" ])
+  ];
 
   ###### interface
 
@@ -88,16 +91,16 @@ in {
 
   config = mkIf cfg.enable {
 
-    users.users = optionalAttrs (cfg.user == "opendkim") (singleton
-      { name = "opendkim";
+    users.users = optionalAttrs (cfg.user == "opendkim") {
+      opendkim = {
         group = cfg.group;
         uid = config.ids.uids.opendkim;
-      });
+      };
+    };
 
-    users.groups = optionalAttrs (cfg.group == "opendkim") (singleton
-      { name = "opendkim";
-        gid = config.ids.gids.opendkim;
-      });
+    users.groups = optionalAttrs (cfg.group == "opendkim") {
+      opendkim.gid = config.ids.gids.opendkim;
+    };
 
     environment.systemPackages = [ pkgs.opendkim ];
 
@@ -126,6 +129,36 @@ in {
         User = cfg.user;
         Group = cfg.group;
         RuntimeDirectory = optional (cfg.socket == defaultSock) "opendkim";
+        StateDirectory = "opendkim";
+        StateDirectoryMode = "0700";
+        ReadWritePaths = [ cfg.keyPath ];
+
+        AmbientCapabilities = [];
+        CapabilityBoundingSet = "";
+        DevicePolicy = "closed";
+        LockPersonality = true;
+        MemoryDenyWriteExecute = true;
+        NoNewPrivileges = true;
+        PrivateDevices = true;
+        PrivateMounts = true;
+        PrivateTmp = true;
+        PrivateUsers = true;
+        ProtectClock = true;
+        ProtectControlGroups = true;
+        ProtectHome = true;
+        ProtectHostname = true;
+        ProtectKernelLogs = true;
+        ProtectKernelModules = true;
+        ProtectKernelTunables = true;
+        ProtectSystem = "strict";
+        RemoveIPC = true;
+        RestrictAddressFamilies = [ "AF_INET" "AF_INET6 AF_UNIX" ];
+        RestrictNamespaces = true;
+        RestrictRealtime = true;
+        RestrictSUIDSGID = true;
+        SystemCallArchitectures = "native";
+        SystemCallFilter = [ "@system-service" "~@privileged @resources" ];
+        UMask = "0077";
       };
     };
 

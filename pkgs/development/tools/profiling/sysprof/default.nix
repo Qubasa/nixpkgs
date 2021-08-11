@@ -1,31 +1,33 @@
 { stdenv
+, lib
 , desktop-file-utils
 , fetchurl
 , gettext
 , glib
 , gtk3
+, json-glib
 , itstool
 , libdazzle
 , libxml2
 , meson, ninja
 , pango
-, pkgconfig
+, pkg-config
 , polkit
 , shared-mime-info
 , systemd
 , wrapGAppsHook
-, gnome3
+, gnome
 }:
 
 stdenv.mkDerivation rec {
   pname = "sysprof";
-  version = "3.34.0";
+  version = "3.40.1";
 
   outputs = [ "out" "lib" "dev" ];
 
   src = fetchurl {
-    url = "mirror://gnome/sources/${pname}/${stdenv.lib.versions.majorMinor version}/${pname}-${version}.tar.xz";
-    sha256 = "0b7rpwvs5wckiy418vs0d4i62wafpcx1zlspw39ag50d1sjcbv58";
+    url = "mirror://gnome/sources/${pname}/${lib.versions.majorMinor version}/${pname}-${version}.tar.xz";
+    sha256 = "0dvlzjwi3a4g37cpyhqpf41f5hypf0gim1jw9wqlv30flbb00l62";
   };
 
   nativeBuildInputs = [
@@ -35,26 +37,36 @@ stdenv.mkDerivation rec {
     libxml2
     meson
     ninja
-    pkgconfig
+    pkg-config
     shared-mime-info
     wrapGAppsHook
-    gnome3.adwaita-icon-theme
+    gnome.adwaita-icon-theme
   ];
-  buildInputs = [ glib gtk3 pango polkit systemd.dev systemd.lib libdazzle ];
+
+  buildInputs = [
+    glib
+    gtk3
+    json-glib
+    pango
+    polkit
+    systemd
+    libdazzle
+  ];
 
   mesonFlags = [
     "-Dsystemdunitdir=lib/systemd/system"
   ];
 
   passthru = {
-    updateScript = gnome3.updateScript {
+    updateScript = gnome.updateScript {
       packageName = pname;
+      versionPolicy = "odd-unstable";
     };
   };
 
-  meta = with stdenv.lib; {
+  meta = with lib; {
     description = "System-wide profiler for Linux";
-    homepage = https://wiki.gnome.org/Apps/Sysprof;
+    homepage = "https://wiki.gnome.org/Apps/Sysprof";
     longDescription = ''
       Sysprof is a sampling CPU profiler for Linux that uses the perf_event_open
       system call to profile the entire system, not just a single
@@ -63,7 +75,7 @@ stdenv.mkDerivation rec {
       be restarted.
     '';
     license = licenses.gpl2Plus;
-    maintainers = gnome3.maintainers;
-    platforms = platforms.linux;
+    maintainers = teams.gnome.members;
+    platforms = platforms.unix;
   };
 }

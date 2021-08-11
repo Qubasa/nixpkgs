@@ -1,5 +1,6 @@
-{ stdenv
+{ lib, stdenv
 , fetchFromGitHub
+, nix-update-script
 , fetchpatch
 , cmake
 , gdk-pixbuf
@@ -8,7 +9,7 @@
 , gettext
 , ninja
 , pantheon
-, pkgconfig
+, pkg-config
 , json-glib
 , libgudev
 , libevdev
@@ -34,7 +35,7 @@ stdenv.mkDerivation rec {
     cmake
     gettext
     ninja
-    pkgconfig
+    pkg-config
     vala
     wrapGAppsHook
   ];
@@ -60,10 +61,16 @@ stdenv.mkDerivation rec {
     })
   ];
 
-  meta = with stdenv.lib; {
+  passthru = {
+    updateScript = nix-update-script {
+      attrPath = pname;
+    };
+  };
+
+  meta = with lib; {
     description = "Create simple and beautiful presentations";
-    homepage = https://github.com/Philip-Scott/Spice-up;
-    maintainers = with maintainers; [ samdroid-apps kjuvi ] ++ pantheon.maintainers;
+    homepage = "https://github.com/Philip-Scott/Spice-up";
+    maintainers = with maintainers; [ samdroid-apps xiorcale ] ++ pantheon.maintainers;
     platforms = platforms.linux;
     # The COPYING file has GPLv3; some files have GPLv2+ and some have GPLv3+
     license = licenses.gpl3Plus;

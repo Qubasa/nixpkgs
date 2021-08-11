@@ -12,6 +12,10 @@ in
 
 {
 
+  meta = {
+    maintainers = teams.gnome.members;
+  };
+
   # Added 2019-08-19
   imports = [
     (mkRenamedOptionModule
@@ -30,7 +34,7 @@ in
       # gvfs can be built with multiple configurations
       package = mkOption {
         type = types.package;
-        default = pkgs.gnome3.gvfs;
+        default = pkgs.gnome.gvfs;
         description = "Which GVfs package to use.";
       };
 

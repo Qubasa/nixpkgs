@@ -1,9 +1,12 @@
-{ stdenv, requireFile, zlib, libpng, libSM, libICE, fontconfig, xorg, libGLU, libGL, alsaLib, dbus, xkeyboardconfig, bc }:
+{ lib, stdenv, requireFile, zlib, libpng, libSM, libICE, fontconfig, xorg, libGLU, libGL, alsa-lib
+, dbus, xkeyboardconfig, nss, nspr, expat, pciutils, libxkbcommon, bc, addOpenGLRunpath
+}:
 
 let
+  # NOTE: Some dependencies only show in errors when run with QT_DEBUG_PLUGINS=1
   ld_library_path = builtins.concatStringsSep ":" [
     "${stdenv.cc.cc.lib}/lib64"
-    (stdenv.lib.makeLibraryPath [
+    (lib.makeLibraryPath [
       libGLU
       libGL
       xorg.libXmu
@@ -17,33 +20,32 @@ let
       xorg.libXcomposite
       xorg.libXdamage
       xorg.libXtst
-      alsaLib
+      xorg.libxcb
+      xorg.libXScrnSaver
+      alsa-lib
       fontconfig
       libSM
       libICE
       zlib
       libpng
       dbus
+      addOpenGLRunpath.driverLink
+      nss
+      nspr
+      expat
+      pciutils
+      libxkbcommon
     ])
   ];
   license_dir = "~/.config/houdini";
 in
 stdenv.mkDerivation rec {
-  version = "17.0.352";
+  version = "18.0.460";
   pname = "houdini-runtime";
   src = requireFile rec {
     name = "houdini-${version}-linux_x86_64_gcc6.3.tar.gz";
-    sha256 = "0cl5fkgaplb0cvv7mli06ffc9j4ngpy8hl5zqabj3d645gcgafjg";
-    message = ''
-      This nix expression requires that ${name} is already part of the store.
-      Download it from https://sidefx.com and add it to the nix store with:
-
-          nix-prefetch-url <URL>
-
-      This can't be done automatically because you need to create an account on
-      their website and agree to their license terms before you can download
-      it. That's what you get for using proprietary software.
-    '';
+    sha256 = "18rbwszcks2zfn9zbax62rxmq50z9mc3h39b13jpd39qjqdd3jsd";
+    url = meta.homepage;
   };
 
   buildInputs = [ bc ];
@@ -77,10 +79,10 @@ stdenv.mkDerivation rec {
   '';
   meta = {
     description = "3D animation application software";
-    homepage = https://sidefx.com;
-    license = stdenv.lib.licenses.unfree;
-    platforms = stdenv.lib.platforms.linux;
-    maintainers = [ stdenv.lib.maintainers.canndrew ];
+    homepage = "https://www.sidefx.com";
+    license = lib.licenses.unfree;
+    platforms = lib.platforms.linux;
+    hydraPlatforms = [ ]; # requireFile src's should be excluded
+    maintainers = with lib.maintainers; [ canndrew kwohlfahrt ];
   };
 }
-

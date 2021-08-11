@@ -1,9 +1,9 @@
 { lib
 , buildPythonPackage
 , fetchPypi
-, pkgconfig
+, pkg-config
 , pytest
-, pytestrunner
+, pytest-runner
 , cffi
 , secp256k1
 }:
@@ -17,8 +17,8 @@ buildPythonPackage rec {
     sha256 = "a3b43e02d321c09eafa769a6fc2c156f555cab3a7db62175ef2fd21e16cdf20c";
   };
 
-  nativeBuildInputs = [ pkgconfig ];
-  checkInputs = [ pytest pytestrunner ];
+  nativeBuildInputs = [ pkg-config ];
+  checkInputs = [ pytest pytest-runner ];
   propagatedBuildInputs = [ cffi secp256k1 ];
 
   # Tests are not included in archive
@@ -36,13 +36,14 @@ buildPythonPackage rec {
   '';
 
   postPatch = ''
+    sed -i '38,45d' setup.py
     substituteInPlace setup.py --replace ", 'pytest-runner==2.6.2'" ""
   '';
 
   meta = {
-    homepage = https://github.com/ludbb/secp256k1-py;
+    homepage = "https://github.com/ludbb/secp256k1-py";
     description = "Python FFI bindings for secp256k1";
     license = with lib.licenses; [ mit ];
-    maintainers = with lib.maintainers; [ chris-martin ];
+    maintainers = with lib.maintainers; [ ];
   };
 }

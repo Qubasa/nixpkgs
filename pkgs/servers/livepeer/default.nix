@@ -1,30 +1,32 @@
-{ stdenv, fetchFromGitHub, buildGoPackage
-, pkgconfig, ffmpeg
+{ lib, fetchFromGitHub, buildGoModule
+, pkg-config, ffmpeg, gnutls
 }:
 
-buildGoPackage rec {
+buildGoModule rec {
   pname = "livepeer";
-  version = "0.2.4";
+  version = "0.5.15";
 
-  goPackagePath = "github.com/livepeer/go-livepeer";
-  goDeps = ./deps.nix;
+  runVend = true;
+  vendorSha256 = "sha256-PhkdbixJDA9Ym4cK5ALIYJgDQnO5GTbZ0XGsVHcvYYQ=";
 
   src = fetchFromGitHub {
     owner = "livepeer";
     repo = "go-livepeer";
-    rev = version;
-    sha256 = "07vhw787wq5q4xm7zvswjdsmr20pwfa39wfkgamb7hkrffn3k2ia";
+    rev = "v${version}";
+    sha256 = "sha256-ZB80QssqN9SBpmYk/QgPRVF88qedmNeUG+EkjxWz4rQ=";
   };
 
-  buildInputs = [ pkgconfig ffmpeg ];
+  # livepeer_cli has a vendoring problem
+  subPackages = [ "cmd/livepeer" ];
 
-  enableParallelBuilding = true;
+  nativeBuildInputs = [ pkg-config ];
 
-  meta = with stdenv.lib; {
+  buildInputs = [ ffmpeg gnutls ];
+
+  meta = with lib; {
     description = "Official Go implementation of the Livepeer protocol";
-    homepage = https://livepeer.org;
+    homepage = "https://livepeer.org";
     license = licenses.mit;
-    platforms = platforms.linux;
     maintainers = with maintainers; [ elitak ];
   };
 }

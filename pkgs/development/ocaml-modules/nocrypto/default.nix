@@ -1,11 +1,23 @@
-{ stdenv, fetchurl, fetchpatch, ocaml, findlib, ocamlbuild, topkg
+{ stdenv, lib, fetchurl, fetchpatch, ocaml, findlib, ocamlbuild, topkg
 , cpuid, ocb-stubblr, sexplib
-, cstruct, zarith, ppx_sexp_conv, ppx_deriving
+, cstruct, zarith, ppx_sexp_conv, ppx_deriving, writeScriptBin
 , cstruct-lwt ? null
 }:
 
-with stdenv.lib;
-let withLwt = cstruct-lwt != null; in
+with lib;
+let
+  withLwt = cstruct-lwt != null;
+  # the build system will call 'cc' with no way to override
+  # this is wrong when we're cross-compiling, so insert a wrapper
+  cc-wrapper = writeScriptBin "cc" ''
+    set -e
+    $CC "$@"
+  '';
+in
+
+if !versionAtLeast ocaml.version "4.08"
+then throw "nocrypto is not available for OCaml ${ocaml.version}"
+else
 
 stdenv.mkDerivation rec {
   name = "ocaml${ocaml.version}-nocrypto-${version}";
@@ -43,16 +55,17 @@ stdenv.mkDerivation rec {
     })
   ];
 
-  buildInputs = [ ocaml findlib ocamlbuild topkg cpuid ocb-stubblr ];
+  nativeBuildInputs = [ ocaml findlib ocamlbuild cc-wrapper ];
+  buildInputs = [ ocamlbuild findlib topkg cpuid ocb-stubblr ];
   propagatedBuildInputs = [ cstruct ppx_deriving ppx_sexp_conv sexplib zarith ] ++ optional withLwt cstruct-lwt;
 
-  buildPhase = "${topkg.buildPhase} --with-lwt ${boolToString withLwt}";
+  buildPhase = "${topkg.buildPhase} --accelerate false --with-lwt ${boolToString withLwt}";
   inherit (topkg) installPhase;
 
   meta = {
-    homepage = https://github.com/mirleft/ocaml-nocrypto;
+    homepage = "https://github.com/mirleft/ocaml-nocrypto";
     description = "Simplest possible crypto to support TLS";
-    license = stdenv.lib.licenses.bsd2;
-    maintainers = with stdenv.lib.maintainers; [ vbgl ];
+    license = lib.licenses.bsd2;
+    maintainers = with lib.maintainers; [ vbgl ];
   };
 }

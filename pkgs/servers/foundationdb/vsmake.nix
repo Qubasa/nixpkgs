@@ -1,10 +1,10 @@
 # This builder is for FoundationDB's original, somewhat strange visual studio +
 # make build system. In FoundationDB 6.1 and later, there's a new CMake system
 # (which will eventually become the default version.)
-{ stdenv49, lib, fetchurl, fetchFromGitHub
+{ gcc6Stdenv, lib, fetchurl, fetchFromGitHub
 
 , which, findutils, m4, gawk
-, python, openjdk, mono, libressl
+, python2, openjdk, mono, libressl
 , ...
 }:
 
@@ -12,7 +12,7 @@ let
   # hysterical raisins dictate a version of boost this old. however,
   # we luckily do not need to build anything, we just need the header
   # files.
-  boost152 = stdenv49.mkDerivation {
+  boost152 = gcc6Stdenv.mkDerivation {
     name = "boost-headers-1.52.0";
 
     src = fetchurl {
@@ -21,7 +21,7 @@ let
     };
 
     dontConfigure = true;
-    buildPhase = ":";
+    dontBuild = true;
     installPhase = "mkdir -p $out/include && cp -R boost $out/include/";
   };
 
@@ -33,10 +33,6 @@ let
     # the revision can be inferred from the fdb tagging policy
     , rev    ? "refs/tags/${version}"
 
-    # in theory newer versions of fdb support newer compilers, but they
-    # don't :( maybe one day
-    , stdenv ? stdenv49
-
     # in theory newer versions of fdb support newer boost versions, but they
     # don't :( maybe one day
     , boost ? boost152
@@ -45,7 +41,7 @@ let
     , officialRelease ? true
 
     , patches ? []
-    }: stdenv.mkDerivation {
+    }: gcc6Stdenv.mkDerivation {
         pname = "foundationdb";
         inherit version;
 
@@ -55,7 +51,7 @@ let
           inherit rev sha256;
         };
 
-        nativeBuildInputs = [ python openjdk gawk which m4 findutils mono ];
+        nativeBuildInputs = [ python2 openjdk gawk which m4 findutils mono ];
         buildInputs = [ libressl boost ];
 
         inherit patches;
@@ -143,9 +139,9 @@ let
 
         outputs = [ "out" "lib" "dev" "pythonsrc" ];
 
-        meta = with stdenv.lib; {
+        meta = with lib; {
           description = "Open source, distributed, transactional key-value store";
-          homepage    = https://www.foundationdb.org;
+          homepage    = "https://www.foundationdb.org";
           license     = licenses.asl20;
           platforms   = [ "x86_64-linux" ];
           maintainers = with maintainers; [ thoughtpolice ];

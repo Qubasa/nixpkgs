@@ -45,14 +45,14 @@ in {
       environment.ROON_DATAROOT = "/var/lib/${name}";
 
       serviceConfig = {
-        ExecStart = "${pkgs.roon-server}/opt/start.sh";
+        ExecStart = "${pkgs.roon-server}/start.sh";
         LimitNOFILE = 8192;
         User = cfg.user;
         Group = cfg.group;
         StateDirectory = name;
       };
     };
-    
+
     networking.firewall = mkIf cfg.openFirewall {
       allowedTCPPortRanges = [
         { from = 9100; to = 9200; }
@@ -60,13 +60,14 @@ in {
       allowedUDPPorts = [ 9003 ];
     };
 
-    
+
     users.groups.${cfg.group} = {};
     users.users.${cfg.user} =
       if cfg.user == "roon-server" then {
         isSystemUser = true;
         description = "Roon Server user";
-        groups = [ cfg.group "audio" ];
+        group = cfg.group;
+        extraGroups = [ "audio" ];
       }
       else {};
   };

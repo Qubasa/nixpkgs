@@ -1,28 +1,39 @@
-{ stdenv, fetchFromGitHub, gtk3 }:
+{ lib, stdenv, fetchFromGitHub, gtk3, hicolor-icon-theme, jdupes }:
 
 stdenv.mkDerivation rec {
   pname = "qogir-icon-theme";
-  version = "2019-09-15";
+  version = "2021-07-14";
 
   src = fetchFromGitHub {
     owner = "vinceliuice";
     repo = pname;
-    rev = "4e1b6c693615bc2c7c7a11df6f4b90f2e6fb67db";
-    sha256 = "1vp1wp4fgmy5af8z8nb3m6wgmb6wbwlvx5smf9dxfcn254hdg8g0";
+    rev = version;
+    sha256 = "0anma2ss3yqr9njx4ay2nyxjkgnj7ky17c93ipwgrvgsv8jk5nn2";
   };
 
-  nativeBuildInputs = [ gtk3 ];
+  nativeBuildInputs = [ gtk3 jdupes ];
+
+  propagatedBuildInputs = [ hicolor-icon-theme ];
+
+  dontDropIconThemeCache = true;
+
+  # These fixup steps are slow and unnecessary.
+  dontPatchELF = true;
+  dontRewriteSymlinks = true;
 
   installPhase = ''
+    runHook preInstall
     patchShebangs install.sh
     mkdir -p $out/share/icons
     name= ./install.sh -d $out/share/icons
+    jdupes -l -r $out/share/icons
+    runHook postInstall
   '';
 
-  meta = with stdenv.lib; {
-    description = "A colorful design icon theme for linux desktops";
-    homepage = https://github.com/vinceliuice/Qogir-icon-theme;
-    license = with licenses; [ gpl3 ];
+  meta = with lib; {
+    description = "Flat colorful design icon theme";
+    homepage = "https://github.com/vinceliuice/Qogir-icon-theme";
+    license = with licenses; [ gpl3Only ];
     platforms = platforms.linux;
     maintainers = with maintainers; [ romildo ];
   };

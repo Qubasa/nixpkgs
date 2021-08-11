@@ -7,6 +7,11 @@ let
   cfg = top.controllerManager;
 in
 {
+  imports = [
+    (mkRenamedOptionModule [ "services" "kubernetes" "controllerManager" "address" ] ["services" "kubernetes" "controllerManager" "bindAddress"])
+    (mkRenamedOptionModule [ "services" "kubernetes" "controllerManager" "port" ] ["services" "kubernetes" "controllerManager" "insecurePort"])
+  ];
+
   ###### interface
   options.services.kubernetes.controllerManager = with lib.types; {
 
@@ -33,7 +38,7 @@ in
     extraOpts = mkOption {
       description = "Kubernetes controller manager extra command line options.";
       default = "";
-      type = str;
+      type = separatedString " ";
     };
 
     featureGates = mkOption {

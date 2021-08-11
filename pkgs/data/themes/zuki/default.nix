@@ -1,14 +1,14 @@
-{ stdenv, fetchFromGitHub, meson, ninja, sassc, gdk-pixbuf, librsvg, gtk_engines, gtk-engine-murrine }:
+{ lib, stdenv, fetchFromGitHub, meson, ninja, sassc, gdk-pixbuf, librsvg, gtk_engines, gtk-engine-murrine }:
 
 stdenv.mkDerivation rec {
   pname = "zuki-themes";
-  version = "3.34-1";
+  version = "3.38-1";
 
   src = fetchFromGitHub {
     owner = "lassekongo83";
     repo = pname;
     rev = "v${version}";
-    sha256 = "19qg60rw5b0caqc542j2nrpkv8d37pai1cr1h0x2nvx0fkc3rmi2";
+    sha256 = "0890i8kavgnrhm8ic4zpl16wc4ngpnf1zi8js9gvki2cl7dlj1xm";
   };
 
   nativeBuildInputs = [ meson ninja sassc ];
@@ -17,10 +17,10 @@ stdenv.mkDerivation rec {
 
   propagatedUserEnvPkgs = [ gtk-engine-murrine ];
 
-  meta = with stdenv.lib; {
+  meta = with lib; {
     description = "Themes for GTK, gnome-shell and Xfce";
-    homepage = https://github.com/lassekongo83/zuki-themes;
-    license = licenses.gpl3;
+    homepage = "https://github.com/lassekongo83/zuki-themes";
+    license = licenses.gpl3Only;
     platforms = platforms.linux;
     maintainers = [ maintainers.romildo ];
   };

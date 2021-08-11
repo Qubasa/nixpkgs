@@ -67,7 +67,7 @@ in
     };
 
     port = mkOption {
-      type = types.int;
+      type = types.port;
       default = 28981;
       description = "Server port to listen on.";
     };
@@ -123,9 +123,9 @@ in
   config = mkIf cfg.enable {
 
     systemd.tmpfiles.rules = [
-      "d '${cfg.dataDir}' - ${cfg.user} ${cfg.user} - -"
+      "d '${cfg.dataDir}' - ${cfg.user} ${config.users.users.${cfg.user}.group} - -"
     ] ++ (optional cfg.consumptionDirIsPublic
-      "d '${cfg.consumptionDir}' 777 ${cfg.user} ${cfg.user} - -"
+      "d '${cfg.consumptionDir}' 777 - - - -"
       # If the consumption dir is not created here, it's automatically created by
       # 'manage' with the default permissions.
     );
@@ -169,17 +169,15 @@ in
     };
 
     users = optionalAttrs (cfg.user == defaultUser) {
-      users = [{
-        name = defaultUser;
+      users.${defaultUser} = {
         group = defaultUser;
         uid = config.ids.uids.paperless;
         home = cfg.dataDir;
-      }];
+      };
 
-      groups = [{
-        name = defaultUser;
+      groups.${defaultUser} = {
         gid = config.ids.gids.paperless;
-      }];
+      };
     };
   };
 }

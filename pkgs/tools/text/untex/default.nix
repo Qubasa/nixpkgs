@@ -1,4 +1,4 @@
-{ stdenv, fetchurl }:
+{ lib, stdenv, fetchurl }:
 
 stdenv.mkDerivation rec {
   pname = "untex";
@@ -12,16 +12,16 @@ stdenv.mkDerivation rec {
   hardeningDisable = [ "format" ];
 
   unpackPhase = "tar xf $src";
-  installTargets = "install install.man";
-  installFlags = "BINDIR=$(out)/bin MANDIR=$(out)/share/man/man1";
+  installTargets = [ "install" "install.man" ];
+  installFlags = [ "BINDIR=$(out)/bin" "MANDIR=$(out)/share/man/man1" ];
   preBuild = ''
     sed -i '1i#include <stdlib.h>\n#include <string.h>' untex.c
     mkdir -p $out/bin $out/share/man/man1
   '';
 
-  meta = with stdenv.lib; {
+  meta = with lib; {
     description = "A utility which removes LaTeX commands from input";
-    homepage = https://www.ctan.org/pkg/untex;
+    homepage = "https://www.ctan.org/pkg/untex";
     license = licenses.gpl1;
     maintainers = with maintainers; [ joachifm ];
     platforms = platforms.all;

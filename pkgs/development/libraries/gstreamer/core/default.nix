@@ -1,84 +1,116 @@
-{ stdenv, fetchurl, fetchpatch, meson, ninja
-, pkgconfig, gettext, gobject-introspection
-, bison, flex, python3, glib, makeWrapper
-, libcap,libunwind, darwin
+{ stdenv
+, fetchurl
+, meson
+, ninja
+, pkg-config
+, gettext
+, gobject-introspection
+, bison
+, flex
+, python3
+, glib
+, makeWrapper
+, libcap
+, libunwind
+, darwin
 , elfutils # for libdw
 , bash-completion
-, docbook_xsl, docbook_xml_dtd_412
-, gtk-doc
 , lib
 , CoreServices
 }:
 
 stdenv.mkDerivation rec {
   pname = "gstreamer";
-  version = "1.16.0";
+  version = "1.18.4";
 
-  meta = with lib ;{
-    description = "Open source multimedia framework";
-    homepage = https://gstreamer.freedesktop.org;
-    license = licenses.lgpl2Plus;
-    platforms = platforms.unix;
-    maintainers = with maintainers; [ ttuegel matthewbauer ];
-  };
+  outputs = [
+    "out"
+    "dev"
+    # "devdoc" # disabled until `hotdoc` is packaged in nixpkgs, see:
+    # - https://github.com/NixOS/nixpkgs/pull/98767
+    # - https://github.com/NixOS/nixpkgs/issues/98769#issuecomment-702296551
+  ];
+  outputBin = "dev";
 
   src = fetchurl {
-    url = "${meta.homepage}/src/gstreamer/${pname}-${version}.tar.xz";
-    sha256 = "003wy1p1in85p9sr5jsyhbnwqaiwz069flwkhyx7qhxy31qjz3hf";
+    url = "https://gstreamer.freedesktop.org/src/${pname}/${pname}-${version}.tar.xz";
+    sha256 = "1igv9l4hm21kp1jmlwlagzs7ly1vaxv1sbda29q8247372dwkvls";
   };
 
   patches = [
     ./fix_pkgconfig_includedir.patch
   ];
 
-  outputs = [ "out" "dev" ];
-  outputBin = "dev";
-
   nativeBuildInputs = [
-    meson ninja pkgconfig gettext bison flex python3 makeWrapper gobject-introspection
+    meson
+    ninja
+    pkg-config
+    gettext
+    bison
+    flex
+    python3
+    makeWrapper
+    glib
+    gobject-introspection
     bash-completion
-    gtk-doc
-    # Without these, enabling the 'gtk_doc' gives us `FAILED: meson-install`
-    docbook_xsl docbook_xml_dtd_412
+
+    # documentation
+    # TODO add hotdoc here
   ];
 
-  buildInputs =
-       lib.optionals stdenv.isLinux [ libcap libunwind elfutils ]
-    ++ lib.optional stdenv.isDarwin CoreServices;
+  buildInputs = [
+    bash-completion
+  ] ++ lib.optionals stdenv.isLinux [
+    libcap
+    libunwind
+    elfutils
+  ] ++ lib.optionals stdenv.isDarwin [
+    CoreServices
+  ];
 
-  propagatedBuildInputs = [ glib ];
+  propagatedBuildInputs = [
+    glib
+  ];
 
   mesonFlags = [
-    # Enables all features, so that we know when new dependencies are necessary.
-    "-Dauto_features=enabled"
     "-Ddbghelp=disabled" # not needed as we already provide libunwind and libdw, and dbghelp is a fallback to those
     "-Dexamples=disabled" # requires many dependencies and probably not useful for our users
-  ]
-    # darwin.libunwind doesn't have pkgconfig definitions so meson doesn't detect it.
-    ++ stdenv.lib.optionals stdenv.isDarwin [ "-Dlibunwind=disabled" "-Dlibdw=disabled" ];
+    "-Ddoc=disabled" # `hotdoc` not packaged in nixpkgs as of writing
+  ] ++ lib.optionals (stdenv.buildPlatform != stdenv.hostPlatform) [
+    "-Dintrospection=disabled"
+  ] ++ lib.optionals stdenv.isDarwin [
+    # darwin.libunwind doesn't have pkg-config definitions so meson doesn't detect it.
+    "-Dlibunwind=disabled"
+    "-Dlibdw=disabled"
+  ];
+
+  postPatch = ''
+    patchShebangs \
+      gst/parse/get_flex_version.py \
+      gst/parse/gen_grammar.py.in \
+      gst/parse/gen_lex.py.in \
+      libs/gst/helpers/ptp_helper_post_install.sh \
+      scripts/extract-release-date-from-doap-file.py
+  '';
 
   postInstall = ''
     for prog in "$dev/bin/"*; do
         # We can't use --suffix here due to quoting so we craft the export command by hand
-        wrapProgram "$prog" --run "export GST_PLUGIN_SYSTEM_PATH=\$GST_PLUGIN_SYSTEM_PATH"$\{GST_PLUGIN_SYSTEM_PATH:+:\}"\$(unset _tmp; for profile in \$NIX_PROFILES; do _tmp="\$profile/lib/gstreamer-1.0''$\{_tmp:+:\}\$_tmp"; done; printf "\$_tmp")"
+        wrapProgram "$prog" --run 'export GST_PLUGIN_SYSTEM_PATH_1_0=$GST_PLUGIN_SYSTEM_PATH_1_0''${GST_PLUGIN_SYSTEM_PATH_1_0:+:}$(unset _tmp; for profile in $NIX_PROFILES; do _tmp="$profile/lib/gstreamer-1.0''${_tmp:+:}$_tmp"; done; printf '%s' "$_tmp")'
     done
   '';
-
-  preConfigure=
-    # These files are not executable upstream, so we need to
-    # make them executable for `patchShebangs` to pick them up.
-    # Can be removed when this is merged and available:
-    #     https://gitlab.freedesktop.org/gstreamer/gstreamer/merge_requests/141
-    ''
-      chmod +x gst/parse/get_flex_version.py
-    '' +
-    ''
-      patchShebangs .
-    '';
 
   preFixup = ''
     moveToOutput "share/bash-completion" "$dev"
   '';
 
   setupHook = ./setup-hook.sh;
+
+  meta = with lib ;{
+    description = "Open source multimedia framework";
+    homepage = "https://gstreamer.freedesktop.org";
+    license = licenses.lgpl2Plus;
+    platforms = platforms.unix;
+    maintainers = with maintainers; [ ttuegel matthewbauer ];
+  };
 }

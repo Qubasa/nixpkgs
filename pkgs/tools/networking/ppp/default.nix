@@ -1,40 +1,37 @@
-{ stdenv, fetchurl, substituteAll, libpcap, openssl }:
+{ lib
+, stdenv
+, fetchFromGitHub
+, substituteAll
+, libpcap
+, openssl
+}:
 
 stdenv.mkDerivation rec {
-  version = "2.4.7";
+  version = "2.4.9";
   pname = "ppp";
 
-  src = fetchurl {
-    url = "mirror://samba/ppp/${pname}-${version}.tar.gz";
-    sha256 = "0c7vrjxl52pdwi4ckrvfjr08b31lfpgwf3pp0cqy76a77vfs7q02";
+  src = fetchFromGitHub {
+    owner = "ppp-project";
+    repo = pname;
+    rev = "${pname}-${version}";
+    sha256 = "sha256-8+nbqRNfKPLDx+wmuKSkv+BSeG72hKJI4dNqypqeEK4=";
   };
 
-  patches =
-    [ ( substituteAll {
-        src = ./nix-purity.patch;
-        inherit libpcap;
-        glibc = stdenv.cc.libc.dev or stdenv.cc.libc;
-      })
-      # Without nonpriv.patch, pppd --version doesn't work when not run as
-      # root.
-      ./nonpriv.patch
-      (fetchurl {
-        name = "CVE-2015-3310.patch";
-        url = "https://salsa.debian.org/roam/ppp/raw/ef5d585aca6b1200a52c7109caa66ef97964d76e/debian/patches/rc_mksid-no-buffer-overflow";
-        sha256 = "1dk00j7bg9nfgskw39fagnwv1xgsmyv0xnkd6n1v5gy0psw0lvqh";
-      })
-      (fetchurl {
-        url = "https://salsa.debian.org/roam/ppp/raw/ef5d585aca6b1200a52c7109caa66ef97964d76e/debian/patches/0016-pppoe-include-netinet-in.h-before-linux-in.h.patch";
-        sha256 = "1xnmqn02kc6g5y84xynjwnpv9cvrfn3nyv7h7r8j8xi7qf2aj4q8";
-      })
-      (fetchurl {
-        url = https://www.nikhef.nl/~janjust/ppp/ppp-2.4.7-eaptls-mppe-1.102.patch;
-        sha256 = "04war8l5szql53l36043hvzgfwqp3v76kj8brbz7wlf7vs2mlkia";
-      })
-      ./musl-fix-headers.patch
-    ];
+  patches = [
+    (substituteAll {
+      src = ./nix-purity.patch;
+      glibc = stdenv.cc.libc.dev or stdenv.cc.libc;
+      openssl_dev = openssl.dev;
+      openssl_out = openssl.out;
+    })
+    # Without nonpriv.patch, pppd --version doesn't work when not run as root.
+    ./nonpriv.patch
+  ];
 
-  buildInputs = [ libpcap openssl ];
+  buildInputs = [
+    libpcap
+    openssl
+  ];
 
   postPatch = ''
     # strip is not found when cross compiling with seemingly no way to point
@@ -42,6 +39,7 @@ stdenv.mkDerivation rec {
     # everything anyway so we remove it from the Makefiles
     for file in $(find -name Makefile.linux); do
       substituteInPlace "$file" --replace '$(INSTALL) -s' '$(INSTALL)'
+      substituteInPlace "$file" --replace '-m 4550' '-m 550'
     done
   '';
 
@@ -59,11 +57,16 @@ stdenv.mkDerivation rec {
     done
   '';
 
-  meta = with stdenv.lib; {
-    homepage = https://ppp.samba.org/;
-    description = "Point-to-point implementation for Linux and Solaris";
-    license = with licenses; [ bsdOriginal publicDomain gpl2 lgpl2 ];
+  meta = with lib; {
+    homepage = "https://ppp.samba.org";
+    description = "Point-to-point implementation to provide Internet connections over serial lines";
+    license = with licenses; [
+      bsdOriginal
+      publicDomain
+      gpl2
+      lgpl2
+    ];
     platforms = platforms.linux;
-    maintainers = [ maintainers.falsifian ];
+    maintainers = [ ];
   };
 }

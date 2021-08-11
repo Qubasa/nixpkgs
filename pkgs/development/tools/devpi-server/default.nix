@@ -1,18 +1,22 @@
-{ stdenv, python3Packages, nginx }:
+{ lib, fetchFromGitHub, python3Packages, nginx }:
 
 python3Packages.buildPythonApplication rec {
   pname = "devpi-server";
-  version = "5.1.0";
+  version = "6.0.0.dev0";
 
-  src = python3Packages.fetchPypi {
-    inherit pname version;
-    sha256 = "254fceee846532a5fec4e6bf52a59eb8f236efc657678a542b5200da4bb3abbc";
+  src = fetchFromGitHub {
+    owner = "devpi";
+    repo = "devpi";
+    rev = "68ee291ef29a93f6d921d4927aec8d13919b4a4c";
+    sha256 = "1ivd5dy9f2gq07w8n2gywa0n0d9wv8644l53ni9fz7i69jf8q2fm";
   };
+  sourceRoot = "source/server";
 
   propagatedBuildInputs = with python3Packages; [
     py
     appdirs
     devpi-common
+    defusedxml
     execnet
     itsdangerous
     repoze_lru
@@ -26,19 +30,35 @@ python3Packages.buildPythonApplication rec {
   checkInputs = with python3Packages; [
     beautifulsoup4
     nginx
-    pytest
+    pytestCheckHook
     pytest-flake8
-    pytestpep8
     webtest
-  ] ++ stdenv.lib.optionals isPy27 [ mock ];
+  ] ++ lib.optionals isPy27 [ mock ];
 
-  # test_genconfig.py needs devpi-server on PATH
-  checkPhase = ''
-    PATH=$PATH:$out/bin pytest ./test_devpi_server --slow -rfsxX
+  # root_passwd_hash tries to write to store
+  # TestMirrorIndexThings tries to write to /var through ngnix
+  # nginx tests try to write to /var
+  preCheck = ''
+    export PATH=$PATH:$out/bin
+    export HOME=$TMPDIR
   '';
+  pytestFlagsArray = [
+    "./test_devpi_server"
+    "--slow"
+    "-rfsxX"
+    "--ignore=test_devpi_server/test_nginx_replica.py"
+    "--ignore=test_devpi_server/test_streaming_nginx.py"
+    "--ignore=test_devpi_server/test_streaming_replica_nginx.py"
+  ];
+  disabledTests = [
+    "root_passwd_hash_option"
+    "TestMirrorIndexThings"
+  ];
 
-  meta = with stdenv.lib;{
-    homepage = http://doc.devpi.net;
+  __darwinAllowLocalNetworking = true;
+
+  meta = with lib;{
+    homepage = "http://doc.devpi.net";
     description = "Github-style pypi index server and packaging meta tool";
     license = licenses.mit;
     maintainers = with maintainers; [ makefu ];

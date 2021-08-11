@@ -1,16 +1,16 @@
-{ stdenv, lib, fetchurl, makeWrapper
-, autoreconfHook, pkgconfig, libxkbcommon, pango, which, git
+{ stdenv, lib, fetchurl
+, autoreconfHook, pkg-config, libxkbcommon, pango, which, git
 , cairo, libxcb, xcbutil, xcbutilwm, xcbutilxrm, libstartup_notification
 , bison, flex, librsvg, check
 }:
 
 stdenv.mkDerivation rec {
   pname = "rofi-unwrapped";
-  version = "1.5.4";
+  version = "1.6.1";
 
   src = fetchurl {
     url = "https://github.com/davatorium/rofi/releases/download/${version}/rofi-${version}.tar.gz";
-    sha256 = "1g1170zmh5v7slnm1sm2d08jgz6icikf8rm17apm1bjzzyw1lhk7";
+    sha256 = "04glljqbf9ckkc6x6fv4x1gqmy468n1agya0kd8rxdvz24wzf7cd";
   };
 
   preConfigure = ''
@@ -19,15 +19,10 @@ stdenv.mkDerivation rec {
     sed -i 's/~root/~nobody/g' test/helper-expand.c
   '';
 
-  nativeBuildInputs = [ autoreconfHook pkgconfig makeWrapper ];
+  nativeBuildInputs = [ autoreconfHook pkg-config ];
   buildInputs = [ libxkbcommon pango cairo git bison flex librsvg check
     libstartup_notification libxcb xcbutil xcbutilwm xcbutilxrm which
   ];
-
-  postInstall = ''
-    wrapProgram $out/bin/rofi-theme-selector \
-      --prefix XDG_DATA_DIRS : $out/share
-  '';
 
   doCheck = false;
 
@@ -35,7 +30,7 @@ stdenv.mkDerivation rec {
     description = "Window switcher, run dialog and dmenu replacement";
     homepage = "https://github.com/davatorium/rofi";
     license = licenses.mit;
-    maintainers = with maintainers; [ mbakke ma27 ];
+    maintainers = with maintainers; [ ];
     platforms = with platforms; linux;
   };
 }

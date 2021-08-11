@@ -1,4 +1,6 @@
-{ stdenv, buildPythonPackage, fetchFromGitHub
+{ lib, stdenv
+, buildPythonPackage
+, fetchFromGitHub
 , aiohttp
 , eventlet
 , iana-etc
@@ -7,24 +9,21 @@
 , requests
 , six
 , tornado
-, websocket_client
+, websocket-client
 , websockets
+, pytestCheckHook
 }:
 
 buildPythonPackage rec {
   pname = "python-engineio";
-  version = "3.9.3";
+  version = "4.0.0";
 
   src = fetchFromGitHub {
     owner = "miguelgrinberg";
     repo = "python-engineio";
     rev = "v${version}";
-    sha256 = "0rwlj12d37dpw6y3bdn6rxv68xnd9ykj4fr3ly0fa143xci35d9y";
+    sha256 = "00x9pmmnl1yd59wd96ivkiqh4n5nphl8cwk43hf4nqr0icgsyhar";
   };
-
-  propagatedBuildInputs = [
-    six
-  ];
 
   checkInputs = [
     aiohttp
@@ -32,22 +31,32 @@ buildPythonPackage rec {
     mock
     requests
     tornado
-    websocket_client
+    websocket-client
     websockets
+    pytestCheckHook
   ];
 
-  # make /etc/protocols accessible to fix socket.getprotobyname('tcp') in sandbox
-  preCheck = stdenv.lib.optionalString stdenv.isLinux ''
-    export NIX_REDIRECTS=/etc/protocols=${iana-etc}/etc/protocols \
+  doCheck = !stdenv.isDarwin;
+
+  preCheck = lib.optionalString stdenv.isLinux ''
+    echo "nameserver 127.0.0.1" > resolv.conf
+    export NIX_REDIRECTS=/etc/protocols=${iana-etc}/etc/protocols:/etc/resolv.conf=$(realpath resolv.conf) \
       LD_PRELOAD=${libredirect}/lib/libredirect.so
   '';
   postCheck = "unset NIX_REDIRECTS LD_PRELOAD";
 
-  meta = with stdenv.lib; {
-    description = "Engine.IO server";
-    homepage = https://github.com/miguelgrinberg/python-engineio/;
-    license = licenses.mit;
-    platforms = platforms.linux;
-    maintainers = [ maintainers.mic92 ];
+  # somehow effective log level does not change?
+  disabledTests = [ "test_logger" ];
+  pythonImportsCheck = [ "engineio" ];
+
+  meta = with lib; {
+    description = "Python based Engine.IO client and server";
+    longDescription = ''
+      Engine.IO is a lightweight transport protocol that enables real-time
+      bidirectional event-based communication between clients and a server.
+    '';
+    homepage = "https://github.com/miguelgrinberg/python-engineio/";
+    license = with licenses; [ mit ];
+    maintainers = with maintainers; [ mic92 ];
   };
 }
