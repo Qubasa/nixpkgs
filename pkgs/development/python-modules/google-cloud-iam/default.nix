@@ -12,11 +12,12 @@
 
 buildPythonPackage rec {
   pname = "google-cloud-iam";
-  version = "2.2.0";
+  version = "2.3.1";
+  disabled = pythonOlder "3.6";
 
   src = fetchPypi {
     inherit pname version;
-    sha256 = "sha256-H2S3jIVMBinyCQMBHW3vKMmBzlaCpSIQMfauHKoKH+o=";
+    sha256 = "166pcra1x8lisgf7cla4vq97qpc1hrpwnvlj1sza1igny2m59w5i";
   };
 
   propagatedBuildInputs = [ google-api-core libcst proto-plus ];

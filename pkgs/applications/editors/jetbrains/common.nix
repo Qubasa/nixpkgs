@@ -38,7 +38,7 @@ with stdenv; lib.makeOverridable mkDerivation rec {
 
   nativeBuildInputs = [ makeWrapper patchelf unzip ];
 
-  patchPhase = lib.optionalString (!stdenv.isDarwin) ''
+  postPatch = lib.optionalString (!stdenv.isDarwin) ''
       get_file_size() {
         local fname="$1"
         echo $(ls -l $fname | cut -d ' ' -f5)
@@ -52,7 +52,7 @@ with stdenv; lib.makeOverridable mkDerivation rec {
       }
 
       interpreter=$(echo ${stdenv.glibc.out}/lib/ld-linux*.so.2)
-      if [ "${stdenv.hostPlatform.system}" == "x86_64-linux" ]; then
+      if [[ "${stdenv.hostPlatform.system}" == "x86_64-linux" && -e bin/fsnotifier64 ]]; then
         target_size=$(get_file_size bin/fsnotifier64)
         patchelf --set-interpreter "$interpreter" bin/fsnotifier64
         munge_size_hack bin/fsnotifier64 $target_size
@@ -64,6 +64,8 @@ with stdenv; lib.makeOverridable mkDerivation rec {
   '';
 
   installPhase = ''
+    runHook preInstall
+
     mkdir -p $out/{bin,$name,share/pixmaps,libexec/${name}}
     cp -a . $out/$name
     ln -s $out/$name/bin/${loName}.png $out/share/pixmaps/${mainProgram}.png
@@ -86,6 +88,8 @@ with stdenv; lib.makeOverridable mkDerivation rec {
       --set ${hiName}_VM_OPTIONS ${vmoptsFile}
 
     ln -s "$item/share/applications" $out/share
+
+    runHook postInstall
   '';
 
 } // lib.optionalAttrs (!(meta.license.free or true)) {

@@ -2,7 +2,7 @@
 , replace, fetchurl, zip, unzip, jq, xdg-utils, writeText
 
 ## various stuff that can be plugged in
-, ffmpeg, xorg, alsa-lib, libpulseaudio, libcanberra-gtk2, libglvnd, libnotify
+, ffmpeg, xorg, alsa-lib, libpulseaudio, libcanberra-gtk3, libglvnd, libnotify, opensc
 , gnome/*.gnome-shell*/
 , browserpass, chrome-gnome-shell, uget-integrator, plasma5Packages, bukubrow, pipewire
 , tridactyl-native
@@ -44,13 +44,13 @@ let
     , nixExtensions ? null
     }:
 
-    assert forceWayland -> (browser ? gtk3); # Can only use the wayland backend if gtk3 is being used
-
     let
       ffmpegSupport = browser.ffmpegSupport or false;
       gssSupport = browser.gssSupport or false;
       alsaSupport = browser.alsaSupport or false;
       pipewireSupport = browser.pipewireSupport or false;
+      # PCSC-Lite daemon (services.pcscd) also must be enabled for firefox to access smartcards
+      smartcardSupport = cfg.smartcardSupport or false;
 
       nativeMessagingHosts =
         ([ ]
@@ -72,8 +72,9 @@ let
             (with xorg; [ stdenv.cc libX11 libXxf86dga libXxf86vm libXext libXt alsa-lib zlib ])
             ++ lib.optional (config.pulseaudio or true) libpulseaudio
             ++ lib.optional alsaSupport alsa-lib
+            ++ lib.optional smartcardSupport opensc
             ++ pkcs11Modules;
-      gtk_modules = [ libcanberra-gtk2 ];
+      gtk_modules = [ libcanberra-gtk3 ];
 
       #########################
       #                       #
@@ -121,6 +122,10 @@ let
               Install = lib.foldr (e: ret:
                 ret ++ [ "${e.outPath}/${e.extid}.xpi" ]
                 ) [] extensions;
+            };
+          } // lib.optionalAttrs smartcardSupport {
+            SecurityDevices = {
+              "OpenSC PKCS#11 Module" = "onepin-opensc-pkcs11.so";
             };
           }
         // extraPolicies;
@@ -183,7 +188,7 @@ let
       };
 
       nativeBuildInputs = [ makeWrapper lndir ];
-      buildInputs = lib.optional (browser ? gtk3) browser.gtk3;
+      buildInputs = [ browser.gtk3 ];
 
 
       buildCommand = lib.optionalString stdenv.isDarwin ''
@@ -266,13 +271,11 @@ let
             --set MOZ_SYSTEM_DIR "$out/lib/mozilla" \
             --set MOZ_LEGACY_PROFILES 1 \
             --set MOZ_ALLOW_DOWNGRADE 1 \
+            --prefix XDG_DATA_DIRS : "$GSETTINGS_SCHEMAS_PATH" \
+            --suffix XDG_DATA_DIRS : '${gnome.adwaita-icon-theme}/share' \
             ${lib.optionalString forceWayland ''
               --set MOZ_ENABLE_WAYLAND "1" \
-            ''}${lib.optionalString (browser ? gtk3)
-                ''--prefix XDG_DATA_DIRS : "$GSETTINGS_SCHEMAS_PATH" \
-                  --suffix XDG_DATA_DIRS : '${gnome.adwaita-icon-theme}/share'
-                ''
-            }
+            ''}
         #############################
         #                           #
         #   END EXTRA PREF CHANGES  #

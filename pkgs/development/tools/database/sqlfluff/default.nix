@@ -5,14 +5,14 @@
 
 python3.pkgs.buildPythonApplication rec {
   pname = "sqlfluff";
-  version = "0.6.0a2";
+  version = "0.6.1";
   disabled = python3.pythonOlder "3.6";
 
   src = fetchFromGitHub {
     owner = pname;
     repo = pname;
     rev = version;
-    sha256 = "13hzr0jialzi2nlvqwvff3w0h6jikqvcg0p2p4irwlisg4db8w7w";
+    sha256 = "0p5vjpfmy52hbq6mz8svvxrg9757cvgj0cbvaa0340309953ilvj";
   };
 
   propagatedBuildInputs = with python3.pkgs; [
@@ -21,7 +21,7 @@ python3.pkgs.buildPythonApplication rec {
     click
     colorama
     configparser
-    diff_cover
+    diff-cover
     jinja2
     oyaml
     pathspec

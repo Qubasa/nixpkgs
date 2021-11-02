@@ -19,7 +19,7 @@
 , parfive
 , pytest-astropy
 , pytest-mock
-, pytestcov
+, pytest-cov
 , python-dateutil
 , scikitimage
 , scipy
@@ -31,12 +31,12 @@
 
 buildPythonPackage rec {
   pname = "sunpy";
-  version = "3.0.0";
+  version = "3.0.1";
   disabled = pythonOlder "3.6";
 
   src = fetchPypi {
     inherit pname version;
-    sha256 = "sha256-N/DAvnO+S9E4tndEWpiG84P3FCFwxYNdGFxbxUVsTx8=";
+    sha256 = "sha256-WpqkCAwDYb6L+W4VTC/1auGVbblnNYwBxbk+tZbAiBw=";
   };
 
   nativeBuildInputs = [
@@ -68,18 +68,20 @@ buildPythonPackage rec {
   checkInputs = [
     hypothesis
     pytest-astropy
-    pytestcov
+    pytest-cov
     pytest-mock
   ];
 
   # darwin has write permission issues
   doCheck = stdenv.isLinux;
 
-  # ignore documentation tests
+  # ignore documentation tests and ignore tests with schema issues
   checkPhase = ''
     PY_IGNORE_IMPORTMISMATCH=1 HOME=$(mktemp -d) pytest sunpy -k 'not rst' \
     --deselect=sunpy/tests/tests/test_self_test.py::test_main_nonexisting_module \
-    --deselect=sunpy/tests/tests/test_self_test.py::test_main_stdlib_module
+    --deselect=sunpy/tests/tests/test_self_test.py::test_main_stdlib_module \
+    --ignore=sunpy/io/special/asdf/schemas/sunpy.org/sunpy/coordinates/frames/heliocentric-1.0.0.yaml \
+    --ignore=sunpy/io/special/asdf/schemas/sunpy.org/sunpy/coordinates/frames/helioprojective-1.0.0.yaml
   '';
 
   meta = with lib; {

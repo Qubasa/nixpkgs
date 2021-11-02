@@ -1,29 +1,29 @@
-{ stdenv, lib, buildGoModule, fetchFromGitHub, pcsclite, pkg-config, PCSC }:
+{ stdenv, lib, buildGoModule, fetchFromGitHub, pcsclite, pkg-config, PCSC, pivKeySupport ? true }:
 
 buildGoModule rec {
   pname = "cosign";
-  version = "0.5.0";
+  version = "1.0.1";
 
   src = fetchFromGitHub {
     owner = "sigstore";
     repo = pname;
     rev = "v${version}";
-    sha256 = "0g60qwdxk6pmkzj0zz9iyc8b0bzh751fj2yyz0vilkgcjq47xjk8";
+    sha256 = "sha256-j1C4OGyVY41bG+rRr6chbii94H4yeRCum52A8XcnP6g=";
   };
 
   buildInputs =
-    lib.optional stdenv.isLinux (lib.getDev pcsclite)
-    ++ lib.optionals stdenv.isDarwin [ PCSC ];
+    lib.optional (stdenv.isLinux && pivKeySupport) (lib.getDev pcsclite)
+    ++ lib.optionals (stdenv.isDarwin && pivKeySupport) [ PCSC ];
 
   nativeBuildInputs = [ pkg-config ];
 
-  vendorSha256 = "0agmnl5d00hm854sj1iipng36pf7hcc26iwcmpcr1rsmc7v522z4";
+  vendorSha256 = "sha256-9/KrgokCqSWqC4nOgA1e9H0sOx6O/ZFGFEPxiPEKoNI=";
 
-  subPackages = [ "cmd/cosign" ];
+  excludedPackages = "\\(copasetic\\)";
 
-  preBuild = ''
-    buildFlagsArray+=("-ldflags" "-s -w -X github.com/sigstore/cosign/cmd/cosign/cli.gitVersion=v${version}")
-  '';
+  tags = lib.optionals pivKeySupport [ "pivkey" ];
+
+  ldflags = [ "-s" "-w" "-X github.com/sigstore/cosign/cmd/cosign/cli.gitVersion=v${version}" ];
 
   meta = with lib; {
     homepage = "https://github.com/sigstore/cosign";

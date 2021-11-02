@@ -14,6 +14,9 @@
 # Kernel dependencies
 , kernel ? null
 , enablePython ? true
+
+# for determining the latest compatible linuxPackages
+, linuxPackages_5_13
 }:
 
 with lib;
@@ -28,6 +31,7 @@ let
     , extraPatches ? []
     , rev ? "zfs-${version}"
     , isUnstable ? false
+    , latestCompatibleLinuxPackages
     , kernelCompatible ? null }:
 
     stdenv.mkDerivation {
@@ -161,7 +165,7 @@ let
       outputs = [ "out" ] ++ optionals buildUser [ "dev" ];
 
       passthru = {
-        inherit enableMail;
+        inherit enableMail latestCompatibleLinuxPackages;
 
         tests =
           if isUnstable then [
@@ -195,22 +199,24 @@ in {
   # to be adapted
   zfsStable = common {
     # check the release notes for compatible kernels
-    kernelCompatible = kernel.kernelAtLeast "3.10" && kernel.kernelOlder "5.13";
+    kernelCompatible = kernel.kernelAtLeast "3.10" && kernel.kernelOlder "5.14";
+    latestCompatibleLinuxPackages = linuxPackages_5_13;
 
     # this package should point to the latest release.
-    version = "2.0.5";
+    version = "2.1.0";
 
-    sha256 = "0n0d8ab7ibxxa8znfsprh7jxwgighx5g291v7hi8272vfjrmk1mj";
+    sha256 = "sha256-YdY4SStXZGBBdAHdM3R/unco7ztxI3s0/buPSNSeh5o=";
   };
 
   zfsUnstable = common {
     # check the release notes for compatible kernels
-    kernelCompatible = kernel.kernelAtLeast "3.10" && kernel.kernelOlder "5.13";
+    kernelCompatible = kernel.kernelAtLeast "3.10" && kernel.kernelOlder "5.14";
+    latestCompatibleLinuxPackages = linuxPackages_5_13;
 
     # this package should point to a version / git revision compatible with the latest kernel release
-    version = "2.1.0-rc7";
+    version = "2.1.0";
 
-    sha256 = "11dvz8r5l7cbhbx2j02y6335i2vibh29dqrqk4kmw4lf87g1isni";
+    sha256 = "sha256-YdY4SStXZGBBdAHdM3R/unco7ztxI3s0/buPSNSeh5o=";
 
     isUnstable = true;
   };

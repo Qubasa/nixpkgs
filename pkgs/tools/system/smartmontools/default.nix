@@ -1,11 +1,8 @@
 { lib, stdenv, fetchurl, autoreconfHook
-, mailutils, enableMail ? true
-, inetutils
+, enableMail ? false, mailutils, inetutils
 , IOKit, ApplicationServices }:
 
 let
-  version = "7.2";
-
   dbrev = "5171";
   drivedbBranch = "RELEASE_7_2_DRIVEDB";
   driverdb = fetchurl {
@@ -16,22 +13,24 @@ let
 
 in stdenv.mkDerivation rec {
   pname = "smartmontools";
-  inherit version;
+  version = "7.2";
 
   src = fetchurl {
     url = "mirror://sourceforge/smartmontools/${pname}-${version}.tar.gz";
     sha256 = "1mlc25sd5rgj5xmzcllci47inmfdw7cp185fday6hc9rwqkqmnaw";
   };
 
-  patches = [ ./smartmontools.patch ];
+  patches = [
+    # fixes darwin build
+    ./smartmontools.patch
+  ];
   postPatch = "cp -v ${driverdb} drivedb.h";
 
-  configureFlags = [
-    "--with-scriptpath=${lib.makeBinPath ([ inetutils ] ++ lib.optional enableMail mailutils)}"
-  ];
+  configureFlags = lib.optional enableMail
+    "--with-scriptpath=${lib.makeBinPath [ inetutils mailutils ]}";
 
   nativeBuildInputs = [ autoreconfHook ];
-  buildInputs = [] ++ lib.optionals stdenv.isDarwin [IOKit ApplicationServices];
+  buildInputs = lib.optionals stdenv.isDarwin [ IOKit ApplicationServices ];
   enableParallelBuilding = true;
 
   meta = with lib; {
@@ -40,5 +39,6 @@ in stdenv.mkDerivation rec {
     license     = licenses.gpl2Plus;
     maintainers = with maintainers; [ peti Frostman ];
     platforms   = with platforms; linux ++ darwin;
+    mainProgram = "smartctl";
   };
 }

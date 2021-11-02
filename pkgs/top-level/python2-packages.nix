@@ -46,6 +46,8 @@ with self; with super; {
 
   cdecimal = callPackage ../development/python-modules/cdecimal { };
 
+  certifi = callPackage ../development/python-modules/certifi/python2.nix { };
+
   chardet = callPackage ../development/python-modules/chardet/2.nix { };
 
   cheetah = callPackage ../development/python-modules/cheetah { };
@@ -55,6 +57,8 @@ with self; with super; {
   cjson = callPackage ../development/python-modules/cjson { };
 
   cliapp = callPackage ../development/python-modules/cliapp { };
+
+  click = callPackage ../development/python-modules/click/7.nix { };
 
   closure-linter = callPackage ../development/python-modules/closure-linter { };
 
@@ -97,6 +101,8 @@ with self; with super; {
   fdint = callPackage ../development/python-modules/fdint { };
 
   feedparser = callPackage ../development/python-modules/feedparser/5.nix { };
+
+  flask = callPackage ../development/python-modules/flask/1.nix { };
 
   flask_ldap_login = callPackage ../development/python-modules/flask-ldap-login { };
 
@@ -188,9 +194,13 @@ with self; with super; {
 
   isort = callPackage ../development/python-modules/isort/4.nix { };
 
+  itsdangerous = callPackage ../development/python-modules/itsdangerous/1.nix { };
+
   jaraco_functools = callPackage ../development/python-modules/jaraco_functools/2.nix { };
 
   jaraco_stream = callPackage ../development/python-modules/jaraco_stream/2.nix { };
+
+  jinja2 = callPackage ../development/python-modules/jinja2/2.nix { };
 
   jsonrpclib = callPackage ../development/python-modules/jsonrpclib { };
 
@@ -256,6 +266,8 @@ with self; with super; {
 
   markdown = callPackage ../development/python-modules/markdown/3_1.nix { };
 
+  markupsafe = callPackage ../development/python-modules/markupsafe/1.nix { };
+
   matplotlib = callPackage ../development/python-modules/matplotlib/2.nix {
     stdenv = if stdenv.isDarwin then pkgs.clangStdenv else pkgs.stdenv;
     inherit (pkgs.darwin.apple_sdk.frameworks) Cocoa;
@@ -268,6 +280,8 @@ with self; with super; {
   meson = disabled super.meson;
 
   metaphone = callPackage ../development/python-modules/metaphone { };
+
+  mlt = disabled super.mlt;
 
   mock = callPackage ../development/python-modules/mock/2.nix { };
 
@@ -391,7 +405,7 @@ with self; with super; {
 
   progressbar231 = callPackage ../development/python-modules/progressbar231 { };
 
-  prompt_toolkit = callPackage ../development/python-modules/prompt_toolkit/1.nix { };
+  prompt-toolkit = callPackage ../development/python-modules/prompt-toolkit/1.nix { };
 
   pyamf = callPackage ../development/python-modules/pyamf { };
 
@@ -466,9 +480,8 @@ with self; with super; {
 
   pytest-mock = callPackage ../development/python-modules/pytest-mock/2.nix { };
 
-  pytestrunner = callPackage ../development/python-modules/pytestrunner/2.nix { };
+  pytest-runner = callPackage ../development/python-modules/pytest-runner/2.nix { };
 
-  pytest_xdist = self.pytest-xdist; # added 2021-01-04
   pytest-xdist = callPackage ../development/python-modules/pytest-xdist/1.nix { };
 
   python-otr = callPackage ../development/python-modules/python-otr { };
@@ -511,6 +524,9 @@ with self; with super; {
 
   ruamel-ordereddict = self.ruamel_ordereddict;
   ruamel_ordereddict = callPackage ../development/python-modules/ruamel_ordereddict { };
+
+  ruamel_yaml = self.ruamel-yaml;
+  ruamel-yaml = callPackage ../development/python-modules/ruamel_yaml/0.16.nix { };
 
   runsnakerun = callPackage ../development/python-modules/runsnakerun { };
 
@@ -625,6 +641,8 @@ with self; with super; {
   urllib3 = callPackage ../development/python-modules/urllib3/2.nix { };
 
   wptserve = callPackage ../development/python-modules/wptserve { };
+
+  werkzeug = callPackage ../development/python-modules/werkzeug/1.nix { };
 
   WSGIProxy = callPackage ../development/python-modules/wsgiproxy { };
 
