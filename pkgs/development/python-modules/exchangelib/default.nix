@@ -27,14 +27,14 @@
 
 buildPythonPackage rec {
   pname = "exchangelib";
-  version = "4.5.0";
+  version = "4.5.2";
   disabled = pythonOlder "3.6";
 
   src = fetchFromGitHub {
     owner = "ecederstrand";
     repo = pname;
     rev = "v${version}";
-    sha256 = "sha256-MtWcqsbKls9I7Oj0UlJzWtHsNfAxk4+ojSgK50ljEfs=";
+    sha256 = "1zz4p13ww9y5x0ifvcj652hgfbjqbnmr3snwrs0p315sc3y47ggm";
   };
 
   propagatedBuildInputs = [

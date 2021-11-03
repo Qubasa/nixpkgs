@@ -18,12 +18,12 @@
 
 buildPythonPackage rec {
   pname = "asyncssh";
-  version = "2.7.0";
+  version = "2.7.2";
   disabled = pythonOlder "3.6";
 
   src = fetchPypi {
     inherit pname version;
-    sha256 = "sha256-GFAT2OZ3R8PA8BtyQWuL14QX2h30jHH3baU8YH71QbY=";
+    sha256 = "96b09239c3cc134cfb66ae1138313fdb48cc390806f21f831dd44f8a1d8252a1";
   };
 
   propagatedBuildInputs = [
@@ -57,6 +57,11 @@ buildPythonPackage rec {
   disabledTestPaths = [
     # Disables windows specific test (specifically the GSSAPI wrapper for Windows)
     "tests/sspi_stub.py"
+  ];
+
+  disabledTests = [
+    # No PIN set
+    "TestSKAuthCTAP2"
   ];
 
   pythonImportsCheck = [ "asyncssh" ];

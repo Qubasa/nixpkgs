@@ -7,10 +7,10 @@ in
 rec {
   firefox = common rec {
     pname = "firefox";
-    ffversion = "91.0";
+    version = "94.0";
     src = fetchurl {
-      url = "mirror://mozilla/firefox/releases/${ffversion}/source/firefox-${ffversion}.source.tar.xz";
-      sha512 = "a02486a3996570e0cc815e92c98890bca1d27ce0018c2ee3d4bff9a6e54dbc8f5926fea8b5864f208e15389d631685b2add1e4e9e51146e40224d16d5c02f730";
+      url = "mirror://mozilla/firefox/releases/${version}/source/firefox-${version}.source.tar.xz";
+      sha512 = "5eb65450a0f1842d28d73235f3ef95fa1dbf8cf1467c354f13df51313bd227aaf5a48b741ee49b13378aaaf054bff52004c1dd5a274eddef4a3cf1b913ef7071";
     };
 
     meta = {
@@ -27,16 +27,15 @@ rec {
     tests = [ nixosTests.firefox ];
     updateScript = callPackage ./update.nix {
       attrPath = "firefox-unwrapped";
-      versionKey = "ffversion";
     };
   };
 
   firefox-esr-91 = common rec {
     pname = "firefox-esr";
-    ffversion = "91.0esr";
+    version = "91.3.0esr";
     src = fetchurl {
-      url = "mirror://mozilla/firefox/releases/${ffversion}/source/firefox-${ffversion}.source.tar.xz";
-      sha512 = "e518e1536094a1da44eb45b3b0f3adc1b5532f17da2dbcc994715419ec4fcec40574fdf633349a8e5de6382942f5706757a35f1b96b11de4754855b9cf7946ae";
+      url = "mirror://mozilla/firefox/releases/${version}/source/firefox-${version}.source.tar.xz";
+      sha512 = "7cf6efd165acc134bf576715580c103a2fc10ab928ede4c18f69908c62a04eb0f60affa8ceafd5883b393c31b85cae6821d0ae063c9e78117456d475947deaa9";
     };
 
     meta = {
@@ -53,33 +52,6 @@ rec {
     updateScript = callPackage ./update.nix {
       attrPath = "firefox-esr-91-unwrapped";
       versionSuffix = "esr";
-      versionKey = "ffversion";
-    };
-  };
-
-  firefox-esr-78 = common rec {
-    pname = "firefox-esr";
-    ffversion = "78.12.0esr";
-    src = fetchurl {
-      url = "mirror://mozilla/firefox/releases/${ffversion}/source/firefox-${ffversion}.source.tar.xz";
-      sha512 = "646eb803e0d0e541773e3111708c7eaa85e784e4bae6e4a77dcecdc617ee29e2e349c9ef16ae7e663311734dd7491aebd904359124dda62672dbc18bfb608f0a";
-    };
-
-    meta = {
-      description = "A web browser built from Firefox Extended Support Release source tree";
-      homepage = "http://www.mozilla.com/en-US/firefox/";
-      maintainers = with lib.maintainers; [ eelco hexa ];
-      platforms = lib.platforms.unix;
-      badPlatforms = lib.platforms.darwin;
-      broken = stdenv.buildPlatform.is32bit; # since Firefox 60, build on 32-bit platforms fails with "out of memory".
-                                             # not in `badPlatforms` because cross-compilation on 64-bit machine might work.
-      license = lib.licenses.mpl20;
-    };
-    tests = [ nixosTests.firefox-esr-78 ];
-    updateScript = callPackage ./update.nix {
-      attrPath = "firefox-esr-78-unwrapped";
-      versionSuffix = "esr";
-      versionKey = "ffversion";
     };
   };
 }

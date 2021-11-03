@@ -20,7 +20,7 @@ or use Mozilla's [Rust nightlies overlay](#using-the-rust-nightlies-overlay).
 Rust applications are packaged by using the `buildRustPackage` helper from `rustPlatform`:
 
 ```nix
-{ lib, rustPlatform }:
+{ lib, fetchFromGitHub, rustPlatform }:
 
 rustPlatform.buildRustPackage rec {
   pname = "ripgrep";
@@ -116,22 +116,44 @@ is updated after every change to `Cargo.lock`. Therefore,
 a `Cargo.lock` file using the `cargoLock` argument. For example:
 
 ```nix
-rustPlatform.buildRustPackage rec {
+rustPlatform.buildRustPackage {
   pname = "myproject";
   version = "1.0.0";
 
   cargoLock = {
     lockFile = ./Cargo.lock;
-  }
+  };
 
   # ...
 }
 ```
 
 This will retrieve the dependencies using fixed-output derivations from
-the specified lockfile. Note that setting `cargoLock.lockFile` doesn't
-add a `Cargo.lock` to your `src`, and a `Cargo.lock` is still required
-to build a rust package. A simple fix is to use:
+the specified lockfile.
+
+One caveat is that `Cargo.lock` cannot be patched in the `patchPhase`
+because it runs after the dependencies have already been fetched. If
+you need to patch or generate the lockfile you can alternatively set
+`cargoLock.lockFileContents` to a string of its contents:
+
+```nix
+rustPlatform.buildRustPackage {
+  pname = "myproject";
+  version = "1.0.0";
+
+  cargoLock = let
+    fixupLockFile = path: f (builtins.readFile path);
+  in {
+    lockFileContents = fixupLockFile ./Cargo.lock;
+  };
+
+  # ...
+}
+```
+
+Note that setting `cargoLock.lockFile` or `cargoLock.lockFileContents`
+doesn't add a `Cargo.lock` to your `src`, and a `Cargo.lock` is still
+required to build a rust package. A simple fix is to use:
 
 ```nix
 postPatch = ''
@@ -214,22 +236,6 @@ where they are known to differ. But there are ways to customize the argument:
    ```shell
    --target /nix/store/asdfasdfsadf-thumb-crazy.json # contains {"foo":"","bar":""}
    ```
-
-Finally, as an ad-hoc escape hatch, a computed target (string or JSON file
-path) can be passed directly to `buildRustPackage`:
-
-```nix
-pkgs.rustPlatform.buildRustPackage {
-  /* ... */
-  target = "x86_64-fortanix-unknown-sgx";
-}
-```
-
-This is useful to avoid rebuilding Rust tools, since they are actually target
-agnostic and don't need to be rebuilt. But in the future, we should always
-build the Rust tools and standard library crates separately so there is no
-reason not to take the `stdenv.hostPlatform.rustc`-modifying approach, and the
-ad-hoc escape hatch to `buildRustPackage` can be removed.
 
 Note that currently custom targets aren't compiled with `std`, so `cargo test`
 will fail. This can be ignored by adding `doCheck = false;` to your derivation.

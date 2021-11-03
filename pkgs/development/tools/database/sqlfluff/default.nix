@@ -5,14 +5,14 @@
 
 python3.pkgs.buildPythonApplication rec {
   pname = "sqlfluff";
-  version = "0.6.1";
+  version = "0.7.1";
   disabled = python3.pythonOlder "3.6";
 
   src = fetchFromGitHub {
     owner = pname;
     repo = pname;
     rev = version;
-    sha256 = "0p5vjpfmy52hbq6mz8svvxrg9757cvgj0cbvaa0340309953ilvj";
+    sha256 = "sha256-kNoUoelD4EiNWZlXvOrWNPX+wsLCwY3329rJf83l7Wg=";
   };
 
   propagatedBuildInputs = with python3.pkgs; [
@@ -28,10 +28,9 @@ python3.pkgs.buildPythonApplication rec {
     pytest
     tblib
     toml
+    typing-extensions
   ] ++ lib.optionals (pythonOlder "3.7") [
     dataclasses
-  ] ++ lib.optionals (pythonOlder "3.9") [
-    typing-extensions
   ];
 
   checkInputs = with python3.pkgs; [
@@ -40,10 +39,9 @@ python3.pkgs.buildPythonApplication rec {
   ];
 
   disabledTestPaths = [
-    # dbt is not available yet
-    "test/core/templaters/dbt_test.py"
     # Don't run the plugin related tests
     "test/core/plugin_test.py"
+    "plugins/sqlfluff-templater-dbt"
     "plugins/sqlfluff-plugin-example/test/rules/rule_test_cases_test.py"
   ];
 

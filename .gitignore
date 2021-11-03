@@ -7,6 +7,7 @@ pkgs/development/tools/analysis/talon/*.txt
 ,*
 .*.swp
 .*.swo
+.idea/
 result
 result-*
 /doc/NEWS.html

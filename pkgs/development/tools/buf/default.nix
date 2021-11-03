@@ -3,19 +3,21 @@
 , fetchFromGitHub
 , protobuf
 , git
+, testVersion
+, buf
 }:
 
 buildGoModule rec {
   pname = "buf";
-  version = "0.49.0";
+  version = "0.54.1";
 
   src = fetchFromGitHub {
     owner = "bufbuild";
     repo = pname;
     rev = "v${version}";
-    sha256 = "sha256-xP2UbcHwimN09IXrGp3zhBLL74l/8YKotqBNRTITF18=";
+    sha256 = "sha256-v8n1K2YrN8o4IPA2u6Sg5zsOM08nppg29vlU6ycMj9U=";
   };
-  vendorSha256 = "sha256-WgQSLe99CbOwJC8ewDcSq6PcBJdmiPRmvAonq8drQ1w=";
+  vendorSha256 = "sha256-WLQ8Bw/UgRVTFEKpDbv6VZkMHQm2tgxekH3J7Sd5vC8=";
 
   patches = [
     # Skip a test that requires networking to be available to work.
@@ -54,13 +56,7 @@ buildGoModule rec {
     runHook postInstall
   '';
 
-  doInstallCheck = true;
-  installCheckPhase = ''
-    runHook preInstallCheck
-    $out/bin/buf --help
-    $out/bin/buf --version 2>&1 | grep "${version}"
-    runHook postInstallCheck
-  '';
+  passthru.tests.version = testVersion { package = buf; };
 
   meta = with lib; {
     homepage = "https://buf.build";

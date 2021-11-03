@@ -16,11 +16,11 @@
 
 buildPythonPackage rec {
   pname = "tern";
-  version = "2.6.1";
+  version = "2.8.0";
 
   src = fetchPypi {
     inherit pname version;
-    sha256 = "749c18ef493ebe3ac28624b2b26c6e38f77de2afd6a6579d2c92393d8fbdbd46";
+    sha256 = "dd7d8ad929ffe951b1f7f86310b9d5ba749b4306132c3611ff1d5a2c4d79d2bd";
   };
 
   preBuild = ''

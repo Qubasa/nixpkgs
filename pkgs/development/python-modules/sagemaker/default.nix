@@ -16,11 +16,11 @@
 
 buildPythonPackage rec {
   pname = "sagemaker";
-  version = "2.46.0";
+  version = "2.63.0";
 
   src = fetchPypi {
     inherit pname version;
-    sha256 = "4f66f8c56b870e7a6f9a3882790a4074f2df26a0fe9605bc5d71e186db193525";
+    sha256 = "b4d793217181f4ff1d269aa22e44f82e21a060ec9723301e1ae5e7d9082c76c8";
   };
 
   pythonImportsCheck = [

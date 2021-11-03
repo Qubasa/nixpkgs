@@ -1,4 +1,4 @@
-{ fetchurl, fetchgit, lib, stdenv
+{ fetchurl, lib, stdenv
 , pkg-config, gnupg
 , xapian, gmime, talloc, zlib
 , doxygen, perl, texinfo
@@ -11,11 +11,11 @@
 
 stdenv.mkDerivation rec {
   pname = "notmuch";
-  version = "0.32.2";
+  version = "0.34";
 
   src = fetchurl {
     url = "https://notmuchmail.org/releases/notmuch-${version}.tar.xz";
-    sha256 = "1myylb19hj5nb1vriqng252vfjwwkgbi3gxj93pi2q1fzyw7w2lf";
+    sha256 = "1dk16xa9q7adp1jaswxvw4p92f4h5mg0zkrh3zv8gqxn88amisc3";
   };
 
   nativeBuildInputs = [
@@ -23,6 +23,7 @@ stdenv.mkDerivation rec {
     doxygen                   # (optional) api docs
     pythonPackages.sphinx     # (optional) documentation -> doc/INSTALL
     texinfo                   # (optional) documentation -> doc/INSTALL
+    pythonPackages.cffi
   ] ++ lib.optional withEmacs emacs;
 
   buildInputs = [
@@ -82,8 +83,6 @@ stdenv.mkDerivation rec {
   postInstall = lib.optionalString withEmacs ''
     moveToOutput bin/notmuch-emacs-mua $emacs
   '';
-
-  dontGzipMan = true; # already compressed
 
   passthru = {
     pythonSourceRoot = "notmuch-${version}/bindings/python";

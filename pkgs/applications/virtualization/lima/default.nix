@@ -8,16 +8,16 @@
 
 buildGoModule rec {
   pname = "lima";
-  version = "0.6.0";
+  version = "0.7.2";
 
   src = fetchFromGitHub {
     owner = "lima-vm";
     repo = pname;
     rev = "v${version}";
-    sha256 = "sha256-UwsAeU7Me2UN9pUWvqGgQ7XSNcrClXYOA+9F6yO2aqA=";
+    sha256 = "sha256-XJZg3uX++gU65bO1uqJblXXcVPzFXROCWFTn/gfkea0=";
   };
 
-  vendorSha256 = "sha256-vdqLdSXQ2ywZoG7ROQP9PLWUqhoOO7N5li+xjc2HtzM=";
+  vendorSha256 = "sha256-+fx/Iy78gmhxRjXPkHYdixpaMkOwEANUsZA+KSdQkWU=";
 
   nativeBuildInputs = [ makeWrapper installShellFiles ];
 
@@ -34,7 +34,9 @@ buildGoModule rec {
     wrapProgram $out/bin/limactl \
       --prefix PATH : ${lib.makeBinPath [ qemu ]}
     installShellCompletion --cmd limactl \
-      --bash <($out/bin/limactl completion bash)
+      --bash <($out/bin/limactl completion bash) \
+      --fish <($out/bin/limactl completion fish) \
+      --zsh <($out/bin/limactl completion zsh)
     runHook postInstall
   '';
 
@@ -50,4 +52,3 @@ buildGoModule rec {
     maintainers = with maintainers; [ anhduy ];
   };
 }
-

@@ -19,13 +19,13 @@
 
 stdenv.mkDerivation rec {
   pname = "river";
-  version = "unstable-2021-08-03";
+  version = "unstable-2021-11-01";
 
   src = fetchFromGitHub {
     owner = "ifreund";
     repo = pname;
-    rev = "2fc0875a3e17a0328d14d0c6323bd8022d5b15de";
-    sha256 = "sha256-Cs9RRubxy0DY6ILRZY36HtcoqBvzbN7NEfpREq1KBBQ=";
+    rev = "363fd3f6a466004eec157a40e51684e56992b857";
+    sha256 = "sha256-RzReUo1p2z4UQaO5n6PKQlEv0vTBGg+1Wq1UIYii0Mo=";
     fetchSubmodules = true;
   };
 

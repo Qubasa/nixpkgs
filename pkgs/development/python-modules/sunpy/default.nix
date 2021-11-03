@@ -17,9 +17,9 @@
 , numpy
 , pandas
 , parfive
+, pytestCheckHook
 , pytest-astropy
 , pytest-mock
-, pytest-cov
 , python-dateutil
 , scikitimage
 , scipy
@@ -31,12 +31,12 @@
 
 buildPythonPackage rec {
   pname = "sunpy";
-  version = "3.0.1";
+  version = "3.0.2";
   disabled = pythonOlder "3.6";
 
   src = fetchPypi {
     inherit pname version;
-    sha256 = "sha256-WpqkCAwDYb6L+W4VTC/1auGVbblnNYwBxbk+tZbAiBw=";
+    sha256 = "5dcd2c5cbf2f419da00abde00798d067b515c2f082ce63f4fbe1de47682c1c41";
   };
 
   nativeBuildInputs = [
@@ -67,22 +67,31 @@ buildPythonPackage rec {
 
   checkInputs = [
     hypothesis
+    pytestCheckHook
     pytest-astropy
-    pytest-cov
     pytest-mock
   ];
 
   # darwin has write permission issues
   doCheck = stdenv.isLinux;
 
-  # ignore documentation tests and ignore tests with schema issues
-  checkPhase = ''
-    PY_IGNORE_IMPORTMISMATCH=1 HOME=$(mktemp -d) pytest sunpy -k 'not rst' \
-    --deselect=sunpy/tests/tests/test_self_test.py::test_main_nonexisting_module \
-    --deselect=sunpy/tests/tests/test_self_test.py::test_main_stdlib_module \
-    --ignore=sunpy/io/special/asdf/schemas/sunpy.org/sunpy/coordinates/frames/heliocentric-1.0.0.yaml \
-    --ignore=sunpy/io/special/asdf/schemas/sunpy.org/sunpy/coordinates/frames/helioprojective-1.0.0.yaml
+  preCheck = ''
+    export HOME=$(mktemp -d)
   '';
+
+  disabledTests = [
+    "rst"
+  ];
+
+  disabledTestPaths = [
+    "sunpy/io/special/asdf/schemas/sunpy.org/sunpy/coordinates/frames/helioprojective-1.0.0.yaml"
+    "sunpy/io/special/asdf/schemas/sunpy.org/sunpy/coordinates/frames/heliocentric-1.0.0.yaml"
+  ];
+
+  pytestFlagsArray = [
+    "--deselect=sunpy/tests/tests/test_self_test.py::test_main_nonexisting_module"
+    "--deselect=sunpy/tests/tests/test_self_test.py::test_main_stdlib_module"
+  ];
 
   meta = with lib; {
     description = "SunPy: Python for Solar Physics";

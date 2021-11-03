@@ -10,11 +10,12 @@
 , llvmSharedForBuild
 , llvmSharedForHost
 , llvmSharedForTarget
+, llvmPackagesForBuild # Exposed through rustc for LTO in Firefox
 }:
 { stdenv, lib
 , buildPackages
 , newScope, callPackage
-, CoreFoundation, Security
+, CoreFoundation, Security, SystemConfiguration
 , pkgsBuildTarget, pkgsBuildBuild
 , makeRustPlatform
 }: rec {
@@ -38,8 +39,11 @@
       "armv5tel" = "armv5te";
       "riscv64" = "riscv64gc";
     }.${cpu.name} or cpu.name;
+    vendor_ = platform.rustc.platform.vendor or {
+      "w64" = "pc";
+    }.${vendor.name} or vendor.name;
   in platform.rustc.config
-    or "${cpu_}-${vendor.name}-${kernel.name}${lib.optionalString (abi.name != "unknown") "-${abi.name}"}";
+    or "${cpu_}-${vendor_}-${kernel.name}${lib.optionalString (abi.name != "unknown") "-${abi.name}"}";
 
   # Returns the name of the rust target if it is standard, or the json file
   # containing the custom target spec.
@@ -82,7 +86,7 @@
         version = rustcVersion;
         sha256 = rustcSha256;
         inherit enableRustcDev;
-        inherit llvmShared llvmSharedForBuild llvmSharedForHost llvmSharedForTarget;
+        inherit llvmShared llvmSharedForBuild llvmSharedForHost llvmSharedForTarget llvmPackagesForBuild;
 
         patches = rustcPatches;
 
@@ -101,7 +105,7 @@
         inherit CoreFoundation Security;
       };
       clippy = self.callPackage ./clippy.nix { inherit Security; };
-      rls = self.callPackage ./rls { inherit CoreFoundation Security; };
+      rls = self.callPackage ./rls { inherit CoreFoundation Security SystemConfiguration; };
     });
   };
 }

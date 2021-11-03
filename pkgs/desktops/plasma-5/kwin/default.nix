@@ -1,5 +1,5 @@
 {
-  mkDerivation, lib, fetchpatch,
+  mkDerivation, lib,
   extra-cmake-modules, kdoctools,
 
   epoxy, lcms2, libICE, libSM, libcap, libdrm, libinput, libxkbcommon, mesa,
