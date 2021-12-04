@@ -1,6 +1,6 @@
 { config
 , lib
-, buildEnv
+, fetchurl
 , callPackage
 , vscode-utils
 , asciidoctor
@@ -349,7 +349,7 @@ let
           downloadPage = "https://marketplace.visualstudio.com/items?itemName=CoenraadS.bracket-pair-colorizer";
           homepage = "https://github.com/CoenraadS/BracketPair";
           license = licenses.mit;
-          maintainers = with maintainers; [ superherointj ];
+          maintainers = with maintainers; [ ];
         };
         mktplcRef = {
           name = "bracket-pair-colorizer";
@@ -485,7 +485,7 @@ let
           downloadPage = "https://marketplace.visualstudio.com/items?itemName=donjayamanne.githistory";
           homepage = "https://github.com/DonJayamanne/gitHistoryVSCode/";
           license = licenses.mit;
-          maintainers = with maintainers; [ superherointj ];
+          maintainers = with maintainers; [ ];
         };
         mktplcRef = {
           name = "githistory";
@@ -612,7 +612,7 @@ let
           downloadPage = "https://marketplace.visualstudio.com/items?itemName=esbenp.prettier-vscode";
           homepage = "https://github.com/prettier/prettier-vscode";
           license = licenses.mit;
-          maintainers = with maintainers; [ superherointj ];
+          maintainers = with maintainers; [ ];
         };
         mktplcRef = {
           name = "prettier-vscode";
@@ -667,7 +667,7 @@ let
           downloadPage = "https://marketplace.visualstudio.com/items?itemName=file-icons.file-icons";
           homepage = "https://github.com/file-icons/vscode";
           license = licenses.mit;
-          maintainers = with maintainers; [ superherointj ];
+          maintainers = with maintainers; [ ];
         };
         mktplcRef = {
           name = "file-icons";
@@ -752,7 +752,7 @@ let
           downloadPage = "https://marketplace.visualstudio.com/items?itemName=freebroccolo.reasonml";
           homepage = "https://github.com/reasonml-editor/vscode-reasonml";
           license = licenses.asl20;
-          maintainers = with maintainers; [ superherointj ];
+          maintainers = with maintainers; [ ];
         };
         mktplcRef = {
           name = "reasonml";
@@ -866,8 +866,8 @@ let
         mktplcRef = {
           name = "haskell";
           publisher = "haskell";
-          version = "1.6.1";
-          sha256 = "1l6nrbqkq1p62dkmzs4sy0rxbid3qa1104s3fd9fzkmc1sldzgsn";
+          version = "1.7.1";
+          sha256 = "sha256-UWdj2J5z5cTUsfvlU++LRil0tEiAH2AFb1AwBsfMvoY=";
         };
         meta = with lib; {
           license = licenses.mit;
@@ -921,8 +921,8 @@ let
         mktplcRef = {
           name = "Ionide-fsharp";
           publisher = "Ionide";
-          version = "5.5.5";
-          sha256 = "xrBNiIbZVJ0sGUk/4PudD8kSyX94QkrFtf7Ho/sB0Vs=";
+          version = "5.10.1";
+          sha256 = "sha256-LkWWgyh4khPyUgekVeO8ZzPK+1gTrS8d9Yz6/kHomr8=";
         };
         meta = with lib; {
           changelog = "https://marketplace.visualstudio.com/items/Ionide.Ionide-fsharp/changelog";
@@ -971,19 +971,19 @@ let
       };
 
       jnoortheen.nix-ide = buildVscodeMarketplaceExtension {
+        mktplcRef = {
+          name = "nix-ide";
+          publisher = "jnoortheen";
+          version = "0.1.18";
+          sha256 = "sha256-dmmx/u+hRQfY/MCIaSdcVtbYnf5cLCDUwr75heQxcuw=";
+        };
         meta = with lib; {
           changelog = "https://marketplace.visualstudio.com/items/jnoortheen.nix-ide/changelog";
           description = "Nix language support with formatting and error report";
           downloadPage = "https://marketplace.visualstudio.com/items?itemName=jnoortheen.nix-ide";
           homepage = "https://github.com/jnoortheen/vscode-nix-ide";
           license = licenses.mit;
-          maintainers = with maintainers; [ superherointj ];
-        };
-        mktplcRef = {
-          name = "nix-ide";
-          publisher = "jnoortheen";
-          version = "0.1.16";
-          sha256 = "04ky1mzyjjr1mrwv3sxz4mgjcq5ylh6n01lvhb19h3fmwafkdxbp";
+          maintainers = with maintainers; [ SuperSandro2000 ];
         };
       };
 
@@ -1275,7 +1275,7 @@ let
           downloadPage = "https://marketplace.visualstudio.com/items?itemName=ocamllabs.ocaml-platform";
           homepage = "https://github.com/ocamllabs/vscode-ocaml-platform";
           license = licenses.isc;
-          maintainers = with maintainers; [ superherointj ];
+          maintainers = with maintainers; [ ];
         };
         mktplcRef = {
           name = "ocaml-platform";
@@ -1435,6 +1435,18 @@ let
         };
       };
 
+      stkb.rewrap = buildVscodeMarketplaceExtension {
+        mktplcRef = {
+          publisher = "stkb";
+          name = "rewrap";
+          version = "1.14.0";
+          sha256 = "qRwKX36a1aLzE1tqaOkH7JfE//pvKdPZ07zasPF3Dl4=";
+        };
+        meta = with lib; {
+          license = licenses.asl20;
+        };
+      };
+
       streetsidesoftware.code-spell-checker = buildVscodeMarketplaceExtension {
         mktplcRef = {
           name = "code-spell-checker";
@@ -1504,8 +1516,8 @@ let
         mktplcRef = {
           name = "even-better-toml";
           publisher = "tamasfe";
-          version = "0.9.3";
-          sha256 = "16x2y58hkankazpwm93j8lqdn3mala7iayck548kki9zx4qrhhck";
+          version = "0.14.2";
+          sha256 = "17djwa2bnjfga21nvyz8wwmgnjllr4a7nvrsqvzm02hzlpwaskcl";
         };
         meta = {
           license = lib.licenses.mit;
@@ -1596,6 +1608,34 @@ let
       };
 
       vadimcn.vscode-lldb = callPackage ./vscode-lldb { };
+
+      valentjn.vscode-ltex = vscode-utils.buildVscodeMarketplaceExtension rec {
+        mktplcRef = {
+          name = "vscode-ltex";
+          publisher = "valentjn";
+          version = "13.0.0";
+        };
+
+        vsix = fetchurl {
+           name = "${mktplcRef.publisher}-${mktplcRef.name}.zip";
+           url = "https://github.com/valentjn/vscode-ltex/releases/download/${mktplcRef.version}/vscode-ltex-${mktplcRef.version}-offline-linux-x64.vsix";
+           sha256 = "6db4846dee4e394f7bcfb7e29520d45d6bc1534482ba73cf40cd5edf3f6ec266";
+        };
+
+        nativeBuildInputs = [ jq moreutils ];
+
+        buildInputs = [ jdk ];
+
+        postInstall = ''
+          cd "$out/$installPrefix"
+          jq '.contributes.configuration.properties."ltex.java.path".default = "${jdk}"' package.json | sponge package.json
+        '';
+
+        meta = with lib; {
+          license = licenses.mpl20;
+          maintainers = [ maintainers._0xbe7a ];
+        };
+      };
 
       viktorqvarfordt.vscode-pitch-black-theme = buildVscodeMarketplaceExtension {
         mktplcRef = {

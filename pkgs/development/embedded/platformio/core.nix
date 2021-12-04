@@ -19,6 +19,27 @@ let
         };
       });
 
+      click = super.click.overridePythonAttrs (oldAttrs: rec {
+        version = "8.0.3";
+        src = fetchFromGitHub {
+          owner = "pallets";
+          repo = "click";
+          rev = version;
+          sha256 = "0pxvxgfhqjgsjbgfnilqjki1l24r0rdfd98cl77i71yqdd2f497g";
+        };
+      });
+
+      starlette = super.starlette.overridePythonAttrs (oldAttrs: rec {
+        version = "0.17.0";
+        src = fetchFromGitHub {
+          owner = "encode";
+          repo = "starlette";
+          rev = version;
+          sha256 = "1g76qpvqzivmwll5ir4bf45jx5kilnkadvy6b7qjisvr402i3qmw";
+        };
+        disabledTestPaths = [];
+      });
+
       uvicorn = super.uvicorn.overridePythonAttrs (oldAttrs: rec {
         version = "0.15.0";
         src = fetchFromGitHub {
@@ -26,6 +47,16 @@ let
           repo = "uvicorn";
           rev = version;
           sha256 = "074smp3448wcazlhc7sb8r54l4kfavr6yks3w5x60zl1qpijf52r";
+        };
+      });
+
+      zeroconf = super.zeroconf.overridePythonAttrs (oldAttrs: rec {
+        version = "0.36.13";
+        src = fetchFromGitHub {
+          owner = "jstasiak";
+          repo = "python-zeroconf";
+          rev = version;
+          sha256 = "aYNb67ESyz2Q2CKLhG+/Z8Xtt0Js8uf+xrVSEpY0X8c=";
         };
       });
     };

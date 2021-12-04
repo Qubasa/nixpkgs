@@ -4,6 +4,7 @@ from queue import Queue, Empty
 from typing import Tuple, Any, Callable, Dict, Iterator, Optional, List, Iterable
 from xml.sax.saxutils import XMLGenerator
 from colorama import Style
+from pathlib import Path
 import queue
 import io
 import threading
@@ -11,7 +12,6 @@ import argparse
 import base64
 import codecs
 import os
-import pathlib
 import ptpython.repl
 import pty
 import re
@@ -171,7 +171,7 @@ class Logger:
         yield
         self.drain_log_queue()
         toc = time.time()
-        self.log("({:.2f} seconds)".format(toc - tic))
+        self.log("(finished: {}, in {:.2f} seconds)".format(message, toc - tic))
 
         self.xml.endElement("nest")
 
@@ -239,8 +239,8 @@ class StartCommand:
 
     def cmd(
         self,
-        monitor_socket_path: pathlib.Path,
-        shell_socket_path: pathlib.Path,
+        monitor_socket_path: Path,
+        shell_socket_path: Path,
         allow_reboot: bool = False,  # TODO: unused, legacy?
     ) -> str:
         display_opts = ""
@@ -272,8 +272,8 @@ class StartCommand:
 
     @staticmethod
     def build_environment(
-        state_dir: pathlib.Path,
-        shared_dir: pathlib.Path,
+        state_dir: Path,
+        shared_dir: Path,
     ) -> dict:
         # We make a copy to not update the current environment
         env = dict(os.environ)
@@ -288,10 +288,10 @@ class StartCommand:
 
     def run(
         self,
-        state_dir: pathlib.Path,
-        shared_dir: pathlib.Path,
-        monitor_socket_path: pathlib.Path,
-        shell_socket_path: pathlib.Path,
+        state_dir: Path,
+        shared_dir: Path,
+        monitor_socket_path: Path,
+        shell_socket_path: Path,
     ) -> subprocess.Popen:
         return subprocess.Popen(
             self.cmd(monitor_socket_path, shell_socket_path),
@@ -334,7 +334,7 @@ class LegacyStartCommand(StartCommand):
         self,
         netBackendArgs: Optional[str] = None,
         netFrontendArgs: Optional[str] = None,
-        hda: Optional[Tuple[pathlib.Path, str]] = None,
+        hda: Optional[Tuple[Path, str]] = None,
         cdrom: Optional[str] = None,
         usb: Optional[str] = None,
         bios: Optional[str] = None,
@@ -394,11 +394,11 @@ class Machine:
     the machine lifecycle with the help of a start script / command."""
 
     name: str
-    tmp_dir: pathlib.Path
-    shared_dir: pathlib.Path
-    state_dir: pathlib.Path
-    monitor_path: pathlib.Path
-    shell_path: pathlib.Path
+    tmp_dir: Path
+    shared_dir: Path
+    state_dir: Path
+    monitor_path: Path
+    shell_path: Path
 
     start_command: StartCommand
     keep_vm_state: bool
@@ -421,7 +421,7 @@ class Machine:
 
     def __init__(
         self,
-        tmp_dir: pathlib.Path,
+        tmp_dir: Path,
         start_command: StartCommand,
         name: str = "machine",
         keep_vm_state: bool = False,
@@ -463,7 +463,7 @@ class Machine:
         hda = None
         if args.get("hda"):
             hda_arg: str = args.get("hda", "")
-            hda_arg_path: pathlib.Path = pathlib.Path(hda_arg)
+            hda_arg_path: Path = Path(hda_arg)
             hda = (hda_arg_path, args.get("hdaInterface", ""))
         return LegacyStartCommand(
             netBackendArgs=args.get("netBackendArgs"),
@@ -490,23 +490,24 @@ class Machine:
         return rootlog.nested(msg, my_attrs)
 
     def wait_for_monitor_prompt(self) -> str:
-        assert self.monitor is not None
-        answer = ""
-        while True:
-            undecoded_answer = self.monitor.recv(1024)
-            if not undecoded_answer:
-                break
-            answer += undecoded_answer.decode()
-            if answer.endswith("(qemu) "):
-                break
-        return answer
+        with self.nested("waiting for monitor prompt"):
+            assert self.monitor is not None
+            answer = ""
+            while True:
+                undecoded_answer = self.monitor.recv(1024)
+                if not undecoded_answer:
+                    break
+                answer += undecoded_answer.decode()
+                if answer.endswith("(qemu) "):
+                    break
+            return answer
 
     def send_monitor_command(self, command: str) -> str:
-        message = ("{}\n".format(command)).encode()
-        self.log("sending monitor command: {}".format(command))
-        assert self.monitor is not None
-        self.monitor.send(message)
-        return self.wait_for_monitor_prompt()
+        with self.nested("sending monitor command: {}".format(command)):
+            message = ("{}\n".format(command)).encode()
+            assert self.monitor is not None
+            self.monitor.send(message)
+            return self.wait_for_monitor_prompt()
 
     def wait_for_unit(self, unit: str, user: Optional[str] = None) -> None:
         """Wait for a systemd unit to get into "active" state.
@@ -533,7 +534,12 @@ class Machine:
 
             return state == "active"
 
-        retry(check_active)
+        with self.nested(
+            "waiting for unit {}{}".format(
+                unit, f" with user {user}" if user is not None else ""
+            )
+        ):
+            retry(check_active)
 
     def get_unit_info(self, unit: str, user: Optional[str] = None) -> Dict[str, str]:
         status, lines = self.systemctl('--no-pager show "{}"'.format(unit), user)
@@ -597,8 +603,13 @@ class Machine:
                 break
         return "".join(output_buffer)
 
-    def execute(self, command: str, check_return: bool = True) -> Tuple[int, str]:
+    def execute(
+        self, command: str, check_return: bool = True, timeout: Optional[int] = 900
+    ) -> Tuple[int, str]:
         self.connect()
+
+        if timeout is not None:
+            command = "timeout {} sh -c {}".format(timeout, shlex.quote(command))
 
         out_command = f"( set -euo pipefail; {command} ) | (base64 --wrap 0; echo)\n"
         assert self.shell
@@ -629,12 +640,12 @@ class Machine:
             pass_fds=[self.shell.fileno()],
         )
 
-    def succeed(self, *commands: str) -> str:
+    def succeed(self, *commands: str, timeout: Optional[int] = None) -> str:
         """Execute each command and check that it succeeds."""
         output = ""
         for command in commands:
             with self.nested("must succeed: {}".format(command)):
-                (status, out) = self.execute(command)
+                (status, out) = self.execute(command, timeout=timeout)
                 if status != 0:
                     self.log("output: {}".format(out))
                     raise Exception(
@@ -643,12 +654,12 @@ class Machine:
                 output += out
         return output
 
-    def fail(self, *commands: str) -> str:
+    def fail(self, *commands: str, timeout: Optional[int] = None) -> str:
         """Execute each command and check that it fails."""
         output = ""
         for command in commands:
             with self.nested("must fail: {}".format(command)):
-                (status, out) = self.execute(command)
+                (status, out) = self.execute(command, timeout=timeout)
                 if status == 0:
                     raise Exception(
                         "command `{}` unexpectedly succeeded".format(command)
@@ -664,14 +675,14 @@ class Machine:
 
         def check_success(_: Any) -> bool:
             nonlocal output
-            status, output = self.execute(command)
+            status, output = self.execute(command, timeout=timeout)
             return status == 0
 
         with self.nested("waiting for success: {}".format(command)):
             retry(check_success, timeout)
             return output
 
-    def wait_until_fails(self, command: str) -> str:
+    def wait_until_fails(self, command: str, timeout: int = 900) -> str:
         """Wait until a command returns failure.
         Throws an exception on timeout.
         """
@@ -679,7 +690,7 @@ class Machine:
 
         def check_failure(_: Any) -> bool:
             nonlocal output
-            status, output = self.execute(command)
+            status, output = self.execute(command, timeout=timeout)
             return status != 0
 
         with self.nested("waiting for failure: {}".format(command)):
@@ -752,7 +763,8 @@ class Machine:
             status, _ = self.execute("nc -z localhost {}".format(port))
             return status != 0
 
-        retry(port_is_closed)
+        with self.nested("waiting for TCP port {} to be closed"):
+            retry(port_is_closed)
 
     def start_job(self, jobname: str, user: Optional[str] = None) -> Tuple[int, str]:
         return self.systemctl("start {}".format(jobname), user)
@@ -814,12 +826,12 @@ class Machine:
         """Copy a file from the host into the guest via the `shared_dir` shared
         among all the VMs (using a temporary directory).
         """
-        host_src = pathlib.Path(source)
-        vm_target = pathlib.Path(target)
+        host_src = Path(source)
+        vm_target = Path(target)
         with tempfile.TemporaryDirectory(dir=self.shared_dir) as shared_td:
-            shared_temp = pathlib.Path(shared_td)
+            shared_temp = Path(shared_td)
             host_intermediate = shared_temp / host_src.name
-            vm_shared_temp = pathlib.Path("/tmp/shared") / shared_temp.name
+            vm_shared_temp = Path("/tmp/shared") / shared_temp.name
             vm_intermediate = vm_shared_temp / host_src.name
 
             self.succeed(make_command(["mkdir", "-p", vm_shared_temp]))
@@ -836,11 +848,11 @@ class Machine:
         all the VMs (using a temporary directory).
         """
         # Compute the source, target, and intermediate shared file names
-        out_dir = pathlib.Path(os.environ.get("out", os.getcwd()))
-        vm_src = pathlib.Path(source)
+        out_dir = Path(os.environ.get("out", os.getcwd()))
+        vm_src = Path(source)
         with tempfile.TemporaryDirectory(dir=self.shared_dir) as shared_td:
-            shared_temp = pathlib.Path(shared_td)
-            vm_shared_temp = pathlib.Path("/tmp/shared") / shared_temp.name
+            shared_temp = Path(shared_td)
+            vm_shared_temp = Path("/tmp/shared") / shared_temp.name
             vm_intermediate = vm_shared_temp / vm_src.name
             intermediate = shared_temp / vm_src.name
             # Copy the file to the shared directory inside VM
@@ -886,24 +898,25 @@ class Machine:
             retry(screen_matches)
 
     def wait_for_console_text(self, regex: str) -> None:
-        self.log("waiting for {} to appear on console".format(regex))
-        # Buffer the console output, this is needed
-        # to match multiline regexes.
-        console = io.StringIO()
-        while True:
-            try:
-                console.write(self.last_lines.get())
-            except queue.Empty:
-                self.sleep(1)
-                continue
-            console.seek(0)
-            matches = re.search(regex, console.read())
-            if matches is not None:
-                return
+        with self.nested("waiting for {} to appear on console".format(regex)):
+            # Buffer the console output, this is needed
+            # to match multiline regexes.
+            console = io.StringIO()
+            while True:
+                try:
+                    console.write(self.last_lines.get())
+                except queue.Empty:
+                    self.sleep(1)
+                    continue
+                console.seek(0)
+                matches = re.search(regex, console.read())
+                if matches is not None:
+                    return
 
     def send_key(self, key: str) -> None:
         key = CHAR_TO_KEY.get(key, key)
         self.send_monitor_command("sendkey {}".format(key))
+        time.sleep(0.01)
 
     def start(self) -> None:
         if self.booted:
@@ -911,12 +924,12 @@ class Machine:
 
         self.log("starting vm")
 
-        def clear(path: pathlib.Path) -> pathlib.Path:
+        def clear(path: Path) -> Path:
             if path.exists():
                 path.unlink()
             return path
 
-        def create_socket(path: pathlib.Path) -> socket.socket:
+        def create_socket(path: Path) -> socket.socket:
             s = socket.socket(family=socket.AF_UNIX, type=socket.SOCK_STREAM)
             s.bind(str(path))
             s.listen(1)
@@ -1014,7 +1027,7 @@ class Machine:
                 )
             return any(pattern.search(name) for name in names)
 
-        with self.nested("Waiting for a window to appear"):
+        with self.nested("waiting for a window to appear"):
             retry(window_is_visible)
 
     def sleep(self, secs: int) -> None:
@@ -1061,7 +1074,7 @@ class VLan:
     """
 
     nr: int
-    socket_dir: pathlib.Path
+    socket_dir: Path
 
     process: subprocess.Popen
     pid: int
@@ -1070,7 +1083,7 @@ class VLan:
     def __repr__(self) -> str:
         return f"<Vlan Nr. {self.nr}>"
 
-    def __init__(self, nr: int, tmp_dir: pathlib.Path):
+    def __init__(self, nr: int, tmp_dir: Path):
         self.nr = nr
         self.socket_dir = tmp_dir / f"vde{self.nr}.ctl"
 
@@ -1123,7 +1136,7 @@ class Driver:
     ):
         self.tests = tests
 
-        tmp_dir = pathlib.Path(os.environ.get("TMPDIR", tempfile.gettempdir()))
+        tmp_dir = Path(os.environ.get("TMPDIR", tempfile.gettempdir()))
         tmp_dir.mkdir(mode=0o700, exist_ok=True)
 
         with rootlog.nested("start all VLans"):
@@ -1183,9 +1196,11 @@ class Driver:
             serial_stdout_on=self.serial_stdout_on,
             Machine=Machine,  # for typing
         )
-        machine_symbols = {
-            m.name: self.machines[idx] for idx, m in enumerate(self.machines)
-        }
+        machine_symbols = {m.name: m for m in self.machines}
+        # If there's exactly one machine, make it available under the name
+        # "machine", even if it's not called that.
+        if len(self.machines) == 1:
+            (machine_symbols["machine"],) = self.machines
         vlan_symbols = {
             f"vlan{v.nr}": self.vlans[idx] for idx, v in enumerate(self.vlans)
         }
@@ -1230,7 +1245,7 @@ class Driver:
             "Using legacy create_machine(), please instantiate the"
             "Machine class directly, instead"
         )
-        tmp_dir = pathlib.Path(os.environ.get("TMPDIR", tempfile.gettempdir()))
+        tmp_dir = Path(os.environ.get("TMPDIR", tempfile.gettempdir()))
         tmp_dir.mkdir(mode=0o700, exist_ok=True)
 
         if args.get("startCommand"):
@@ -1316,7 +1331,7 @@ if __name__ == "__main__":
         action=EnvDefault,
         envvar="testScript",
         help="the test script to run",
-        type=pathlib.Path,
+        type=Path,
     )
 
     args = arg_parser.parse_args()

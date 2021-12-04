@@ -3501,10 +3501,10 @@ let
 
   CompressRawBzip2 = buildPerlPackage {
     pname = "Compress-Raw-Bzip2";
-    version = "2.096";
+    version = "2.101";
     src = fetchurl {
-      url = "mirror://cpan/authors/id/P/PM/PMQS/Compress-Raw-Bzip2-2.096.tar.gz";
-      sha256 = "1glcjnbqksaviwyrprh9i4dybsb12kzfy0bx932l0xya9riyfr55";
+      url = "mirror://cpan/authors/id/P/PM/PMQS/Compress-Raw-Bzip2-2.101.tar.gz";
+      sha256 = "1n5q01akpsw1skn59c3nivwjfqcn00wzdj8gx4q0wac8sd7i76qc";
     };
 
     # Don't build a private copy of bzip2.
@@ -3540,11 +3540,11 @@ let
 
   CompressRawZlib = buildPerlPackage {
     pname = "Compress-Raw-Zlib";
-    version = "2.096";
+    version = "2.101";
 
     src = fetchurl {
-      url = "mirror://cpan/authors/id/P/PM/PMQS/Compress-Raw-Zlib-2.096.tar.gz";
-      sha256 = "04jrqvqsa2c655idw7skv5rhb9vx9997h4n9if5p99srq4hblk6d";
+      url = "mirror://cpan/authors/id/P/PM/PMQS/Compress-Raw-Zlib-2.101.tar.gz";
+      sha256 = "1cmb39dw928jssa3fzk4pxb7sw8q1zyx3yikgq01nz17x0ara6wx";
     };
 
     preConfigure = ''
@@ -5804,6 +5804,20 @@ let
     };
   };
 
+  DateTimeFormatRFC3339 = buildPerlPackage rec {
+    pname = "DateTime-Format-RFC3339";
+    version = "1.2.0";
+    src = fetchurl {
+      url = "mirror://cpan/authors/id/I/IK/IKEGAMI/DateTime-Format-RFC3339-v${version}.tar.gz";
+      sha256 = "1xqdbbiksy6kapc3mv3ayjahmxxlzmb5x7rad4by1iii9hif2vhk";
+    };
+    propagatedBuildInputs = [ DateTime ];
+    meta = {
+      description = "Parse and format RFC3339 datetime strings";
+      license = lib.licenses.cc0;
+    };
+  };
+
   DateTimeSet = buildPerlModule {
     pname = "DateTime-Set";
     version = "0.3900";
@@ -6873,6 +6887,10 @@ let
     };
     buildInputs = [ CPANMetaCheck TestDeep TestFailWarnings TestFatal TestFileShareDir ];
     propagatedBuildInputs = [ AppCmd CPANUploader ConfigMVPReaderINI DateTime FileCopyRecursive FileFindRule FileShareDirInstall Filepushd LogDispatchouli MooseXLazyRequire MooseXSetOnce MooseXTypesPerl PathTiny PerlPrereqScanner SoftwareLicense TermEncoding TermUI YAMLTiny ];
+    nativeBuildInputs = lib.optional stdenv.isDarwin shortenPerlShebang;
+    postInstall = lib.optionalString stdenv.isDarwin ''
+      shortenPerlShebang $out/bin/dzil
+    '';
     meta = {
       homepage = "http://dzil.org/";
       description = "Distribution builder; installer not included!";
@@ -8032,6 +8050,11 @@ let
     };
     nativeBuildInputs = [ buildPackages.pkg-config ];
     propagatedBuildInputs = [ pkgs.pkg-config ];
+    postPatch = ''
+      # no pkg-config binary when cross-compiling so the check fails
+      substituteInPlace Makefile.PL \
+        --replace "pkg-config" "$PKG_CONFIG"
+    '';
     doCheck = false; # expects test_glib-2.0.pc in PKG_CONFIG_PATH
     meta = {
       homepage = "http://gtk2-perl.sourceforge.net";
@@ -9708,10 +9731,10 @@ let
 
   Gtk3ImageView = buildPerlPackage rec {
     pname = "Gtk3-ImageView";
-    version = "9";
+    version = "10";
     src = fetchurl {
       url = "mirror://cpan/authors/id/A/AS/ASOKOLOV/Gtk3-ImageView-${version}.tar.gz";
-      sha256 = "sha256-0dxe0p1UQglq+xok7g4l2clJ9WqOHxCeAzWD65E0H9w=";
+      sha256 = "sha256-vHfnBgaeZPK7hBgZcP1KjepG+IvsDE3XwrH9U4xoN+Y=";
     };
     buildInputs = [ pkgs.gtk3 ];
     propagatedBuildInputs = [ Readonly Gtk3 ];
@@ -10980,10 +11003,10 @@ let
 
   IOCompress = buildPerlPackage {
     pname = "IO-Compress";
-    version = "2.096";
+    version = "2.102";
     src = fetchurl {
-      url = "mirror://cpan/authors/id/P/PM/PMQS/IO-Compress-2.096.tar.gz";
-      sha256 = "9d219fd5df4b490b5d2f847921e3cb1c3392758fa0bae9b05a8992b3620ba572";
+      url = "mirror://cpan/authors/id/P/PM/PMQS/IO-Compress-2.102.tar.gz";
+      sha256 = "193jvi4800cbcac5n1swj9zgwwqck9c47g0g592ldr7fbfd7zynn";
     };
     propagatedBuildInputs = [ CompressRawBzip2 CompressRawZlib ];
     meta = {
@@ -11796,6 +11819,13 @@ let
       url = "mirror://cpan/authors/id/S/SH/SHAY/libnet-3.12.tar.gz";
       sha256 = "1px35q9qchzd7rxqldj87vbrall8v31blidhmh0d25d5hyq9lw25";
     };
+    patches = [
+      (fetchpatch {
+        name = "deterministic-libnet.cfg";
+        url = "https://github.com/steve-m-hay/perl-libnet/commit/7d076c4352f67ee4ed64092cfad3963a2321bd53.patch";
+        sha256 = "0pg9w2m08janqn5nrp4x9w5hbcsyxz87hfskd21zzfrzjk8z28qv";
+      })
+    ];
     meta = {
       description = "Collection of network protocol modules";
       license = with lib.licenses; [ artistic1 gpl1Plus ];
@@ -20610,12 +20640,12 @@ let
 
   SysVirt = buildPerlModule rec {
     pname = "Sys-Virt";
-    version = "7.8.0";
+    version = "7.9.0";
     src = fetchFromGitLab {
       owner = "libvirt";
       repo = "libvirt-perl";
-      rev = "v7.8.0";
-      sha256 = "sha256-D/sVIKMWy3WnDM97+ofG3ClgGhJJuK2a6NJLC03S4LI=";
+      rev = "v7.9.0";
+      sha256 = "sha256-QxY6TRVQWrN689CD76CQZeyXsDVWxk24N1v67DCvmDo=";
     };
     nativeBuildInputs = [ pkgs.pkg-config ];
     buildInputs = [ pkgs.libvirt CPANChanges TestPod TestPodCoverage XMLXPath ];
@@ -24532,7 +24562,15 @@ let
       url = "mirror://cpan/authors/id/M/MS/MSTPLBG/X11-XCB-0.18.tar.gz";
       sha256 = "1cjpghw7cnackw20lbd7yzm222kz5bnrwz52f8ay24d1f4pwrnxf";
     };
+    patches = [
+      # Pull upstream fix for parallel build failure
+      (fetchpatch {
+        url = "https://github.com/stapelberg/X11-XCB/commit/813608dacdae1ae35c9eb0f171a958617e014520.patch";
+        sha256 = "017f5r4fyryhzgp99lw3csrl21r27hmqv483vp9fdz9xkvrmh743";
+      })
+    ];
     AUTOMATED_TESTING = false;
+    nativeBuildInputs = [ pkgs.pkg-config ];
     buildInputs = [ pkgs.xorg.libxcb pkgs.xorg.xcbproto pkgs.xorg.xcbutil pkgs.xorg.xcbutilwm ExtUtilsDepends ExtUtilsPkgConfig TestDeep TestException XSObjectMagic ];
     propagatedBuildInputs = [ DataDump MouseXNativeTraits XMLDescent XMLSimple ];
     NIX_CFLAGS_LINK = "-lxcb -lxcb-util -lxcb-xinerama -lxcb-icccm";
@@ -24686,7 +24724,8 @@ let
       sha256 = "068nhmld1031grgi4qm7k5niwxlbn6qd08zf6g1gj4c7qfas62q1";
     };
     SKIP_SAX_INSTALL = 1;
-    buildInputs = [ AlienBuild AlienLibxml2 ];
+    buildInputs = [ AlienBuild AlienLibxml2 ]
+      ++ lib.optional stdenv.isDarwin pkgs.libiconv;
     propagatedBuildInputs = [ XMLSAX ];
   };
 

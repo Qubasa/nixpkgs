@@ -464,7 +464,6 @@ let
         extraFlags = [ "--lnd.network=regtest" ];
       };
       metricProvider = {
-        virtualisation.memorySize = 1024;
         systemd.services.prometheus-lnd-exporter.serviceConfig.RestartSec = 15;
         systemd.services.prometheus-lnd-exporter.after = [ "lnd.service" ];
         services.bitcoind.regtest = {
@@ -862,6 +861,9 @@ let
         wait_for_unit("prometheus-postfix-exporter.service")
         wait_for_file("/var/lib/postfix/queue/public/showq")
         wait_for_open_port(9154)
+        wait_until_succeeds(
+            "curl -sSf http://localhost:9154/metrics | grep 'postfix_up{path=\"/var/lib/postfix/queue/public/showq\"} 1'"
+        )
         succeed(
             "curl -sSf http://localhost:9154/metrics | grep 'postfix_smtpd_connects_total 0'"
         )
@@ -953,7 +955,6 @@ let
       };
       metricProvider = {
         services.rspamd.enable = true;
-        virtualisation.memorySize = 1024;
       };
       exporterTest = ''
         wait_for_unit("rspamd.service")

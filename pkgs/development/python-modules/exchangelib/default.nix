@@ -27,14 +27,16 @@
 
 buildPythonPackage rec {
   pname = "exchangelib";
-  version = "4.5.2";
+  version = "4.6.1";
+  format = "setuptools";
+
   disabled = pythonOlder "3.6";
 
   src = fetchFromGitHub {
     owner = "ecederstrand";
     repo = pname;
     rev = "v${version}";
-    sha256 = "1zz4p13ww9y5x0ifvcj652hgfbjqbnmr3snwrs0p315sc3y47ggm";
+    sha256 = "sha256-9MvxQe5VnR+UHB5DSn6EtExKTYsTvzZzCCaTTkCBQkU=";
   };
 
   propagatedBuildInputs = [
@@ -66,7 +68,9 @@ buildPythonPackage rec {
     requests-mock
   ];
 
-  pythonImportsCheck = [ "exchangelib" ];
+  pythonImportsCheck = [
+    "exchangelib"
+  ];
 
   meta = with lib; {
     description = "Client for Microsoft Exchange Web Services (EWS)";

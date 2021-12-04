@@ -28,7 +28,6 @@ in
   inherit version release;
 
   defaultVersion =  with versions; switch coq.version [
-      { case = isEq "8.14"; out = "8.14+rc1+0.14.0"; }
       { case = isEq "8.13"; out = "8.13.0+0.13.0"; }
       { case = isEq "8.12"; out = "8.12.0+0.12.1"; }
       { case = isEq "8.11"; out = "8.11.0+0.11.1"; }
@@ -57,7 +56,7 @@ in
   '';
 
   meta = with lib; {
-    homepage = https://github.com/ejgallego/coq-serapi;
+    homepage = "https://github.com/ejgallego/coq-serapi";
     description = "SerAPI is a library for machine-to-machine interaction with the Coq proof assistant";
     license = licenses.lgpl21Plus;
     maintainers = [ maintainers.Zimmi48 ];

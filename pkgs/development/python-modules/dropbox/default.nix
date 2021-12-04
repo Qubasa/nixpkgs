@@ -1,13 +1,15 @@
-{ lib, buildPythonPackage, fetchPypi
+{ lib, buildPythonPackage, fetchFromGitHub
 , requests, urllib3, mock, setuptools, stone }:
 
 buildPythonPackage rec {
   pname = "dropbox";
-  version = "11.22.0";
+  version = "11.23.0";
 
-  src = fetchPypi {
-    inherit pname version;
-    sha256 = "ab84c9c78606faa0dc94cdb95c6b2bdb579beb5f34fff42091c98a1e0fbeb16c";
+  src = fetchFromGitHub {
+    owner = "dropbox";
+    repo = "dropbox-sdk-python";
+    rev = "v${version}";
+    sha256 = "1zrwr73dirmkbkcpy8v49hb52xffh0k9wp2603aysg9435w1rxvx";
   };
 
   postPatch = ''

@@ -8,8 +8,10 @@ pkgs/development/tools/analysis/talon/*.txt
 .*.swp
 .*.swo
 .idea/
+outputs/
 result
 result-*
+source/
 /doc/NEWS.html
 /doc/NEWS.txt
 /doc/manual.html
@@ -30,3 +32,6 @@ update-git-commits.txt
 .direnv
 .history
 .__pycache__
+
+# JetBrains IDEA module declaration file
+/nixpkgs.iml

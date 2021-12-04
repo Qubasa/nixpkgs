@@ -110,6 +110,8 @@ with self; with super; {
 
   feedparser = callPackage ../development/python-modules/feedparser/5.nix { };
 
+  filelock =  callPackage ../development/python-modules/filelock/3.2.nix { };
+
   flask = callPackage ../development/python-modules/flask/1.nix { };
 
   flask_ldap_login = callPackage ../development/python-modules/flask-ldap-login { };
@@ -215,8 +217,6 @@ with self; with super; {
   jupyter-client = callPackage ../development/python-modules/jupyter-client/5.nix { };
 
   jupyter_console = callPackage ../development/python-modules/jupyter_console/5.nix { };
-
-  keyring = callPackage ../development/python-modules/keyring/2.nix { };
 
   koji = callPackage ../development/python-modules/koji { };
 
@@ -413,12 +413,17 @@ with self; with super; {
 
   prompt-toolkit = callPackage ../development/python-modules/prompt-toolkit/1.nix { };
 
+  protobuf = callPackage ../development/python-modules/protobuf {
+    disabled = isPyPy;
+    protobuf = pkgs.protobuf3_17; # last version compatible with Python 2
+  };
+
   pyamf = callPackage ../development/python-modules/pyamf { };
 
   pyblosxom = callPackage ../development/python-modules/pyblosxom { };
 
   pycairo = callPackage ../development/python-modules/pycairo/1.18.nix {
-    inherit (pkgs) meson;
+    inherit (pkgs.buildPackages) meson;
   };
 
   pycangjie = disabled pycangjie;
@@ -528,11 +533,9 @@ with self; with super; {
 
   robotframework-ride = callPackage ../development/python-modules/robotframework-ride { };
 
-  ruamel-ordereddict = self.ruamel_ordereddict;
-  ruamel_ordereddict = callPackage ../development/python-modules/ruamel_ordereddict { };
+  ruamel-ordereddict = callPackage ../development/python-modules/ruamel-ordereddict { };
 
-  ruamel_yaml = self.ruamel-yaml;
-  ruamel-yaml = callPackage ../development/python-modules/ruamel_yaml/0.16.nix { };
+  ruamel-yaml = callPackage ../development/python-modules/ruamel-yaml/0.16.nix { };
 
   runsnakerun = callPackage ../development/python-modules/runsnakerun { };
 

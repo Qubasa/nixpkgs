@@ -2,7 +2,6 @@
 , stdenv
 , buildPythonPackage
 , fetchPypi
-, argh
 , pathtools
 , pyyaml
 , flaky
@@ -23,7 +22,6 @@ buildPythonPackage rec {
   buildInputs = lib.optionals stdenv.isDarwin [ CoreServices ];
 
   propagatedBuildInputs = [
-    argh
     pathtools
     pyyaml
   ];
@@ -48,6 +46,7 @@ buildPythonPackage rec {
     license = licenses.asl20;
     maintainers = with maintainers; [ goibhniu ];
     # error: use of undeclared identifier 'kFSEventStreamEventFlagItemCloned'
-    broken = stdenv.isDarwin;
+    # builds fine on aarch64-darwin
+    broken = stdenv.isDarwin && !stdenv.isAarch64;
   };
 }

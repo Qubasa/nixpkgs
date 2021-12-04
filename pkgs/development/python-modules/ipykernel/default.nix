@@ -1,14 +1,14 @@
 { lib
-, stdenv
 , buildPythonPackage
 , callPackage
 , fetchPypi
+, pythonOlder
+, argcomplete
 , debugpy
 , ipython
 , jupyter-client
 , tornado
 , traitlets
-, pythonOlder
 }:
 
 buildPythonPackage rec {
@@ -26,6 +26,8 @@ buildPythonPackage rec {
     jupyter-client
     tornado
     traitlets
+  ] ++ lib.optionals (pythonOlder "3.8") [
+    argcomplete
   ];
 
   # check in passthru.tests.pytest to escape infinite recursion with ipyparallel

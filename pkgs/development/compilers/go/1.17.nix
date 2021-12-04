@@ -50,11 +50,11 @@ in
 
 stdenv.mkDerivation rec {
   pname = "go";
-  version = "1.17.2";
+  version = "1.17.4";
 
   src = fetchurl {
     url = "https://dl.google.com/go/go${version}.src.tar.gz";
-    sha256 = "sha256-IlXrPk6CTdfV/Nwuf4RTQ3HBhjEuVG+xCGo0wXdS9DE=";
+    sha256 = "sha256-S+82mTge8J4HVihQQYdBZWXXEGYP7GWwV+3xzrGH/Es=";
   };
 
   # perl is used for testing go vet
@@ -268,12 +268,10 @@ stdenv.mkDerivation rec {
   disallowedReferences = [ goBootstrap ];
 
   meta = with lib; {
-    homepage = "http://golang.org/";
+    homepage = "https://go.dev/";
     description = "The Go Programming language";
     license = licenses.bsd3;
     maintainers = teams.golang.members;
     platforms = platforms.linux ++ platforms.darwin;
-    # requires >=10.13 stdenv on x86_64-darwin
-    badPlatforms = [ "x86_64-darwin" ];
   };
 }

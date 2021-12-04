@@ -93,7 +93,6 @@ with lib.maintainers; {
       cstrahan
       Frostman
       kalbasit
-      mdlayher
       mic92
       orivej
       rvolosatovs
@@ -200,7 +199,6 @@ with lib.maintainers; {
   openstack = {
     members = [
       angustrau
-      superherointj
       SuperSandro2000
     ];
     scope = "Maintain the ecosystem around OpenStack";

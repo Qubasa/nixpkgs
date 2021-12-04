@@ -178,6 +178,10 @@ self: super: {
     '';
   });
 
+  crates-nvim = super.crates-nvim.overrideAttrs (old: {
+    dependencies = with self; [ plenary-nvim ];
+  });
+
   ctrlp-cmatcher = super.ctrlp-cmatcher.overrideAttrs (old: {
     buildInputs = [ python ];
     buildPhase = ''
@@ -479,6 +483,10 @@ self: super: {
     dependencies = with self; [ popfix ];
   });
 
+  nvim-metals = super.nvim-metals.overrideAttrs (old: {
+    dontBuild = true;
+  });
+
   nvim-spectre = super.nvim-spectre.overrideAttrs (old: {
     dependencies = with self; [ plenary-nvim ];
   });
@@ -740,7 +748,7 @@ self: super: {
             libiconv
           ];
 
-          cargoSha256 = "sha256-DiCQpgyz0iNEm6gjaJU5IGdsQISHhPqlDQBzZafngjY=";
+          cargoSha256 = "sha256-XFo3FLaeLnXVQAEZol9PipqYYZ9C1z23S/qijxf0uIE=";
         };
       in
       ''
@@ -770,6 +778,10 @@ self: super: {
         sha256 = "0x0xabb56xkgdqrg1mpvhbi3yw4d829n73lsnnyj5yrxjffy4ax4";
       })
     ];
+  });
+
+  vim-fzf-coauthorship = super.vim-fzf-coauthorship.overrideAttrs (old: {
+    dependencies = with self; [ fzf-vim ];
   });
 
   # change the go_bin_path to point to a path in the nix store. See the code in
@@ -1029,6 +1041,7 @@ self: super: {
       "coc-tslint"
       "coc-tslint-plugin"
       "coc-tsserver"
+      "coc-ultisnips"
       "coc-vetur"
       "coc-vimlsp"
       "coc-vimtex"
