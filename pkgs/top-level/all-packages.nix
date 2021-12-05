@@ -22293,6 +22293,8 @@ with pkgs;
 
   lsiutil = callPackage ../os-specific/linux/lsiutil { };
 
+  kaitai_struct = callPackage ../development/compilers/kaitai_struct { };
+
   kmod = callPackage ../os-specific/linux/kmod { };
 
   kmod-blacklist-ubuntu = callPackage ../os-specific/linux/kmod-blacklist-ubuntu { };
