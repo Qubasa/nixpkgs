@@ -8,6 +8,7 @@ pkgs/development/tools/analysis/talon/*.txt
 .*.swp
 .*.swo
 .idea/
+.vscode/
 outputs/
 result
 result-*
