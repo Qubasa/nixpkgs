@@ -33968,6 +33968,8 @@ with pkgs;
 
   hy = callPackage ../development/interpreters/hy {};
 
+  vtune = callPackage ../tools/misc/vtune {};
+
   wmic-bin = callPackage ../servers/monitoring/plugins/wmic-bin.nix { };
 
   check-uptime = callPackage ../servers/monitoring/plugins/uptime.nix { };
