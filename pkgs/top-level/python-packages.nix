@@ -1879,11 +1879,7 @@ in {
 
   compiledb = callPackage ../development/python-modules/compiledb { };
 
-<<<<<<< HEAD
-  compdb = callPackage ../development/python-modules/compdb { };
-=======
   compreffor = callPackage ../development/python-modules/compreffor { };
->>>>>>> master
 
   concurrent-log-handler = callPackage ../development/python-modules/concurrent-log-handler { };
 
