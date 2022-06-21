@@ -12,7 +12,6 @@
 , requests
 , aiosqlite
 , databases
-, pytest-asyncio
 , pytestCheckHook
 , pythonOlder
 , trio
@@ -22,7 +21,7 @@
 
 buildPythonPackage rec {
   pname = "starlette";
-  version = "0.17.1";
+  version = "0.20.1";
   format = "setuptools";
 
   disabled = pythonOlder "3.6";
@@ -31,7 +30,7 @@ buildPythonPackage rec {
     owner = "encode";
     repo = pname;
     rev = version;
-    sha256 = "sha256-qT/w7r8PsrauLoBolwCGpxiwhDZo3z6hIqKVXeY5yqA=";
+    hash = "sha256-PUZ9joOhXkL1K2yi0baiuY74PIi71V/epX8zdcUv1DA=";
   };
 
   postPatch = ''
@@ -58,7 +57,6 @@ buildPythonPackage rec {
   checkInputs = [
     aiosqlite
     databases
-    pytest-asyncio
     pytestCheckHook
     trio
     typing-extensions

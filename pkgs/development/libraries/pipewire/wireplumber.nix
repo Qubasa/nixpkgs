@@ -26,7 +26,7 @@ let
 in
 stdenv.mkDerivation rec {
   pname = "wireplumber";
-  version = "0.4.6";
+  version = "0.4.10";
 
   outputs = [ "out" "dev" ] ++ lib.optional enableDocs "doc";
 
@@ -35,7 +35,7 @@ stdenv.mkDerivation rec {
     owner = "pipewire";
     repo = "wireplumber";
     rev = version;
-    sha256 = "sha256-y+Gj9EZn67W3U81zXgp+6JAFxZSZTwwT0TB3Kueb/Tw=";
+    sha256 = "sha256-Z5Uqjw05SdEU9bGLuhdS+hDv7Fgqx4oW92k4AG1p3Ug=";
   };
 
   nativeBuildInputs = [
@@ -66,6 +66,9 @@ stdenv.mkDerivation rec {
     "-Delogind=disabled"
     "-Ddoc=${mesonEnableFeature enableDocs}"
     "-Dintrospection=${mesonEnableFeature enableGI}"
+    "-Dsystemd-system-service=true"
+    "-Dsystemd-system-unit-dir=${placeholder "out"}/lib/systemd/system"
+    "-Dsysconfdir=/etc"
   ];
 
   passthru.updateScript = nix-update-script {

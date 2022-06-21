@@ -14,18 +14,13 @@ in
   ### vim tests
   ##################
   vim_with_vim2nix = vim_configurable.customize {
-    name = "vim"; vimrcConfig.vam.pluginDictionaries = [ "vim-addon-vim2nix" ];
+    name = "vim"; vimrcConfig.vam.pluginDictionaries = [ "vim2nix" ];
   };
 
   # test cases:
   test_vim_with_vim_nix_using_vam = vim_configurable.customize {
    name = "vim-with-vim-addon-nix-using-vam";
     vimrcConfig.vam.pluginDictionaries = [{name = "vim-nix"; }];
-  };
-
-  test_vim_with_vim_nix_using_pathogen = vim_configurable.customize {
-    name = "vim-with-vim-addon-nix-using-pathogen";
-    vimrcConfig.pathogen.pluginNames = [ "vim-nix" ];
   };
 
   test_vim_with_vim_nix_using_plug = vim_configurable.customize {

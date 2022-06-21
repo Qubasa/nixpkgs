@@ -23,11 +23,11 @@
 
 stdenv.mkDerivation rec {
   pname = "rizin";
-  version = "0.3.2";
+  version = "0.3.4";
 
   src = fetchurl {
     url = "https://github.com/rizinorg/rizin/releases/download/v${version}/rizin-src-v${version}.tar.xz";
-    sha256 = "sha256-T65gm1tfRD7dZSL8qZKMTAbQ65Lx/ecidFc9T1b7cig=";
+    sha256 = "sha256-7qSbOWOHwJ0ZcFqrAqYXzbFWgvymfxAf8rJ+75SnEOk=";
   };
 
   mesonFlags = [
@@ -43,7 +43,7 @@ stdenv.mkDerivation rec {
 
   nativeBuildInputs = [ pkg-config meson ninja cmake (python3.withPackages (ps: [ ps.setuptools ])) ];
 
-  # meson's find_library seems to not use our compiler wrapper if static paraemter
+  # meson's find_library seems to not use our compiler wrapper if static parameter
   # is either true/false... We work around by also providing LIBRARY_PATH
   preConfigure = ''
     LIBRARY_PATH=""

@@ -2,16 +2,16 @@
 
 rustPlatform.buildRustPackage rec {
   pname = "cocogitto";
-  version = "4.0.1";
+  version = "5.1.0";
 
   src = fetchFromGitHub {
     owner = "oknozor";
     repo = pname;
     rev = version;
-    sha256 = "sha256-uSKzHo1lEBiXsi1rOKvfD2zVlkAUVZ5k0y8iiTXYE2A=";
+    sha256 = "sha256-q2WJKAXpIO+VsOFrjdyEx06yis8f2SkCuB0blUgqq0M=";
   };
 
-  cargoSha256 = "sha256-gss3+XXyM//zER3gnN9qemIWaVDfs/f4gljmukMxoq0=";
+  cargoSha256 = "sha256-UArYBcUkXPYlNRLQBMwNhsd3bNgLeEwtJdzepMTt2no=";
 
   # Test depend on git configuration that would likly exist in a normal user enviroment
   # and might be failing to create the test repository it works in.
@@ -28,8 +28,6 @@ rustPlatform.buildRustPackage rec {
       --zsh  <($out/bin/cog generate-completions zsh)
 
     wrapProgram $out/bin/cog \
-      --prefix PATH : "${lib.makeBinPath [ git ]}"
-    wrapProgram $out/bin/coco \
       --prefix PATH : "${lib.makeBinPath [ git ]}"
   '';
 

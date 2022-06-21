@@ -5,27 +5,29 @@
 , pyaes
 , pysocks
 , async-lru
+, tgcrypto
 , pytestCheckHook
 , pytest-asyncio
 }:
 
 buildPythonPackage rec {
   pname = "pyrogram";
-  version = "1.3.0";
+  version = "2.0.27";
 
-  disabled = pythonOlder "3.6";
+  disabled = pythonOlder "3.7";
 
   src = fetchFromGitHub {
     owner = "pyrogram";
     repo = "pyrogram";
     rev = "v${version}";
-    sha256 = "09rxdd5bl1yby76xd3wcyrmlb4glixs637nj1w05gh2rp3gppkf8";
+    hash = "sha256-QYNE6VfbhlZpxc3CGitOs0zMwYI6RKQG/GhyWSNoaDI=";
   };
 
   propagatedBuildInputs = [
     pyaes
     pysocks
     async-lru
+    tgcrypto
   ];
 
   checkInputs = [

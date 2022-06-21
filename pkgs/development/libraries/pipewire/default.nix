@@ -2,12 +2,13 @@
 , lib
 , buildPackages
 , fetchFromGitLab
-, fetchpatch
 , removeReferencesTo
 , python3
 , meson
 , ninja
+, eudev
 , systemd
+, enableSystemd ? true
 , pkg-config
 , docutils
 , doxygen
@@ -20,14 +21,12 @@
 , udev
 , libva
 , libsndfile
-, SDL2
 , vulkan-headers
 , vulkan-loader
 , webrtc-audio-processing
 , ncurses
 , readline81 # meson can't find <7 as those versions don't have a .pc file
 , lilv
-, openssl
 , makeFontsConf
 , callPackage
 , nixosTests
@@ -55,8 +54,13 @@
 , libpulseaudio
 , zeroconfSupport ? true
 , avahi
+, raopSupport ? true
+, openssl
 , rocSupport ? true
 , roc-toolkit
+, x11Support ? true
+, libcanberra
+, xorg
 }:
 
 let
@@ -65,7 +69,7 @@ let
 
   self = stdenv.mkDerivation rec {
     pname = "pipewire";
-    version = "0.3.43";
+    version = "0.3.51";
 
     outputs = [
       "out"
@@ -83,7 +87,7 @@ let
       owner = "pipewire";
       repo = "pipewire";
       rev = version;
-      sha256 = "sha256-vjMA9dQvZe7dPbF9BNtCYf1V240RUBdtxeyqFjWA4j4=";
+      sha256 = "sha256-k5OdKgkQUaelvrGS4KtO0MtSJg6cF2Nf8RrsR8Kf+C8=";
     };
 
     patches = [
@@ -120,21 +124,21 @@ let
       libsndfile
       lilv
       ncurses
-      openssl
       readline81
       udev
       vulkan-headers
       vulkan-loader
       webrtc-audio-processing
-      SDL2
-      systemd
-    ] ++ lib.optionals gstreamerSupport [ gst_all_1.gst-plugins-base gst_all_1.gstreamer ]
+    ] ++ (if enableSystemd then [ systemd ] else [ eudev ])
+    ++ lib.optionals gstreamerSupport [ gst_all_1.gst-plugins-base gst_all_1.gstreamer ]
     ++ lib.optionals libcameraSupport [ libcamera libdrm ]
     ++ lib.optional ffmpegSupport ffmpeg
     ++ lib.optionals bluezSupport [ bluez libfreeaptx ldacbt sbc fdk_aac ]
     ++ lib.optional pulseTunnelSupport libpulseaudio
     ++ lib.optional zeroconfSupport avahi
-    ++ lib.optional rocSupport roc-toolkit;
+    ++ lib.optional raopSupport openssl
+    ++ lib.optional rocSupport roc-toolkit
+    ++ lib.optionals x11Support [ libcanberra xorg.libX11 xorg.libXfixes ];
 
     # Valgrind binary is required for running one optional test.
     checkInputs = lib.optional withValgrind valgrind;
@@ -151,7 +155,9 @@ let
       "-Dlibpulse=${mesonEnableFeature pulseTunnelSupport}"
       "-Davahi=${mesonEnableFeature zeroconfSupport}"
       "-Dgstreamer=${mesonEnableFeature gstreamerSupport}"
-      "-Dsystemd-system-service=enabled"
+      "-Dsystemd-system-service=${mesonEnableFeature enableSystemd}"
+      "-Dudev=${mesonEnableFeature (!enableSystemd)}"
+      "-Dudevrulesdir=${placeholder "out"}/lib/udev/rules.d"
       "-Dffmpeg=${mesonEnableFeature ffmpegSupport}"
       "-Dbluez5=${mesonEnableFeature bluezSupport}"
       "-Dbluez5-backend-hsp-native=${mesonEnableFeature nativeHspSupport}"
@@ -160,8 +166,11 @@ let
       "-Dbluez5-backend-hsphfpd=${mesonEnableFeature hsphfpdSupport}"
       "-Dsysconfdir=/etc"
       "-Dpipewire_confdata_dir=${placeholder "lib"}/share/pipewire"
+      "-Draop=${mesonEnableFeature raopSupport}"
       "-Dsession-managers="
       "-Dvulkan=enabled"
+      "-Dx11=${mesonEnableFeature x11Support}"
+      "-Dsdl2=disabled" # required only to build examples, causes dependency loop
     ];
 
     # Fontconfig error: Cannot load default config file
@@ -188,9 +197,14 @@ let
         cp ${buildPackages.pipewire}/nix-support/*.json "$out/nix-support"
       ''}
 
-      moveToOutput "share/systemd/user/pipewire-pulse.*" "$pulse"
-      moveToOutput "lib/systemd/user/pipewire-pulse.*" "$pulse"
+      ${lib.optionalString enableSystemd ''
+        moveToOutput "share/systemd/user/pipewire-pulse.*" "$pulse"
+        moveToOutput "lib/systemd/user/pipewire-pulse.*" "$pulse"
+      ''}
+
       moveToOutput "bin/pipewire-pulse" "$pulse"
+
+      moveToOutput "bin/pw-jack" "$jack"
     '';
 
     passthru = {
@@ -205,6 +219,7 @@ let
             "nix-support/client-rt.conf.json"
             "nix-support/client.conf.json"
             "nix-support/jack.conf.json"
+            "nix-support/minimal.conf.json"
             "nix-support/pipewire.conf.json"
             "nix-support/pipewire-pulse.conf.json"
           ];

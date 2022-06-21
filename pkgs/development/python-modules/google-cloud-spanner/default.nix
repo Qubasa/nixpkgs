@@ -14,11 +14,11 @@
 
 buildPythonPackage rec {
   pname = "google-cloud-spanner";
-  version = "3.12.1";
+  version = "3.15.1";
 
   src = fetchPypi {
     inherit pname version;
-    sha256 = "98e53298a7c79f0af351c80e6fc0b57bc735afdec764424e459179ef04f5a40f";
+    sha256 = "sha256-VmHmje3fJfiCT2CeJgk98qdFhZnxGZudfHP1MgW6Mtw=";
   };
 
   propagatedBuildInputs = [

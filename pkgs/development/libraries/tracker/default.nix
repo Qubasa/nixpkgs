@@ -25,26 +25,18 @@
 , json-glib
 , systemd
 , dbus
-, substituteAll
 }:
 
 stdenv.mkDerivation rec {
   pname = "tracker";
-  version = "3.2.1";
+  version = "3.3.1";
 
   outputs = [ "out" "dev" "devdoc" ];
 
   src = fetchurl {
     url = "mirror://gnome/sources/${pname}/${lib.versions.majorMinor version}/${pname}-${version}.tar.xz";
-    sha256 = "GEfgiznm5h2EhzWqH5f32WwDggFlP6DXy56Bs365wDo=";
+    sha256 = "Wtb1vJd4Hr9V7NaUfNSuf/QZJRZYDRC9g4Dx3UcZbtI=";
   };
-
-  patches = [
-    (substituteAll {
-      src = ./fix-paths.patch;
-      inherit asciidoc;
-    })
-  ];
 
   nativeBuildInputs = [
     meson
@@ -61,7 +53,8 @@ stdenv.mkDerivation rec {
     python3 # for data-generators
     systemd # used for checks to install systemd user service
     dbus # used for checks and pkg-config to install dbus service/s
-  ];
+  ] ++ checkInputs; # gi is in the main meson.build and checked regardless of
+                    # whether tests are enabled
 
   buildInputs = [
     glib
@@ -77,7 +70,6 @@ stdenv.mkDerivation rec {
 
   checkInputs = with python3.pkgs; [
     pygobject3
-    tappy
   ];
 
   mesonFlags = [
@@ -87,11 +79,7 @@ stdenv.mkDerivation rec {
   doCheck = true;
 
   postPatch = ''
-    patchShebangs utils/g-ir-merge/g-ir-merge
     patchShebangs utils/data-generators/cc/generate
-    patchShebangs tests/functional-tests/test-runner.sh.in
-    patchShebangs tests/functional-tests/*.py
-    patchShebangs examples/python/endpoint.py
   '';
 
   preCheck = ''
@@ -111,7 +99,9 @@ stdenv.mkDerivation rec {
 
     dbus-run-session \
       --config-file=${dbus.daemon}/share/dbus-1/session.conf \
-      meson test --print-errorlogs
+      meson test \
+        --timeout-multiplier 2 \
+        --print-errorlogs
 
     runHook postCheck
   '';
@@ -124,7 +114,6 @@ stdenv.mkDerivation rec {
   passthru = {
     updateScript = gnome.updateScript {
       packageName = pname;
-      versionPolicy = "none";
     };
   };
 

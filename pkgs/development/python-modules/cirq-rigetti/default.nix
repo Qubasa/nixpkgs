@@ -40,7 +40,11 @@ buildPythonPackage rec {
       --replace "httpx~=0.15.5" "httpx" \
       --replace "idna~=2.10" "idna" \
       --replace "pyjwt~=1.7.1" "pyjwt" \
-      --replace "qcs-api-client~=0.8.0" "qcs-api-client"
+      --replace "qcs-api-client~=0.8.0" "qcs-api-client" \
+      --replace "iso8601~=0.1.14" "iso8601" \
+      --replace "rfc3986~=1.5.0" "rfc3986" \
+      --replace "pyquil~=3.0.0" "pyquil" \
+      --replace "pydantic~=1.8.2" "pydantic"
     # Remove outdated test
     rm cirq_rigetti/service_test.py
   '';
