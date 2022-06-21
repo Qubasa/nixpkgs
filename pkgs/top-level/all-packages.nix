@@ -28447,6 +28447,8 @@ with pkgs;
 
   seq66 = qt5.callPackage ../applications/audio/seq66 { };
 
+  sejda = callPackage ../applications/misc/sejda { };
+
   setbfree = callPackage ../applications/audio/setbfree { };
 
   sfizz = callPackage ../applications/audio/sfizz { };
