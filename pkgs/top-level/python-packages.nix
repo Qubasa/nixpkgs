@@ -1879,6 +1879,8 @@ in {
 
   compiledb = callPackage ../development/python-modules/compiledb { };
 
+  compdb = callPackage ../development/python-modules/compdb { };
+
   compreffor = callPackage ../development/python-modules/compreffor { };
 
   concurrent-log-handler = callPackage ../development/python-modules/concurrent-log-handler { };
