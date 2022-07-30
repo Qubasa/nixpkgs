@@ -13,17 +13,22 @@ let
     then "hedgedoc"
     else "codimd";
 
+  settingsFormat = pkgs.formats.json {};
+
   prettyJSON = conf:
     pkgs.runCommandLocal "hedgedoc-config.json" {
       nativeBuildInputs = [ pkgs.jq ];
     } ''
-      echo '${builtins.toJSON conf}' | jq \
-        '{production:del(.[]|nulls)|del(.[][]?|nulls)}' > $out
+      jq '{production:del(.[]|nulls)|del(.[][]?|nulls)}' \
+        < ${settingsFormat.generate "hedgedoc-ugly.json" cfg.settings} \
+        > $out
     '';
 in
 {
   imports = [
     (mkRenamedOptionModule [ "services" "codimd" ] [ "services" "hedgedoc" ])
+    (mkRenamedOptionModule
+      [ "services" "hedgedoc" "configuration" ] [ "services" "hedgedoc" "settings" ])
   ];
 
   options.services.hedgedoc = {
@@ -45,7 +50,7 @@ in
       '';
     };
 
-    configuration = {
+    settings = let options = {
       debug = mkEnableOption "debug mode";
       domain = mkOption {
         type = types.nullOr types.str;
@@ -838,7 +843,8 @@ in
               '';
             };
             searchAttributes = mkOption {
-              type = types.listOf types.str;
+              type = types.nullOr (types.listOf types.str);
+              default = null;
               example = [ "displayName" "mail" ];
               description = ''
                 LDAP attributes to search with.
@@ -861,6 +867,7 @@ in
             };
             tlsca = mkOption {
               type = types.str;
+              default = "/etc/ssl/certs/ca-certificates.crt";
               example = "server-cert.pem,root.pem";
               description = ''
                 Root CA for LDAP TLS in PEM format.
@@ -960,6 +967,16 @@ in
         default = null;
         description = "Configure the SAML integration.";
       };
+    }; in lib.mkOption {
+      type = lib.types.submodule {
+        freeformType = settingsFormat.type;
+        inherit options;
+      };
+      description = ''
+        HedgeDoc configuration, see
+        <link xlink:href="https://docs.hedgedoc.org/configuration/"/>
+        for documentation.
+      '';
     };
 
     environmentFile = mkOption {
@@ -1000,12 +1017,13 @@ in
         Package that provides HedgeDoc.
       '';
     };
+
   };
 
   config = mkIf cfg.enable {
     assertions = [
-      { assertion = cfg.configuration.db == {} -> (
-          cfg.configuration.dbURL != "" && cfg.configuration.dbURL != null
+      { assertion = cfg.settings.db == {} -> (
+          cfg.settings.dbURL != "" && cfg.settings.dbURL != null
         );
         message = "Database configuration for HedgeDoc missing."; }
     ];
@@ -1026,13 +1044,12 @@ in
       preStart = ''
         ${pkgs.envsubst}/bin/envsubst \
           -o ${cfg.workDir}/config.json \
-          -i ${prettyJSON cfg.configuration}
-        mkdir -p ${cfg.configuration.uploadsPath}
+          -i ${prettyJSON cfg.settings}
+        mkdir -p ${cfg.settings.uploadsPath}
       '';
       serviceConfig = {
         WorkingDirectory = cfg.workDir;
-        StateDirectory = [ (builtins.replaceStrings [ "/var/lib/"  ] [ "" ] cfg.workDir) ];
-        ReadWritePaths = [ cfg.configuration.uploadsPath ];
+        StateDirectory = [ cfg.workDir cfg.settings.uploadsPath ];
         ExecStart = "${cfg.package}/bin/hedgedoc";
         EnvironmentFile = mkIf (cfg.environmentFile != null) [ cfg.environmentFile ];
         Environment = [

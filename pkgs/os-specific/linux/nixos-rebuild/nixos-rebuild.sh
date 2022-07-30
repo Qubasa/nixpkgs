@@ -49,6 +49,8 @@ while [ "$#" -gt 0 ]; do
         ;;
       switch|boot|test|build|edit|dry-build|dry-run|dry-activate|build-vm|build-vm-with-bootloader)
         if [ "$i" = dry-run ]; then i=dry-build; fi
+        # exactly one action mandatory, bail out if multiple are given
+        if [ -n "$action" ]; then showSyntax; fi
         action="$i"
         ;;
       --install-grub)
@@ -252,7 +254,7 @@ nixBuild() {
 
 nixFlakeBuild() {
     logVerbose "Building in flake mode."
-    if [[ -z "$buildHost" && -z "$targetHost" && "$action" != switch && "$action" != boot ]]
+    if [[ -z "$buildHost" && -z "$targetHost" && "$action" != switch && "$action" != boot && "$action" != test && "$action" != dry-activate ]]
     then
         runCmd nix "${flakeFlags[@]}" build "$@"
         readlink -f ./result

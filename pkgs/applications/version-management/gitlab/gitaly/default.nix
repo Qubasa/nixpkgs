@@ -11,8 +11,8 @@ let
     gemdir = ./.;
   };
 
-  version = "15.0.2";
-  package_version = "v14";
+  version = "15.1.4";
+  package_version = "v${lib.versions.major version}";
   gitaly_package = "gitlab.com/gitlab-org/gitaly/${package_version}";
 in
 
@@ -24,16 +24,16 @@ buildGoModule {
     owner = "gitlab-org";
     repo = "gitaly";
     rev = "v${version}";
-    sha256 = "sha256-jwPXar16FOq0xCg3xUXH72YPmoVa91ae3bgz95ZmYo4=";
+    sha256 = "sha256-7bsbmC+a+Qk0MevAJvbQoRfvd3G7+q2zY6Gsb5yP44U=";
   };
 
-  vendorSha256 = "sha256-/tHKWo09ZV31TSIqlOk36V3y7gNikziUJHf+nS1gHEw=";
+  vendorSha256 = "sha256-0JWJ2mpf79gJdnNRdlQLi0oDvnj6VmibkW2XcPnaCww=";
 
   passthru = {
     inherit rubyEnv;
   };
 
-  ldflags = "-X ${gitaly_package}/internal/version.version=${version} -X ${gitaly_package}/internal/version.moduleVersion=${version}";
+  ldflags = [ "-X ${gitaly_package}/internal/version.version=${version}" "-X ${gitaly_package}/internal/version.moduleVersion=${version}" ];
 
   tags = [ "static,system_libgit2" ];
   nativeBuildInputs = [ pkg-config ];

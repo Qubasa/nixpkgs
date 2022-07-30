@@ -1,5 +1,4 @@
 { lib
-, stdenv
 , buildGoModule
 , fetchFromGitHub
 , installShellFiles
@@ -7,15 +6,15 @@
 
 buildGoModule rec {
   pname = "chain-bench";
-  version = "0.0.2";
+  version = "0.1.3";
 
   src = fetchFromGitHub {
     owner = "aquasecurity";
     repo = pname;
     rev = "v${version}";
-    sha256 = "sha256-aoqkCaMEFTmaV9ewSZW6iy5Uc+riha8ecOECVccb9MM=";
+    sha256 = "sha256-qNprOxp8PKV5nld4uDGH0I0KG0r5sH7vr6It62J8RXc=";
   };
-  vendorSha256 = "sha256-MTWXDIHVdgqdRO0ZoXzUPeTZ6Y19TjFQSvrhKP35BuM=";
+  vendorSha256 = "sha256-54q486c/uUpatLQ3/FiVZxqu9NCkzcf8yQUZnAtrqYg=";
 
   nativeBuildInputs = [ installShellFiles ];
 
@@ -54,9 +53,5 @@ buildGoModule rec {
     '';
     license = licenses.asl20;
     maintainers = with maintainers; [ jk ];
-    # TODO: see if this is an issue
-    # # Need updated macOS SDK
-    # # https://github.com/NixOS/nixpkgs/issues/101229
-    # broken = (stdenv.isDarwin && stdenv.isx86_64);
   };
 }

@@ -25,14 +25,14 @@ with py.pkgs;
 
 buildPythonApplication rec {
   pname = "pip-audit";
-  version = "2.3.3";
+  version = "2.4.2";
   format = "pyproject";
 
   src = fetchFromGitHub {
     owner = "trailofbits";
     repo = pname;
     rev = "v${version}";
-    hash = "sha256-pzcphJWRM1OTbytZ4jJyPSQ+961gmBTrfYuLrMGkBQk=";
+    hash = "sha256-GH7dP2/0j2bXqw1qssyzMSV/YtYImbT7VSn/x97idiU=";
   };
 
   nativeBuildInputs = [
@@ -46,6 +46,7 @@ buildPythonApplication rec {
     lockfile
     packaging
     pip-api
+    pip-requirements-parser
     progress
     resolvelib
     rich

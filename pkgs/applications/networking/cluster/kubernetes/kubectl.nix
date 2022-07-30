@@ -1,24 +1,14 @@
-{ lib, stdenv, kubernetes }:
+{ lib, kubernetes }:
 
-stdenv.mkDerivation rec {
+kubernetes.overrideAttrs (_: rec {
   pname = "kubectl";
-
-  inherit (kubernetes)
-    disallowedReferences
-    GOFLAGS
-    nativeBuildInputs
-    postBuild
-    postPatch
-    src
-    version
-    ;
 
   outputs = [ "out" "man" "convert" ];
 
   WHAT = lib.concatStringsSep " " [
     "cmd/kubectl"
     "cmd/kubectl-convert"
-    ];
+  ];
 
   installPhase = ''
     runHook preInstall
@@ -39,4 +29,4 @@ stdenv.mkDerivation rec {
     homepage = "https://github.com/kubernetes/kubectl";
     platforms = lib.platforms.unix;
   };
-}
+})

@@ -14,6 +14,12 @@ dotnetBuildHook() {
         parallelBuildFlag="false"
     fi
 
+    if [ "${selfContainedBuild-}" ]; then
+        dotnetBuildFlags+=("--self-contained")
+    else
+        dotnetBuildFlags+=("--no-self-contained")
+    fi
+
     if [ "${version-}" ]; then
         versionFlag="-p:Version=${version-}"
     fi
@@ -25,6 +31,7 @@ dotnetBuildHook() {
                 -p:BuildInParallel=$parallelBuildFlag \
                 -p:ContinuousIntegrationBuild=true \
                 -p:Deterministic=true \
+                -p:UseAppHost=true \
                 --configuration "@buildType@" \
                 --no-restore \
                 ${versionFlag-} \

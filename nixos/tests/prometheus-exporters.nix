@@ -557,10 +557,12 @@ let
         systemd.services.prometheus-mail-exporter = {
           after = [ "postfix.service" ];
           requires = [ "postfix.service" ];
-          preStart = ''
-            mkdir -p -m 0700 mail-exporter/new
-          '';
           serviceConfig = {
+            ExecStartPre = [
+              "${pkgs.writeShellScript "create-maildir" ''
+                mkdir -p -m 0700 mail-exporter/new
+              ''}"
+            ];
             ProtectHome = true;
             ReadOnlyPaths = "/";
             ReadWritePaths = "/var/spool/mail";
@@ -1335,7 +1337,7 @@ mapAttrs
       '';
 
       meta = with maintainers; {
-        maintainers = [ willibutz elseym ];
+        maintainers = [ willibutz ];
       };
     }
   )))

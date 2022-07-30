@@ -257,6 +257,7 @@ let
         vaultenv
         wstunnel
         xmobar
+        xmonadctl
         xmonad-with-packages
         yi
         zsh-git-prompt
@@ -325,6 +326,7 @@ let
                 random
                 QuickCheck
                 cabal2nix
+                terminfo # isn't bundled for cross
                 xhtml # isn't bundled for cross
               ;
             };
@@ -336,6 +338,7 @@ let
                 random
                 QuickCheck
                 cabal2nix
+                terminfo # isn't bundled for cross
                 xhtml # isn't bundled for cross
               ;
             };
@@ -380,9 +383,6 @@ let
         compilerNames.ghc8107
         compilerNames.ghc902
         compilerNames.ghc923
-      ];
-      purescript = [
-        compilerNames.ghc8107
       ];
       purescript-cst = [
         compilerNames.ghc8107

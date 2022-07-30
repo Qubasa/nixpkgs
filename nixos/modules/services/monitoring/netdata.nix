@@ -186,7 +186,7 @@ in {
       description = "Real time performance monitoring";
       after = [ "network.target" ];
       wantedBy = [ "multi-user.target" ];
-      path = (with pkgs; [ curl gawk iproute2 which procps ])
+      path = (with pkgs; [ curl gawk iproute2 which procps bash ])
         ++ lib.optional cfg.python.enable (pkgs.python3.withPackages cfg.python.extraPackages)
         ++ lib.optional config.virtualisation.libvirtd.enable (config.virtualisation.libvirtd.package);
       environment = {
@@ -201,7 +201,9 @@ in {
       serviceConfig = {
         ExecStart = "${cfg.package}/bin/netdata -P /run/netdata/netdata.pid -D -c /etc/netdata/netdata.conf";
         ExecReload = "${pkgs.util-linux}/bin/kill -s HUP -s USR1 -s USR2 $MAINPID";
-        ExecPostStart = ''while [ "$(netdatacli ping)" != pong ]; do sleep 0.5; done'';
+        ExecStartPost = pkgs.writeShellScript "wait-for-netdata-up" ''
+          while [ "$(${pkgs.netdata}/bin/netdatacli ping)" != pong ]; do sleep 0.5; done
+        '';
 
         TimeoutStopSec = 60;
         Restart = "on-failure";

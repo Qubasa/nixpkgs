@@ -12,7 +12,7 @@
 , flask_mail
 
 # extras: fsqla
-, flask_sqlalchemy
+, flask-sqlalchemy
 , sqlalchemy
 , sqlalchemy-utils
 
@@ -23,7 +23,7 @@
 
 # propagates
 , blinker
-, email_validator
+, email-validator
 , flask
 , flask_login
 , flask_principal
@@ -54,7 +54,7 @@ buildPythonPackage rec {
 
   propagatedBuildInputs = [
     blinker
-    email_validator
+    email-validator
     flask
     flask_login
     flask_principal
@@ -74,7 +74,7 @@ buildPythonPackage rec {
       flask_mail
     ];
     fsqla = [
-      flask_sqlalchemy
+      flask-sqlalchemy
       sqlalchemy
       sqlalchemy-utils
     ];

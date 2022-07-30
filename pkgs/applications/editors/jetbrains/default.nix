@@ -94,7 +94,7 @@ let
           The new IDE extends the IntelliJ platform with the coding assistance
           and tool integrations specific for the Go language
         '';
-        maintainers = [ maintainers.miltador ];
+        maintainers = [ ];
       };
     }).overrideAttrs (attrs: {
       postFixup = (attrs.postFixup or "") + lib.optionalString stdenv.isLinux ''
@@ -162,11 +162,11 @@ let
           with on-the-fly code analysis, error prevention and
           automated refactorings for PHP and JavaScript code.
         '';
-        maintainers = with maintainers; [ schristo ];
+        maintainers = with maintainers; [ ];
       };
     });
 
-  buildPycharm = { pname, version, src, license, description, wmClass, product, ... }:
+  buildPycharm = { pname, version, src, license, description, wmClass, product, cythonSpeedup ? stdenv.isLinux, ... }:
     (mkJetBrainsProduct {
       inherit pname version src wmClass jdk product;
       productShort = "PyCharm";
@@ -189,6 +189,17 @@ let
         '';
         maintainers = with maintainers; [ ];
       };
+    }).overrideAttrs (finalAttrs: previousAttrs: optionalAttrs cythonSpeedup {
+      buildInputs = with python3.pkgs; [ python3 setuptools ];
+      preInstall = ''
+      echo "compiling cython debug speedups"
+      if [[ -d plugins/python-ce ]]; then
+          ${python3.interpreter} plugins/python-ce/helpers/pydev/setup_cython.py build_ext --inplace
+      else
+          ${python3.interpreter} plugins/python/helpers/pydev/setup_cython.py build_ext --inplace
+      fi
+      '';
+      # See https://www.jetbrains.com/help/pycharm/2022.1/cython-speedups.html
     });
 
   buildRider = { pname, version, src, license, description, wmClass, ... }:
@@ -206,7 +217,7 @@ let
           apps, services and libraries, Unity games, ASP.NET and
           ASP.NET Core web applications.
         '';
-        maintainers = [ maintainers.miltador ];
+        maintainers = [ ];
       };
     }).overrideAttrs (attrs: {
       postPatch = lib.optionalString (!stdenv.isDarwin) (attrs.postPatch + ''

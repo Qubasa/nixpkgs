@@ -1,8 +1,9 @@
 { lib
+, stdenv
 , buildPythonPackage
 , cython
 , devtools
-, email_validator
+, email-validator
 , fetchFromGitHub
 , pytest-mock
 , pytestCheckHook
@@ -10,6 +11,8 @@
 , pythonOlder
 , typing-extensions
 # dependencies for building documentation.
+# docs fail to build in Darwin sandbox: https://github.com/samuelcolvin/pydantic/issues/4245
+, withDocs ? (stdenv.hostPlatform == stdenv.buildPlatform && !stdenv.isDarwin)
 , ansi2html
 , markdown-include
 , mkdocs
@@ -24,15 +27,21 @@
 
 buildPythonPackage rec {
   pname = "pydantic";
-  version = "1.9.0";
-  outputs = [ "out" "doc" ];
+  version = "1.9.1";
+
+  outputs = [
+    "out"
+  ] ++ lib.optionals withDocs [
+    "doc"
+  ];
+
   disabled = pythonOlder "3.7";
 
   src = fetchFromGitHub {
     owner = "samuelcolvin";
     repo = pname;
-    rev = "v${version}";
-    sha256 = "sha256-C4WP8tiMRFmkDkQRrvP3yOSM2zN8pHJmX9cdANIckpM=";
+    rev = "refs/tags/v${version}";
+    sha256 = "sha256-jqTtNJQ9lRkxDYGG4vg91qH1jrxRU9orEeUofO+bBpA=";
   };
 
   postPatch = ''
@@ -41,7 +50,7 @@ buildPythonPackage rec {
 
   nativeBuildInputs = [
     cython
-
+  ] ++ lib.optionals withDocs [
     # dependencies for building documentation
     ansi2html
     markdown-include
@@ -57,7 +66,7 @@ buildPythonPackage rec {
 
   propagatedBuildInputs = [
     devtools
-    email_validator
+    email-validator
     python-dotenv
     typing-extensions
   ];
@@ -73,12 +82,12 @@ buildPythonPackage rec {
 
   # Must include current directory into PYTHONPATH, since documentation
   # building process expects "import pydantic" to work.
-  preBuild = ''
+  preBuild = lib.optionalString withDocs ''
     PYTHONPATH=$PWD:$PYTHONPATH make docs
   '';
 
   # Layout documentation in same way as "sphinxHook" does.
-  postInstall = ''
+  postInstall = lib.optionalString withDocs ''
     mkdir -p $out/share/doc/$name
     mv ./site $out/share/doc/$name/html
   '';

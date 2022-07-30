@@ -16,18 +16,19 @@
 , xz
 , zlib
 , zstd
+, jemalloc
 , follyMobile ? false
 }:
 
 stdenv.mkDerivation rec {
   pname = "folly";
-  version = "2022.05.23.00";
+  version = "2022.07.25.00";
 
   src = fetchFromGitHub {
     owner = "facebook";
     repo = "folly";
     rev = "v${version}";
-    sha256 = "sha256-ti/aqVg6b3ZPEI72AZNo/4NrtlI/mKQb39tlTw+3VG4=";
+    sha256 = "sha256-Bb6Txg0GNhkRP1qqeracmYENrO6x79HXMuWU2gtGGxU=";
   };
 
   nativeBuildInputs = [
@@ -50,7 +51,10 @@ stdenv.mkDerivation rec {
     libunwind
     fmt_8
     zstd
-  ];
+  ] ++ lib.optional stdenv.isLinux jemalloc;
+
+  # jemalloc headers are required in include/folly/portability/Malloc.h
+  propagatedBuildInputs = lib.optional stdenv.isLinux jemalloc;
 
   NIX_CFLAGS_COMPILE = [ "-DFOLLY_MOBILE=${if follyMobile then "1" else "0"}" "-fpermissive" ];
   cmakeFlags = [ "-DBUILD_SHARED_LIBS=ON" ];

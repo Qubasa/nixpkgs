@@ -39,6 +39,8 @@
 # IE: programs coupled with the compiler
 , allowGoReference ? false
 
+, CGO_ENABLED ? go.CGO_ENABLED
+
 , meta ? {}
 
 # Not needed with buildGoModule
@@ -141,6 +143,7 @@ let
 
     GO111MODULE = "on";
     GOFLAGS = lib.optionals (!proxyVendor) [ "-mod=vendor" ] ++ lib.optionals (!allowGoReference) [ "-trimpath" ];
+    inherit CGO_ENABLED;
 
     configurePhase = args.configurePhase or ''
       runHook preConfigure
@@ -175,12 +178,22 @@ let
       exclude+='\)'
 
       buildGoDir() {
-        local d; local cmd;
-        cmd="$1"
-        d="$2"
+        local cmd="$1" dir="$2"
+
         . $TMPDIR/buildFlagsArray
+
+        declare -a flags
+        flags+=($buildFlags "''${buildFlagsArray[@]}")
+        flags+=(''${tags:+-tags=${lib.concatStringsSep "," tags}})
+        flags+=(''${ldflags:+-ldflags="$ldflags"})
+        flags+=("-v" "-p" "$NIX_BUILD_CORES")
+
+        if [ "$cmd" = "test" ]; then
+          flags+=($checkFlags)
+        fi
+
         local OUT
-        if ! OUT="$(go $cmd $buildFlags "''${buildFlagsArray[@]}" ''${tags:+-tags=${lib.concatStringsSep "," tags}} ''${ldflags:+-ldflags="$ldflags"} -v -p $NIX_BUILD_CORES $d 2>&1)"; then
+        if ! OUT="$(go $cmd "''${flags[@]}" $dir 2>&1)"; then
           if ! echo "$OUT" | grep -qE '(no( buildable| non-test)?|build constraints exclude all) Go (source )?files'; then
             echo "$OUT" >&2
             return 1
@@ -238,7 +251,7 @@ let
       runHook preCheck
 
       for pkg in $(getGoDirs test); do
-        buildGoDir test $checkFlags "$pkg"
+        buildGoDir test "$pkg"
       done
 
       runHook postCheck
@@ -265,11 +278,7 @@ let
     meta = {
       # Add default meta information
       platforms = go.meta.platforms or lib.platforms.all;
-    } // meta // {
-      # add an extra maintainer to every package
-      maintainers = (meta.maintainers or []) ++
-                    [ lib.maintainers.kalbasit ];
-    };
+    } // meta;
   });
 in
 lib.warnIf (buildFlags != "" || buildFlagsArray != "")

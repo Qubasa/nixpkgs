@@ -2,7 +2,6 @@
 , beautifulsoup4
 , buildPythonPackage
 , click
-, dataclasses
 , dataclasses-json
 , fetchFromGitHub
 , htmlmin
@@ -19,16 +18,16 @@
 
 buildPythonPackage rec {
   pname = "json-schema-for-humans";
-  version = "0.41.1";
+  version = "0.41.6";
   format = "pyproject";
 
-  disabled = pythonOlder "3.6";
+  disabled = pythonOlder "3.7";
 
   src = fetchFromGitHub {
     owner = "coveooss";
     repo = pname;
     rev = "v${version}";
-    hash = "sha256-JQqoQiug4n1o4PbGT/Ry/Qib11KmaTmkhPtZjhwmpc4=";
+    hash = "sha256-t5t+tZwhzOHpI2nc69baWtZamEOeouseMuVBnCQyjzQ=";
   };
 
   postPatch = ''
@@ -50,8 +49,6 @@ buildPythonPackage rec {
     pytz
     pyyaml
     requests
-  ] ++ lib.optionals (pythonOlder "3.7") [
-    dataclasses
   ];
 
   checkInputs = [

@@ -1,5 +1,6 @@
 { stdenv, lib, rustPlatform, fetchgit
-, pkg-config, wayland-scanner, libcap, minijail, wayland, wayland-protocols
+, pkg-config, wayland-scanner
+, libcap, libdrm, libepoxy, minijail, virglrenderer, wayland, wayland-protocols
 , linux
 }:
 
@@ -8,7 +9,7 @@ let
   upstreamInfo = with builtins; fromJSON (readFile ./upstream-info.json);
 
   arch = with stdenv.hostPlatform;
-    if isAarch64 then "arm"
+    if isAarch64 then "aarch64"
     else if isx86_64 then "x86_64"
     else throw "no seccomp policy files available for host platform";
 
@@ -20,6 +21,8 @@ in
 
     src = fetchgit (builtins.removeAttrs upstreamInfo.src [ "date" "path" ]);
 
+    separateDebugInfo = true;
+
     patches = [
       ./default-seccomp-policy-dir.diff
     ];
@@ -28,7 +31,9 @@ in
 
     nativeBuildInputs = [ pkg-config wayland-scanner ];
 
-    buildInputs = [ libcap minijail wayland wayland-protocols ];
+    buildInputs = [
+      libcap libdrm libepoxy minijail virglrenderer wayland wayland-protocols
+    ];
 
     postPatch = ''
       cp ${./Cargo.lock} Cargo.lock
@@ -39,6 +44,8 @@ in
     preBuild = ''
       export DEFAULT_SECCOMP_POLICY_DIR=$out/share/policy
     '';
+
+    buildFeatures = [ "default" "virgl_renderer" "virgl_renderer_next" ];
 
     postInstall = ''
       mkdir -p $out/share/policy/
@@ -53,7 +60,7 @@ in
 
     meta = with lib; {
       description = "A secure virtual machine monitor for KVM";
-      homepage = "https://chromium.googlesource.com/chromiumos/platform/crosvm/";
+      homepage = "https://chromium.googlesource.com/crosvm/crosvm/";
       maintainers = with maintainers; [ qyliss ];
       license = licenses.bsd3;
       platforms = [ "aarch64-linux" "x86_64-linux" ];

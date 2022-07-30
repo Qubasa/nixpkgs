@@ -1,6 +1,7 @@
 { lib
+, stdenv
 , buildGoModule
-, buildGo118Module
+, buildGo117Module
 , fetchFromGitHub
 , callPackage
 , config
@@ -17,7 +18,7 @@ let
      , rev
      , version
      , sha256
-     , vendorSha256 ? throw "vendorSha256 missing: please use `buildGoModule`" /* added 2022/01 */
+     , vendorSha256
      , deleteVendor ? false
      , proxyVendor ? false
      , mkProviderGoModule ? buildGoModule
@@ -58,11 +59,18 @@ let
   # These are the providers that don't fall in line with the default model
   special-providers =
     {
-      brightbox = automated-providers.brightbox.override { mkProviderGoModule = buildGo118Module; };
-      # mkisofs needed to create ISOs holding cloud-init data,
-      # and wrapped to terraform via deecb4c1aab780047d79978c636eeb879dd68630
+      # mkisofs needed to create ISOs holding cloud-init data and wrapped to terraform via deecb4c1aab780047d79978c636eeb879dd68630
       libvirt = automated-providers.libvirt.overrideAttrs (_: { propagatedBuildInputs = [ cdrtools ]; });
-      linode = automated-providers.linode.override { mkProviderGoModule = buildGo118Module; };
+      # fails to build on x86_64-darwin with 1.18
+      lxd = automated-providers.lxd.override { mkProviderGoModule = buildGo117Module; };
+      # fails to build on x86_64-darwin with 1.18
+      netlify = automated-providers.netlify.override { mkProviderGoModule = buildGo117Module; };
+      # fails to build on x86_64-darwin with 1.18
+      pass = automated-providers.pass.override { mkProviderGoModule = buildGo117Module; };
+      # fails to build on x86_64-darwin with 1.18
+      skytap = automated-providers.skytap.override { mkProviderGoModule = buildGo117Module; };
+      # fails to build on x86_64-{darwin,linux} with 1.18
+      tencentcloud = automated-providers.tencentcloud.override { mkProviderGoModule = buildGo117Module; };
     };
 
   # Put all the providers we not longer support in this list.

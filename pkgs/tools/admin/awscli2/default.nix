@@ -22,6 +22,8 @@ let
           inherit version;
           sha256 = "sha256-uF0FZ7hmYUmpMXJxLmiSBzQzPAzn6Jt4s+mH9x5e1Pk=";
         };
+        # pypi missing test suite
+        doCheck = false;
       });
     };
   };
@@ -29,13 +31,13 @@ let
 in
 with py.pkgs; buildPythonApplication rec {
   pname = "awscli2";
-  version = "2.7.8"; # N.B: if you change this, check if overrides are still up-to-date
+  version = "2.7.14"; # N.B: if you change this, check if overrides are still up-to-date
 
   src = fetchFromGitHub {
     owner = "aws";
     repo = "aws-cli";
     rev = version;
-    sha256 = "sha256-6JlBgcHpR2ZfrljS+flxaog/KZQLvPUacJGLMQNsZ5Y=";
+    sha256 = "sha256-ji/hKoYxM3wag9DXy2e/VsJZVGN5UEebWX/ctOVJ42M=";
   };
 
   propagatedBuildInputs = [
@@ -71,6 +73,7 @@ with py.pkgs; buildPythonApplication rec {
       --replace "docutils>=0.10,<0.16" "docutils" \
       --replace "ruamel.yaml>=0.15.0,<0.16.0" "ruamel.yaml" \
       --replace "wcwidth<0.2.0" "wcwidth" \
+      --replace "prompt-toolkit>=3.0.24,<3.0.29" "prompt-toolkit~=3.0" \
       --replace "distro>=1.5.0,<1.6.0" "distro"
   '';
 
@@ -101,6 +104,6 @@ with py.pkgs; buildPythonApplication rec {
     changelog = "https://github.com/aws/aws-cli/blob/${version}/CHANGELOG.rst";
     description = "Unified tool to manage your AWS services";
     license = licenses.asl20;
-    maintainers = with maintainers; [ bhipple davegallant bryanasdev000 ];
+    maintainers = with maintainers; [ bhipple davegallant bryanasdev000 devusb ];
   };
 }

@@ -44,12 +44,19 @@ let
 
 in stdenv.mkDerivation rec {
   pname = "1password";
-  version = "8.8.0-119.BETA";
+  version = "8.8.0-215.BETA";
 
-  src = fetchurl {
-    url = "https://downloads.1password.com/linux/tar/beta/x86_64/1password-${version}.x64.tar.gz";
-    sha256 = "sha256-MnfO41r86jLGI9R30trCPR+BwXVKACyrB3dWSbPbBIA=";
-  };
+  src =
+    if stdenv.hostPlatform.isAarch64 then
+      fetchurl {
+        url = "https://downloads.1password.com/linux/tar/beta/aarch64/1password-${version}.arm64.tar.gz";
+        sha256 = "sha256-GjLwLeJ6GE39NFIZ+v83xaUVsgrkKRH3xt60aG/XrDg=";
+      }
+    else
+      fetchurl {
+        url = "https://downloads.1password.com/linux/tar/beta/x86_64/1password-${version}.x64.tar.gz";
+        sha256 = "sha256-TR0evvu5NNR6Kvqj8JlpYuTcK9Rmf1oDFGrfzrGZzo8=";
+      };
 
   nativeBuildInputs = [ makeWrapper ];
 
@@ -129,8 +136,9 @@ in stdenv.mkDerivation rec {
   meta = with lib; {
     description = "Multi-platform password manager";
     homepage = "https://1password.com/";
+    sourceProvenance = with sourceTypes; [ binaryNativeCode ];
     license = licenses.unfree;
     maintainers = with maintainers; [ timstott savannidgerinel maxeaubrey sebtm ];
-    platforms = [ "x86_64-linux" ];
+    platforms = [ "x86_64-linux" "aarch64-linux" ];
   };
 }
