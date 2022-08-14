@@ -315,6 +315,9 @@ self: super: builtins.intersectAttrs super {
   greenclip = addExtraLibrary pkgs.xorg.libXdmcp super.greenclip;
 
   # The cabal files for these libraries do not list the required system dependencies.
+  libjwt-typed = overrideCabal (drv: {
+    librarySystemDepends = [ pkgs.libjwt ];
+  }) super.libjwt-typed;
   miniball = overrideCabal (drv: {
     librarySystemDepends = [ pkgs.miniball ];
   }) super.miniball;
@@ -976,6 +979,9 @@ self: super: builtins.intersectAttrs super {
       install -Dm644 test/examples/*.jac -t "$docDir/examples"
     '';
   }) super.jacinda;
+
+  # Tests assume dist-newstyle build directory is present
+  cabal-hoogle = dontCheck super.cabal-hoogle;
 
   nfc = overrideCabal (drv: {
     isExecutable = true;

@@ -1,5 +1,6 @@
 { lib
 , stdenv
+, fetchpatch
 , fetchurl
 , tzdata
 , iana-etc
@@ -17,15 +18,11 @@
 , runtimeShell
 , buildPackages
 , pkgsBuildTarget
-, callPackage
-, threadsCross ? null # for MinGW
+, threadsCross
 }:
 
-# threadsCross is just for MinGW
-assert threadsCross != null -> stdenv.targetPlatform.isWindows;
-
 let
-  go_bootstrap = buildPackages.callPackage ./bootstrap.nix { };
+  go_bootstrap = buildPackages.callPackage ./bootstrap116.nix { };
 
   goBootstrap = runCommand "go-bootstrap" { } ''
     mkdir $out
@@ -36,19 +33,19 @@ let
   '';
 
   goarch = platform: {
-    "i686" = "386";
-    "x86_64" = "amd64";
     "aarch64" = "arm64";
     "arm" = "arm";
     "armv5tel" = "arm";
     "armv6l" = "arm";
     "armv7l" = "arm";
+    "i686" = "386";
     "mips" = "mips";
+    "mips64el" = "mips64le";
     "mipsel" = "mipsle";
+    "powerpc64le" = "ppc64le";
     "riscv64" = "riscv64";
     "s390x" = "s390x";
-    "powerpc64le" = "ppc64le";
-    "mips64el" = "mips64le";
+    "x86_64" = "amd64";
   }.${platform.parsed.cpu.name} or (throw "Unsupported system: ${platform.parsed.cpu.name}");
 
   # We need a target compiler which is still runnable at build time,
@@ -57,7 +54,6 @@ let
 
   isCross = stdenv.buildPlatform != stdenv.targetPlatform;
 in
-
 stdenv.mkDerivation rec {
   pname = "go";
   version = "1.18.4";
@@ -80,7 +76,7 @@ stdenv.mkDerivation rec {
 
   depsBuildTarget = lib.optional isCross targetCC;
 
-  depsTargetTarget = lib.optional (threadsCross != null) threadsCross;
+  depsTargetTarget = lib.optional stdenv.targetPlatform.isWindows threadsCross;
 
   hardeningDisable = [ "all" ];
 
@@ -172,7 +168,11 @@ stdenv.mkDerivation rec {
     touch $TMPDIR/group $TMPDIR/hosts $TMPDIR/passwd
   '';
 
-  patches = [
+  patches = let
+    fetchBase64Patch = args: (fetchpatch args).overrideAttrs (o: {
+      postFetch = "mv $out p; base64 -d p > $out; " + o.postFetch;
+    });
+  in [
     ./remove-tools-1.11.patch
     ./ssl-cert-file-1.16.patch
     ./remove-test-pie-1.15.patch
@@ -182,6 +182,12 @@ stdenv.mkDerivation rec {
     ./skip-nohup-tests.patch
     ./skip-cgo-tests-1.15.patch
     ./go_no_vendor_checks-1.16.patch
+
+    # https://go-review.googlesource.com/c/go/+/417615/
+    (fetchBase64Patch {
+      url = "https://go-review.googlesource.com/changes/go~417615/revisions/3/patch";
+      sha256 = "sha256-Gu5eZUwGGch7et75A/BNynbs4VlQUBClVUxjxPkdjOs=";
+    })
   ];
 
   postPatch = ''
@@ -277,10 +283,10 @@ stdenv.mkDerivation rec {
   disallowedReferences = [ goBootstrap ];
 
   meta = with lib; {
-    homepage = "https://go.dev/";
     description = "The Go Programming language";
+    homepage = "https://go.dev/";
     license = licenses.bsd3;
     maintainers = teams.golang.members;
-    platforms = platforms.linux ++ platforms.darwin;
+    platforms = platforms.darwin ++ platforms.linux;
   };
 }

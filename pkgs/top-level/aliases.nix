@@ -408,6 +408,7 @@ mapAliases ({
   facette = throw "facette has been removed"; # Added 2020-01-06
   fast-neural-doodle = throw "fast-neural-doodle has been removed, as the upstream project has been abandoned"; # Added 2020-03-28
   fastnlo = fastnlo_toolkit; # Added 2021-04-24
+  fbreader = throw "fbreader has been removed, as the upstream project has been archived"; # Added 2022-05-26
   fedora-coreos-config-transpiler = throw "fedora-coreos-config-transpiler has been renamed to 'butane'"; # Added 2021-04-13
   feedreader = throw "feedreader is no longer activily maintained since 2019. The developer is working on a spiritual successor called NewsFlash."; # Added 2022-05-03
   fetchFromGithub = throw "You meant fetchFromGitHub, with a capital H";
@@ -422,6 +423,7 @@ mapAliases ({
   firefox-wrapper = throw "'firefox-wrapper' has been renamed to/replaced by 'firefox'"; # Converted to throw 2022-02-22
   firmwareLinuxNonfree = linux-firmware; # Added 2022-01-09
   fish-foreign-env = throw "fish-foreign-env has been replaced with fishPlugins.foreign-env"; # Added 2020-12-29, modified 2021-01-10
+  fishfight = jumpy; # Added 2022-08-03
   flameGraph = throw "'flameGraph' has been renamed to/replaced by 'flamegraph'"; # Converted to throw 2022-02-22
   flashplayer-standalone-debugger = throw "flashplayer-standalone-debugger has been removed as Adobe Flash Player is now deprecated"; # Added 2021-02-07
   flashplayer-standalone = throw "flashplayer-standalone has been removed as Adobe Flash Player is now deprecated"; # Added 2021-02-07
@@ -579,6 +581,8 @@ mapAliases ({
   ### H ###
 
   hal-flash = throw "hal-flash has been removed as Adobe Flash Player is now deprecated"; # Added 2021-02-07
+  hardlink = throw "hardlink was merged into util-linux since 2019-06-14."; # Added 2022-08-12
+  inherit (harePackages) hare harec; # Added 2022-08-10
   hawkthorne = throw "hawkthorne has been removed because it depended on a broken version of love"; # Added 2022-01-15
   heapster = throw "Heapster is now retired. See https://github.com/kubernetes-retired/heapster/blob/master/docs/deprecation.md"; # Added 2022-04-05
   heimdalFull = throw "'heimdalFull' has been renamed to/replaced by 'heimdal'"; # Converted to throw 2022-02-22
@@ -630,6 +634,7 @@ mapAliases ({
 
   jack2Full = jack2; # moved from top-level 2021-03-14
   jami-client-gnome = throw "jami-client-gnome has been removed: abandoned upstream"; # Added 2022-05-15
+  jami-libclient = throw "jami-libclient has been removed: moved into jami-qt"; # Added 2022-07-29
   jamomacore = throw "jamomacore has been removed: abandoned upstream"; # Added 2020-11-21
   jbidwatcher = throw "jbidwatcher was discontinued in march 2021"; # Added 2021-03-15
   jbuilder = throw "'jbuilder' has been renamed to/replaced by 'dune_1'"; # Converted to throw 2022-02-22
@@ -752,6 +757,7 @@ mapAliases ({
   libva-full = throw "'libva-full' has been renamed to/replaced by 'libva'"; # Converted to throw 2022-02-22
   libva1-full = throw "'libva1-full' has been renamed to/replaced by 'libva1'"; # Converted to throw 2022-02-22
   libwnck3 = libwnck;
+  lightdm_gtk_greeter = lightdm-gtk-greeter; # Added 2022-08-01
   lighthouse = throw "lighthouse has been removed: abandoned by upstream"; # Added 2022-04-24
   lighttable = throw "'lighttable' crashes (SIGSEGV) on startup, has not been updated in years and depends on deprecated GTK2"; # Added 2022-06-15
   lilypond-unstable = lilypond; # Added 2021-03-11
@@ -772,6 +778,7 @@ mapAliases ({
   linuxPackages_5_16 = linuxKernel.packages.linux_5_16;
   linuxPackages_5_17 = linuxKernel.packages.linux_5_17;
   linuxPackages_5_18 = linuxKernel.packages.linux_5_18;
+  linuxPackages_5_19 = linuxKernel.packages.linux_5_19;
   linuxPackages_5_4 = linuxKernel.packages.linux_5_4;
   linuxPackages_hardkernel_4_14 = linuxKernel.packages.hardkernel_4_14;
   linuxPackages_rpi0 = linuxKernel.packages.linux_rpi1;
@@ -791,6 +798,7 @@ mapAliases ({
   linux_5_16 = linuxKernel.kernels.linux_5_16;
   linux_5_17 = linuxKernel.kernels.linux_5_17;
   linux_5_18 = linuxKernel.kernels.linux_5_18;
+  linux_5_19 = linuxKernel.kernels.linux_5_19;
   linux_5_4 = linuxKernel.kernels.linux_5_4;
   linux_mptcp_95 = linuxKernel.kernels.linux_mptcp_95;
   linux_rpi0 = linuxKernel.kernels.linux_rpi1;
@@ -889,6 +897,7 @@ mapAliases ({
   mopidy-spotify-tunigo = throw "mopidy-spotify-tunigo has been removed because Spotify stopped supporting libspotify"; # added 2022-05-29
 
   morituri = throw "'morituri' has been renamed to/replaced by 'whipper'"; # Converted to throw 2022-02-22
+  moz-phab = mozphab; # Added 2022-08-09
   mozart-binary = mozart2-binary; # Added 2019-09-23
   mozart = mozart2-binary; # Added 2019-09-23
   mpc_cli = mpc-cli; # moved from top-level 2022-01-24
@@ -1365,6 +1374,8 @@ mapAliases ({
 
   tahoelafs = throw "'tahoelafs' has been renamed to/replaced by 'tahoe-lafs'"; # Converted to throw 2022-02-22
   tangogps = foxtrotgps; # Added 2020-01-26
+  taplo-cli = taplo; # Added 2022-07-30
+  taplo-lsp = taplo; # Added 2022-07-30
   tdm = throw "tdm has been removed because nobody can figure out how to fix OpenAL integration. Use precompiled binary and `steam-run` instead";
   teleconsole = throw "teleconsole is archived by upstream"; # Added 2022-04-05
   telepathy-qt = throw "telepathy-qt no longer supports Qt 4. Please use libsForQt5.telepathy instead"; # Added 2020-07-02
@@ -1379,6 +1390,7 @@ mapAliases ({
   telepathy_qt5 = throw "'telepathy_qt5' has been renamed to/replaced by 'libsForQt5.telepathy'"; # Converted to throw 2022-02-22
   telnet = throw "'telnet' has been renamed to/replaced by 'inetutils'"; # Converted to throw 2022-02-22
   terminus = throw "terminus has been removed, it was unmaintained in nixpkgs"; # Added 2021-08-21
+  terraform-full = throw "terraform-full has been removed, it was an alias for 'terraform.full'"; # Added 2022-08-02
   terraform_0_13 = throw "terraform_0_13 has been removed from nixpkgs"; # Added 2022-06-26
   terraform_0_14 = throw "terraform_0_14 has been removed from nixpkgs"; # Added 2022-06-26
   terraform_0_15 = throw "terraform_0_15 has been removed from nixpkgs"; # Added 2022-06-26
@@ -1520,6 +1532,10 @@ mapAliases ({
   '';
   xf86_input_multitouch = throw "xf86_input_multitouch has been removed from nixpkgs"; # Added 2020-01-20
   xlibs = throw "'xlibs' has been renamed to/replaced by 'xorg'"; # Converted to throw 2022-02-22
+  xow = throw (
+    "Upstream has ended support for 'xow' and the package has been removed" +
+    "from nixpkgs. Users are urged to switch to 'xone'."
+  ); # Added 2022-08-02
   xpraGtk3 = throw "'xpraGtk3' has been renamed to/replaced by 'xpra'"; # Converted to throw 2022-02-22
   xv = xxv; # Added 2020-02-22
   xvfb_run = xvfb-run; # Added 2021-05-07

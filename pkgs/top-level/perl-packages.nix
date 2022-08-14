@@ -759,10 +759,10 @@ let
 
   Appcpm = buildPerlModule {
     pname = "App-cpm";
-    version = "0.997006";
+    version = "0.997011";
     src = fetchurl {
-      url = "mirror://cpan/authors/id/S/SK/SKAJI/App-cpm-0.997006.tar.gz";
-      sha256 = "1mh4bg141qbch0vdvir2l9533zzm3k8hnqx36iwciwzhvpd9hl9s";
+      url = "mirror://cpan/authors/id/S/SK/SKAJI/App-cpm-0.997011.tar.gz";
+      sha256 = "sha256-YyECxuZ958nP9R1vqg2dA7/vvtNbXMXZaRn3uSAlAck=";
     };
     buildInputs = [ ModuleBuildTiny ];
     propagatedBuildInputs = [ CPAN02PackagesSearch CPANCommonIndex CPANDistnameInfo ClassTiny CommandRunner ExtUtilsInstall ExtUtilsInstallPaths FileCopyRecursive Filepushd HTTPTinyish MenloLegacy Modulecpmfile ModuleCPANfile ParsePMFile ParallelPipes locallib ];
@@ -1517,6 +1517,22 @@ let
     buildInputs = [ ExtUtilsDepends ];
     meta = {
       description = "Wrap OP check callbacks";
+      license = with lib.licenses; [ artistic1 gpl1Plus ];
+    };
+  };
+
+  BioPerl = buildPerlPackage {
+    pname = "BioPerl";
+    version = "1.7.8";
+    src = fetchurl {
+      url = "mirror://cpan/authors/id/C/CJ/CJFIELDS/BioPerl-1.7.8.tar.gz";
+      sha256 = "c490a3be7715ea6e4305efd9710e5edab82dabc55fd786b6505b550a30d71738";
+    };
+    buildInputs = [ ModuleBuild TestMemoryCycle TestWeaken TestDeep TestWarn TestException TestDifferences ];
+    propagatedBuildInputs = [ DataStag Error Graph HTTPMessage IOString IOStringy IPCRun LWP ListMoreUtils SetScalar TestMost TestRequiresInternet URI XMLDOM XMLLibXML XMLSAX XMLSAXBase XMLSAXWriter XMLTwig XMLWriter YAML DBFile libxml_perl ];
+    meta = {
+      homepage = "https://metacpan.org/release/BioPerl";
+      description = "Perl modules for biology";
       license = with lib.licenses; [ artistic1 gpl1Plus ];
     };
   };
@@ -3527,13 +3543,13 @@ let
 
   CommandRunner = buildPerlModule {
     pname = "Command-Runner";
-    version = "0.103";
+    version = "0.200";
     src = fetchurl {
-      url = "mirror://cpan/authors/id/S/SK/SKAJI/Command-Runner-0.103.tar.gz";
-      sha256 = "0f180b5c3b3fc9db7b83d4a5fdd959db34f7d6d2472f817dbf8b4b795a9dc82a";
+      url = "mirror://cpan/authors/id/S/SK/SKAJI/Command-Runner-0.200.tar.gz";
+      sha256 = "sha256-WtJtBhEb/s1TyPW7XeqUvyAl9seOlfbYAS5M+oninyY=";
     };
     buildInputs = [ ModuleBuildTiny ];
-    propagatedBuildInputs = [ CaptureTiny StringShellQuote Win32ShellQuote ];
+    propagatedBuildInputs = [ CaptureTiny Filepushd StringShellQuote Win32ShellQuote ];
     meta = {
       homepage = "https://github.com/skaji/Command-Runner";
       description = "Run external commands and Perl code refs";
@@ -5435,6 +5451,20 @@ let
     };
     propagatedBuildInputs = [ DataPage MathRound ];
     meta = {
+      license = with lib.licenses; [ artistic1 gpl1Plus ];
+    };
+  };
+
+  DataStag = buildPerlPackage {
+    pname = "Data-Stag";
+    version = "0.14";
+    src = fetchurl {
+      url = "mirror://cpan/authors/id/C/CM/CMUNGALL/Data-Stag-0.14.tar.gz";
+      sha256 = "4ab122508d2fb86d171a15f4006e5cf896d5facfa65219c0b243a89906258e59";
+    };
+    propagatedBuildInputs = [ IOString ];
+    meta = {
+      description = "Structured Tags";
       license = with lib.licenses; [ artistic1 gpl1Plus ];
     };
   };
@@ -9248,10 +9278,10 @@ let
 
   Future = buildPerlModule {
     pname = "Future";
-    version = "0.47";
+    version = "0.48";
     src = fetchurl {
-      url = "mirror://cpan/authors/id/P/PE/PEVANS/Future-0.47.tar.gz";
-      sha256 = "1pmhkhrmvaf8c3jbrfqqhmxjrzcsxdn2q7apj033gwxggland88h";
+      url = "mirror://cpan/authors/id/P/PE/PEVANS/Future-0.48.tar.gz";
+      sha256 = "sha256-D+ixXBQvKjBKMXGKIKEFA6m0TMASw69eN7i34koHUqM=";
     };
     buildInputs = [ TestFatal TestIdentity TestRefcount ];
     meta = {
@@ -9262,16 +9292,33 @@ let
 
   FutureAsyncAwait = buildPerlModule rec {
     pname = "Future-AsyncAwait";
-    version = "0.52";
+    version = "0.58";
     src = fetchurl {
-      url = "mirror://cpan/authors/id/P/PE/PEVANS/Future-AsyncAwait-${version}.tar.gz";
-      sha256 = "0dwij2r51vij91hx808zc2l5q38h55jahzrh73h4rn816jv597yx";
+      url = "mirror://cpan/authors/id/P/PE/PEVANS/Future-AsyncAwait-0.58.tar.gz";
+      sha256 = "sha256-OLtJ9jabBUrAUuaNomR/4i0Io605rgNuJ6KRELtOQi4=";
     };
-    buildInputs = [ TestRefcount ];
+    buildInputs = [ TestRefcount TestFatal ];
     propagatedBuildInputs = [ Future XSParseKeyword XSParseSublike ];
     perlPreHook = lib.optionalString stdenv.isDarwin "export LD=$CC";
     meta = {
       description = "Deferred subroutine syntax for futures";
+      license = with lib.licenses; [ artistic1 gpl1Plus ];
+      maintainers = [ maintainers.zakame ];
+    };
+  };
+
+  FutureIO = buildPerlModule {
+    pname = "Future-IO";
+    version = "0.11";
+    src = fetchurl {
+      url = "mirror://cpan/authors/id/P/PE/PEVANS/Future-IO-0.11.tar.gz";
+      sha256 = "sha256-dVM2JvgfdoxfIxyXAhBsJbV3KotplcqixYvMSsyRB8k=";
+    };
+    buildInputs = [ TestIdentity ];
+    propagatedBuildInputs = [ Future StructDumb ];
+    preCheck = "rm t/06connect.t"; # this test fails in sandbox
+    meta = {
+      description = "Future-returning IO methods";
       license = with lib.licenses; [ artistic1 gpl1Plus ];
       maintainers = [ maintainers.zakame ];
     };
@@ -11014,10 +11061,10 @@ let
 
   Imager = buildPerlPackage {
     pname = "Imager";
-    version = "1.012";
+    version = "1.019";
     src = fetchurl {
-      url = "mirror://cpan/authors/id/T/TO/TONYC/Imager-1.012.tar.gz";
-      sha256 = "a321c728e3277fd15de842351e69bbef0e2a5a608a31d089e5029b8381e23f21";
+      url = "mirror://cpan/authors/id/T/TO/TONYC/Imager-1.019.tar.gz";
+      sha256 = "sha256-dNRNcBwfFPxLmE+toelVcmtQTC2LBtJl56hh+llDy0g=";
     };
     buildInputs = [ pkgs.freetype pkgs.fontconfig pkgs.libjpeg pkgs.libpng ];
     makeMakerFlags = "--incpath ${pkgs.libjpeg.dev}/include --libpath ${pkgs.libjpeg.out}/lib --incpath ${pkgs.libpng.dev}/include --libpath ${pkgs.libpng.out}/lib";
@@ -11214,14 +11261,14 @@ let
 
   IOAsync = buildPerlModule {
     pname = "IO-Async";
-    version = "0.78";
+    version = "0.801";
     src = fetchurl {
-      url = "mirror://cpan/authors/id/P/PE/PEVANS/IO-Async-0.78.tar.gz";
-      sha256 = "sha256-P7UYhZd7hiGKiepC84yvvOWCO/SPqqLRhaGGwqNYNmw=";
+      url = "mirror://cpan/authors/id/P/PE/PEVANS/IO-Async-0.801.tar.gz";
+      sha256 = "sha256-ieRZuhe3alcrsbS7EgMBVB6MyTJCQXFmI2tsbbDhybk=";
     };
     preCheck = "rm t/50resolver.t"; # this test fails with "Temporary failure in name resolution" in sandbox
     propagatedBuildInputs = [ Future StructDumb ];
-    buildInputs = [ TestFatal TestIdentity TestMetricsAny TestRefcount ];
+    buildInputs = [ FutureIO TestFatal TestIdentity TestMetricsAny TestRefcount ];
     meta = {
       description = "Asynchronous event-driven programming";
       license = with lib.licenses; [ artistic1 gpl1Plus ];
@@ -11230,10 +11277,10 @@ let
 
   IOAsyncSSL = buildPerlModule {
     pname = "IO-Async-SSL";
-    version = "0.22";
+    version = "0.23";
     src = fetchurl {
-      url = "mirror://cpan/authors/id/P/PE/PEVANS/IO-Async-SSL-0.22.tar.gz";
-      sha256 = "0c7363a7f1a08805bd1b2cf2b1a42a950ca71914c2aedbdd985970e011331a21";
+      url = "mirror://cpan/authors/id/P/PE/PEVANS/IO-Async-SSL-0.23.tar.gz";
+      sha256 = "sha256-0vyuFuJ+F6yjkDpK1aK/L7wmjQZRzn8ARabQVG9YTy4=";
     };
     buildInputs = [ TestIdentity ];
     propagatedBuildInputs = [ Future IOAsync IOSocketSSL ];
@@ -13030,12 +13077,12 @@ let
 
   LWP = buildPerlPackage {
     pname = "libwww-perl";
-    version = "6.49";
+    version = "6.67";
     src = fetchurl {
-      url = "mirror://cpan/authors/id/O/OA/OALDERS/libwww-perl-6.49.tar.gz";
-      sha256 = "19k0cg4j4qz005a4ngy48z4r8dc99dxlpq8kvj7qnk15mvgd1r63";
+      url = "mirror://cpan/authors/id/O/OA/OALDERS/libwww-perl-6.67.tar.gz";
+      sha256 = "sha256-lu7ECj/QqhvYNBF75eshxDj3MJTYYaGn5XdPCxImtyM=";
     };
-    propagatedBuildInputs = [ FileListing HTMLParser HTTPCookies HTTPDaemon HTTPNegotiate NetHTTP TryTiny WWWRobotRules ];
+    propagatedBuildInputs = [ FileListing HTMLParser HTTPCookies HTTPNegotiate NetHTTP TryTiny WWWRobotRules ];
     # support cross-compilation by avoiding using `has_module` which does not work in miniperl (it requires B native module)
     postPatch = lib.optionalString (stdenv.buildPlatform != stdenv.hostPlatform) ''
       substituteInPlace Makefile.PL --replace 'if has_module' 'if 0; #'
@@ -13045,7 +13092,7 @@ let
       description = "The World-Wide Web library for Perl";
       license = with licenses; [ artistic1 gpl1Plus ];
     };
-    buildInputs = [ TestFatal TestNeeds TestRequiresInternet ];
+    checkInputs = [ HTTPDaemon TestFatal TestNeeds TestRequiresInternet ];
   };
 
   LWPAuthenOAuth = buildPerlPackage {
@@ -16772,6 +16819,19 @@ let
     };
   };
 
+  NetMQTTSimple = buildPerlPackage {
+    pname = "Net-MQTT-Simple";
+    version = "1.26";
+    src = fetchurl {
+      url = "mirror://cpan/authors/id/J/JU/JUERD/Net-MQTT-Simple-1.26.tar.gz";
+      sha256 = "sha256-ERxNNnu1AgXci8AjFfDGuw3mDRwwfQLnUuQuwRtPiLQ=";
+    };
+    meta = {
+      description = "Minimal MQTT version 3 interface";
+      license = with lib.licenses; [ free ];
+    };
+  };
+
   NetOAuth = buildPerlModule {
     pname = "Net-OAuth";
     version = "0.28";
@@ -17253,6 +17313,23 @@ let
     };
   };
 
+  ObjectPad = buildPerlModule {
+    pname = "Object-Pad";
+    version = "0.68";
+    src = fetchurl {
+      url = "mirror://cpan/authors/id/P/PE/PEVANS/Object-Pad-0.68.tar.gz";
+      sha256 = "sha256-xN5jBIQxMJZNrskozF99HphTnu/X7azHvn4Yg0XhnXE=";
+    };
+    buildInputs = [ TestFatal TestRefcount ];
+    perlPreHook = lib.optionalString stdenv.isDarwin "export LD=$CC";
+    propagatedBuildInputs = [ XSParseKeyword XSParseSublike ];
+    meta = {
+      description = "simple syntax for lexical field-based objects";
+      license = with lib.licenses; [ artistic1 gpl1Plus ];
+      maintainers = [ maintainers.zakame ];
+    };
+  };
+
   ObjectSignature = buildPerlPackage {
     pname = "Object-Signature";
     version = "1.08";
@@ -17533,10 +17610,10 @@ let
 
   ParallelPipes = buildPerlModule {
     pname = "Parallel-Pipes";
-    version = "0.005";
+    version = "0.102";
     src = fetchurl {
-      url = "mirror://cpan/authors/id/S/SK/SKAJI/Parallel-Pipes-0.005.tar.gz";
-      sha256 = "44bd9e2be33d7b314f81c9b886a95d53514689090635f9fad53181f2d3051fd5";
+      url = "mirror://cpan/authors/id/S/SK/SKAJI/Parallel-Pipes-0.102.tar.gz";
+      sha256 = "sha256-JjZfgQXcYGsUC9HUX41w1cMFQ5D3Xk/bdISj5ZHL+pc=";
     };
     buildInputs = [ ModuleBuildTiny ];
     meta = {
@@ -20028,6 +20105,7 @@ let
       license = with lib.licenses; [ artistic1 gpl1Plus ];
     };
     buildInputs = [ TestWarn XMLParserLite ];
+    checkInputs = [ HTTPDaemon ];
   };
 
   Socket6 = buildPerlPackage {
@@ -21101,10 +21179,10 @@ let
 
   SyntaxKeywordTry = buildPerlModule {
     pname = "Syntax-Keyword-Try";
-    version = "0.25";
+    version = "0.27";
     src = fetchurl {
-      url = "mirror://cpan/authors/id/P/PE/PEVANS/Syntax-Keyword-Try-0.25.tar.gz";
-      sha256 = "0xd82gcpcrnmwxsbk7x0ainmyybdc087g6j69hrpy80j0asnq2f5";
+      url = "mirror://cpan/authors/id/P/PE/PEVANS/Syntax-Keyword-Try-0.27.tar.gz";
+      sha256 = "sha256-JG4bAz4/8i/VQgVQ1Lbg1WtDjNy7nTXL6LG1uhV03iM=";
     };
     propagatedBuildInputs = [ XSParseKeyword ];
     perlPreHook = lib.optionalString stdenv.isDarwin "export LD=$CC";
@@ -23275,6 +23353,20 @@ let
     };
   };
 
+  TestWeaken = buildPerlPackage {
+    pname = "Test-Weaken";
+    version = "3.022000";
+    src = fetchurl {
+      url = "mirror://cpan/authors/id/K/KR/KRYDE/Test-Weaken-3.022000.tar.gz";
+      sha256 = "2631a87121310262e0e96107a6fa0ed69487b7701520773bee5fa9accc295f5b";
+    };
+    propagatedBuildInputs = [ ScalarListUtils ];
+    meta = {
+      description = "Test that freed memory objects were, indeed, freed";
+      license = with lib.licenses; [ artistic1 gpl1Plus ];
+    };
+  };
+
   TestWithoutModule = buildPerlPackage {
     pname = "Test-Without-Module";
     version = "0.20";
@@ -24473,6 +24565,7 @@ let
       IPCShareLite
       JSON
       LWP
+      HTTPDaemon
       pkgs.cairo
       pkgs.mapnik
       pkgs.zlib
@@ -25794,10 +25887,10 @@ let
 
   XSParseKeyword = buildPerlModule {
     pname = "XS-Parse-Keyword";
-    version = "0.12";
+    version = "0.25";
     src = fetchurl {
-      url = "mirror://cpan/authors/id/P/PE/PEVANS/XS-Parse-Keyword-0.12.tar.gz";
-      sha256 = "0crwhcw9ciqndvwvhycd93m6jgyhi77yyj4vi9xfyglpv84p3y68";
+      url = "mirror://cpan/authors/id/P/PE/PEVANS/XS-Parse-Keyword-0.25.tar.gz";
+      sha256 = "sha256-9e2zDPfH8iDQxsMdwetVQDKECpnHwpgxT1zD/vZscsc=";
     };
     buildInputs = [ ExtUtilsCChecker ];
     perlPreHook = lib.optionalString stdenv.isDarwin "export LD=$CC";
@@ -25810,10 +25903,10 @@ let
 
   XSParseSublike = buildPerlModule {
     pname = "XS-Parse-Sublike";
-    version = "0.12";
+    version = "0.16";
     src = fetchurl {
-      url = "mirror://cpan/authors/id/P/PE/PEVANS/XS-Parse-Sublike-0.12.tar.gz";
-      sha256 = "08kpia48f1rqc44rvbns97h3jyy2y5c8qlkh4a95v1m0yr5cb22s";
+      url = "mirror://cpan/authors/id/P/PE/PEVANS/XS-Parse-Sublike-0.16.tar.gz";
+      sha256 = "sha256-IV5AmzmFgdJfDv8DeFBjvCUTu4YbrL6Z/m1VNTRvZt8=";
     };
     buildInputs = [ TestFatal ];
     perlPreHook = lib.optionalString stdenv.isDarwin "export LD=$CC";
