@@ -282,6 +282,8 @@ with pkgs;
 
   beyond-identity = callPackage ../tools/security/beyond-identity {};
 
+  binbloom = callPackage ../tools/security/binbloom {};
+
   bingo = callPackage ../development/tools/bingo {};
 
   binserve = callPackage ../servers/binserve {
@@ -367,6 +369,8 @@ with pkgs;
   };
 
   conftest = callPackage ../development/tools/conftest { };
+
+  colemak-dh = callPackage ../data/misc/colemak-dh { };
 
   colmena = callPackage ../tools/admin/colmena { };
 
@@ -1495,7 +1499,9 @@ with pkgs;
 
   pcsxr = callPackage ../applications/emulators/pcsxr { };
 
-  ppsspp = libsForQt5.callPackage ../applications/emulators/ppsspp { };
+  ppsspp = callPackage ../applications/emulators/ppsspp {
+    inherit (libsForQt5) qtbase qtmultimedia wrapQtAppsHook;
+  };
 
   proton-caller = callPackage ../applications/emulators/proton-caller { };
 
@@ -5456,11 +5462,14 @@ with pkgs;
 
   ddrutility = callPackage ../tools/system/ddrutility { };
 
-  deluge-2_x = callPackage ../applications/networking/p2p/deluge {
-    pythonPackages = python3Packages;
+  inherit (callPackages ../applications/networking/p2p/deluge {
     libtorrent-rasterbar = libtorrent-rasterbar-1_2_x.override { python = python3; };
-  };
-  deluge = deluge-2_x;
+  })
+    deluge-gtk
+    deluged
+    deluge;
+
+  deluge-2_x = deluge;
 
   desktop-file-utils = callPackage ../tools/misc/desktop-file-utils { };
 
@@ -8071,7 +8080,7 @@ with pkgs;
 
   mcfly = callPackage ../tools/misc/mcfly { };
 
-  m2r = python3Packages.callPackage ../tools/text/m2r { };
+  m2r = with python3Packages; toPythonApplication m2r;
 
   md2gemini = with python3.pkgs; toPythonApplication md2gemini;
 
@@ -11643,6 +11652,8 @@ with pkgs;
 
   up = callPackage ../tools/misc/up { };
 
+  upbound = callPackage ../development/tools/upbound { };
+
   upterm = callPackage ../tools/misc/upterm { };
 
   upx = callPackage ../tools/compression/upx { };
@@ -12400,6 +12411,8 @@ with pkgs;
   };
 
   zdelta = callPackage ../tools/compression/zdelta { };
+
+  zed = callPackage ../development/tools/zed { };
 
   zellij = callPackage ../tools/misc/zellij {
     inherit (darwin.apple_sdk.frameworks) DiskArbitration Foundation;
@@ -16270,6 +16283,8 @@ with pkgs;
   kafka-delta-ingest = callPackage ../development/tools/kafka-delta-ingest { };
 
   kamid = callPackage ../servers/ftp/kamid { };
+
+  karate = callPackage ../development/tools/karate { };
 
   kati = callPackage ../development/tools/build-managers/kati { };
 
@@ -21017,7 +21032,7 @@ with pkgs;
 
   qgnomeplatform = libsForQt5.callPackage ../development/libraries/qgnomeplatform { };
 
-  randomx = callPackage ../development/libraries/randomx { };
+  randomx = darwin.apple_sdk_11_0.callPackage ../development/libraries/randomx { };
 
   remodel = callPackage ../development/tools/remodel {
     inherit (darwin.apple_sdk.frameworks) Security;
@@ -22355,7 +22370,7 @@ with pkgs;
   codeowners = callPackage ../development/tools/codeowners { };
 
   couchdb3 = callPackage ../servers/http/couchdb/3.nix {
-    erlang = erlangR22;
+    erlang = buildPackages.erlangR22;
   };
 
   dcnnt = python3Packages.callPackage ../servers/dcnnt { };
@@ -25070,6 +25085,8 @@ with pkgs;
 
   fira-code = callPackage ../data/fonts/fira-code { };
   fira-code-symbols = callPackage ../data/fonts/fira-code/symbols.nix { };
+
+  fira-go = callPackage ../data/fonts/fira-go { };
 
   fira-mono = callPackage ../data/fonts/fira-mono { };
 
@@ -30639,16 +30656,6 @@ with pkgs;
 
   spotify = callPackage ../applications/audio/spotify/wrapper.nix { };
 
-  sourcetrail = let
-    llvmPackages = llvmPackages_10;
-  in libsForQt5.callPackage ../development/tools/sourcetrail {
-    stdenv = if stdenv.cc.isClang then llvmPackages.stdenv else stdenv;
-    jdk = jdk8;
-    pythonPackages = python3Packages;
-    inherit llvmPackages;
-    boost = boost16x; # Filesystem tests in the checkPhase fail with Boost 1.77
-  };
-
   spotifywm = callPackage ../applications/audio/spotifywm { };
 
   psst = callPackage ../applications/audio/psst { };
@@ -30808,6 +30815,7 @@ with pkgs;
   teams = callPackage ../applications/networking/instant-messengers/teams { };
 
   teamspeak_client = libsForQt5.callPackage ../applications/networking/instant-messengers/teamspeak/client.nix { };
+  teamspeak5_client = callPackage ../applications/networking/instant-messengers/teamspeak/client5.nix { };
   teamspeak_server = callPackage ../applications/networking/instant-messengers/teamspeak/server.nix { };
 
   taskell = haskell.lib.compose.justStaticExecutables haskellPackages.taskell;
@@ -31974,18 +31982,17 @@ with pkgs;
 
   inherit (nodePackages) zx;
 
-  zynaddsubfx = zyn-fusion;
+  zynaddsubfx = callPackage ../applications/audio/zynaddsubfx {
+    guiModule = "zest";
+    fftw = fftwSinglePrec;
+  };
 
-  zynaddsubfx-fltk = callPackage ../applications/audio/zynaddsubfx {
+  zynaddsubfx-fltk = zynaddsubfx.override {
     guiModule = "fltk";
   };
 
-  zynaddsubfx-ntk = callPackage ../applications/audio/zynaddsubfx {
+  zynaddsubfx-ntk = zynaddsubfx.override {
     guiModule = "ntk";
-  };
-
-  zyn-fusion = callPackage ../applications/audio/zynaddsubfx {
-    guiModule = "zest";
   };
 
   ### BLOCKCHAINS / CRYPTOCURRENCIES / WALLETS
@@ -34519,6 +34526,8 @@ with pkgs;
 
   openroad = libsForQt5.callPackage ../applications/science/electronics/openroad { };
 
+  openboardview = callPackage ../applications/science/electronics/openboardview { };
+
   pcb = callPackage ../applications/science/electronics/pcb { };
 
   qucs = callPackage ../applications/science/electronics/qucs { };
@@ -36294,7 +36303,9 @@ with pkgs;
 
   bcompare = libsForQt5.callPackage ../applications/version-management/bcompare {};
 
-  pentablet-driver = libsForQt5.callPackage ../misc/drivers/pentablet-driver { };
+  xp-pen-deco-01-v2-driver = libsForQt5.xp-pen-deco-01-v2-driver;
+
+  xp-pen-g430-driver = libsForQt5.xp-pen-g430-driver;
 
   new-session-manager = callPackage ../applications/audio/new-session-manager { };
 
