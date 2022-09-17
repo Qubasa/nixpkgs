@@ -33,7 +33,7 @@ let
     then (builtins.trace ("Reading lockfile") (builtins.readFile lockFile))
     else (builtins.trace "Returning predefined lockFilecontent from arg" args.lockFileContents);
 
-  packages = (builtins.fromTOML lockFileContents).package;
+  packages = builtins.trace (builtins.fromTOML lockFileContents).package (builtins.fromTOML lockFileContents).package;
 
   # There is no source attribute for the source package itself. But
   # since we do not want to vendor the source package anyway, we can
