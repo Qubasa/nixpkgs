@@ -136,14 +136,14 @@ stdenv.mkDerivation ((removeAttrs args [ "depsExtraArgs" "cargoUpdateHook" "carg
     if stdenv.buildPlatform != stdenv.hostPlatform then 1 else 0;
 
   postUnpack = ''
-    set -ex
+    echo "Executing postUnpack"
     eval "$cargoDepsHook"
 
     export RUST_LOG=${logLevel}
   '' + (args.postUnpack or "");
 
   configurePhase = args.configurePhase or ''
-    set -xe
+    echo "Executing configurePhase"
     runHook preConfigure
     runHook postConfigure
   '';
