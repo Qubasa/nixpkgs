@@ -36,6 +36,8 @@ in stdenv.mkDerivation ({
   nativeBuildInputs = [ cacert git cargo-vendor-normalise cargo ] ++ nativeBuildInputs;
 
   buildPhase = ''
+    echo "HELLO FROM fetch-cargo-tarball"
+    set -xe
     runHook preBuild
 
     # Ensure deterministic Cargo vendor builds
