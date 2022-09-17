@@ -81,7 +81,7 @@ in ''
   # crate. The `link.final` file will be copied to the output and can
   # be used by downstream crates to get the linker flags of this
   # crate.
-
+  set -xe
   mkdir -p target/{deps,lib,build,buildDeps}
   chmod uga+w target -R
   echo ${extraLinkFlags} > target/link
