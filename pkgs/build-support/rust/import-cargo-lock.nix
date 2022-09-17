@@ -125,6 +125,7 @@ let
         };
       in runCommand "${pkg.name}-${pkg.version}" {} ''
         set -xe
+        echo "==============HEY 2================"
         tree=${tree}
 
         # If the target package is in a workspace, or if it's the top-level

@@ -35,6 +35,7 @@ let version_ = lib.splitString "-" crateVersion;
       map (f: lib.replaceChars ["-"] ["_"] (lib.toUpper f)) crateFeatures
     );
 in ''
+  echo "==============HEY 1================"
   ${echo_colored colors}
   ${noisily colors verbose}
   source ${./lib.sh}
@@ -82,6 +83,7 @@ in ''
   # be used by downstream crates to get the linker flags of this
   # crate.
   set -xe
+ 
   mkdir -p target/{deps,lib,build,buildDeps}
   chmod uga+w target -R
   echo ${extraLinkFlags} > target/link
