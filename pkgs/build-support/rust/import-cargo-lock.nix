@@ -124,6 +124,7 @@ let
           rev = gitParts.sha; # The commit SHA is always available.
         };
       in runCommand "${pkg.name}-${pkg.version}" {} ''
+        set -xe
         tree=${tree}
 
         # If the target package is in a workspace, or if it's the top-level
