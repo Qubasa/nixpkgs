@@ -85,7 +85,7 @@ let
       (lib.removeSuffix ".json" (builtins.baseNameOf "${target}"))
     else target;
 
-  sysroot = trace ("Using sysroot...") (callPackage ./sysroot { } {
+  sysroot = builtins.trace ("Using sysroot...") (callPackage ./sysroot { } {
     inherit target shortTarget;
     RUSTFLAGS = args.RUSTFLAGS or "";
     originalCargoToml = src + /Cargo.toml; # profile info is later extracted
