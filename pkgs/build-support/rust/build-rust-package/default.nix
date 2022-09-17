@@ -59,9 +59,9 @@ assert buildType == "release" || buildType == "debug";
 let
 
   cargoDeps = builtins.trace ("executing cargoDeps...") (
-    if cargoVendorDir != null then null
-    else if cargoLock != null then importCargoLock cargoLock
-    else fetchCargoTarball ({
+    if cargoVendorDir != null then (builtins.trace "cargoVendorDir != null returning null" null)
+    else if cargoLock != null then  (builtins.trace "cargoLock != null returning importCargoLock cargoLock" (importCargoLock cargoLock)) 
+    else  (builtins.trace  "cargoDeps executes fetchCargoTarball" fetchCargoTarball ({
       inherit src srcs sourceRoot unpackPhase cargoUpdateHook;
       name = cargoDepsName;
       patches = cargoPatches;
@@ -69,7 +69,7 @@ let
       hash = args.cargoHash;
     } // lib.optionalAttrs (args ? cargoSha256) {
       sha256 = args.cargoSha256;
-    } // depsExtraArgs));
+    } // depsExtraArgs)));
 
   # If we have a cargoSha256 fixed-output derivation, validate it at build time
   # against the src fixed-output derivation to check consistency.
