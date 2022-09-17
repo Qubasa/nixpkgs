@@ -69,7 +69,7 @@ let
       hash = args.cargoHash;
     } // lib.optionalAttrs (args ? cargoSha256) {
       sha256 = args.cargoSha256;
-    } // depsExtraArgs););
+    } // depsExtraArgs));
 
   # If we have a cargoSha256 fixed-output derivation, validate it at build time
   # against the src fixed-output derivation to check consistency.
