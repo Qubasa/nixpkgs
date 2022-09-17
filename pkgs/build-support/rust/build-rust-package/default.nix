@@ -55,10 +55,10 @@
 assert cargoVendorDir == null && cargoLock == null -> !(args ? cargoSha256) && !(args ? cargoHash)
   -> throw "cargoSha256, cargoHash, cargoVendorDir, or cargoLock must be set";
 assert buildType == "release" || buildType == "debug";
-assert false;
+
 let
 
-  cargoDeps =
+  cargoDeps = builtins.trace "executing cargoDeps..."
     if cargoVendorDir != null then null
     else if cargoLock != null then importCargoLock cargoLock
     else fetchCargoTarball ({
