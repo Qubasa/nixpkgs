@@ -58,7 +58,7 @@ assert buildType == "release" || buildType == "debug";
 
 let
 
-  cargoDeps = builtins.trace "executing cargoDeps..."
+  cargoDeps = builtins.trace ("executing cargoDeps...") (
     if cargoVendorDir != null then null
     else if cargoLock != null then importCargoLock cargoLock
     else fetchCargoTarball ({
@@ -69,7 +69,7 @@ let
       hash = args.cargoHash;
     } // lib.optionalAttrs (args ? cargoSha256) {
       sha256 = args.cargoSha256;
-    } // depsExtraArgs);
+    } // depsExtraArgs););
 
   # If we have a cargoSha256 fixed-output derivation, validate it at build time
   # against the src fixed-output derivation to check consistency.
