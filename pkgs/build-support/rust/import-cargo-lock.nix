@@ -30,8 +30,8 @@ let
   # shadows args.lockFileContents
   lockFileContents =
     if lockFile != null
-    then builtins.readFile lockFile
-    else args.lockFileContents;
+    then (builtins.trace ("Reading lockfile") (builtins.readFile lockFile))
+    else (builtins.trace "Returning predefined lockFilecontent from arg" args.lockFileContents);
 
   packages = (builtins.fromTOML lockFileContents).package;
 
@@ -125,7 +125,7 @@ let
         };
       in runCommand "${pkg.name}-${pkg.version}" {} ''
         set -xe
-        echo "==============HEY 2================"
+        echo "Executing import-cargo-lock.nix"
         tree=${tree}
 
         # If the target package is in a workspace, or if it's the top-level
