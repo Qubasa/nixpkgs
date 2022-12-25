@@ -2,13 +2,13 @@
 
 rustPlatform.buildRustPackage rec {
   pname = "gleam";
-  version = "0.22.1";
+  version = "0.24.0";
 
   src = fetchFromGitHub {
     owner = "gleam-lang";
     repo = pname;
     rev = "v${version}";
-    sha256 = "sha256-/mP15jPZiiavnZ7fwFehSSzJUtVVmksj1xfbDOycxmQ=";
+    sha256 = "sha256-MywgFoydV58oBJ2dGK1lWSu7o3SkuOhLpKhy7WDAJ3I=";
   };
 
   nativeBuildInputs = [ pkg-config ];
@@ -16,7 +16,7 @@ rustPlatform.buildRustPackage rec {
   buildInputs = [ openssl ] ++
     lib.optionals stdenv.isDarwin [ Security libiconv ];
 
-  cargoSha256 = "sha256-JAQQiCnl/EMKCMqoL8WkwUcjng+MSz2Cjb3L5yyrQ+E=";
+  cargoSha256 = "sha256-VcC7G0m/GYpxUZ+c+orFkCaqiNO3fUjymE29Z1pMqek=";
 
   meta = with lib; {
     description = "A statically typed language for the Erlang VM";

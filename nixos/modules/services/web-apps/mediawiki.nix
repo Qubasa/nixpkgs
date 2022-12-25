@@ -35,7 +35,7 @@ let
   };
 
   mediawikiScripts = pkgs.runCommand "mediawiki-scripts" {
-    buildInputs = [ pkgs.makeWrapper ];
+    nativeBuildInputs = [ pkgs.makeWrapper ];
     preferLocalBuild = true;
   } ''
     mkdir -p $out/bin
@@ -171,7 +171,7 @@ in
   options = {
     services.mediawiki = {
 
-      enable = mkEnableOption "MediaWiki";
+      enable = mkEnableOption (lib.mdDoc "MediaWiki");
 
       package = mkOption {
         type = types.package;
@@ -449,6 +449,7 @@ in
           --dbuser ${cfg.database.user} \
           ${optionalString (cfg.database.passwordFile != null) "--dbpassfile ${cfg.database.passwordFile}"} \
           --passfile ${cfg.passwordFile} \
+          --dbtype ${cfg.database.type} \
           ${cfg.name} \
           admin
 

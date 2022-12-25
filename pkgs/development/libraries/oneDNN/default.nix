@@ -5,13 +5,13 @@
 # https://github.com/oneapi-src/oneDNN#oneapi-deep-neural-network-library-onednn
 stdenv.mkDerivation rec {
   pname = "oneDNN";
-  version = "2.3.2";
+  version = "2.7.1";
 
   src = fetchFromGitHub {
     owner = "oneapi-src";
     repo = "oneDNN";
     rev = "v${version}";
-    sha256 = "sha256-sfTcBthrnt7m9AnzdwWl9yLu1jRpwUp8i9s9DlA3IJo=";
+    sha256 = "sha256-HBCuSZkApd/6UkAxz/KDFb/gyX2SI1S2GwgXAXSTU/c=";
   };
 
   outputs = [ "out" "dev" "doc" ];
@@ -20,12 +20,6 @@ stdenv.mkDerivation rec {
 
   # Tests fail on some Hydra builders, because they do not support SSE4.2.
   doCheck = false;
-
-  # The cmake install gets tripped up and installs a nix tree into $out, in
-  # addition to the correct install; clean it up.
-  postInstall = ''
-    rm -r $out/nix
-  '';
 
   meta = with lib; {
     description = "oneAPI Deep Neural Network Library (oneDNN)";

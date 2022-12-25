@@ -22,23 +22,25 @@
 , enableWayland ? stdenv.isLinux
 , wayland
 , xorg
+, xcbuild
+, Security
+, ApplicationServices
+, AppKit
+, Carbon
+, removeReferencesTo
 }:
 rustPlatform.buildRustPackage rec {
   pname = "neovide";
-  version = "0.10.0";
+  version = "0.10.3";
 
   src = fetchFromGitHub {
     owner = "Kethku";
     repo = "neovide";
     rev = version;
-    sha256 = "sha256-4oZJZd5Allh9Wc7YOvW9sF+38Sm15dL03TJZkHTbXXc=";
-    postFetch = ''
-      cd $out
-      patch -p1 -i ${./Cargo.lock.patch}
-    '';
+    sha256 = "sha256-CcBiCcfOJzuq0DnokTUHpMdo7Ry29ugQ+N7Hk0R+cQE=";
   };
 
-  cargoSha256 = "sha256-E1Wp5tPVK+5WIQ+3OrzY3W9Vfy57DHgNccKtIp/vUy8=";
+  cargoSha256 = "sha256-bS7yBnxAWPoTTabxI6W5Knl1DFiDztYSkEPJMa8bqlY=";
 
   SKIA_SOURCE_DIR =
     let
@@ -79,7 +81,8 @@ rustPlatform.buildRustPackage rec {
     python2 # skia-bindings
     python3 # rust-xcb
     llvmPackages.clang # skia
-  ];
+    removeReferencesTo
+  ] ++ lib.optionals stdenv.isDarwin [ xcbuild ];
 
   # All tests passes but at the end cargo prints for unknown reason:
   #   error: test failed, to rerun pass '--bin neovide'
@@ -102,7 +105,7 @@ rustPlatform.buildRustPackage rec {
         }))
       ];
     }))
-  ];
+  ] ++ lib.optionals stdenv.isDarwin [ Security ApplicationServices Carbon AppKit ];
 
   postFixup = let
     libPath = lib.makeLibraryPath ([
@@ -114,6 +117,10 @@ rustPlatform.buildRustPackage rec {
       xorg.libXi
     ] ++ lib.optionals enableWayland [ wayland ]);
   in ''
+      # library skia embeds the path to its sources
+      remove-references-to -t "$SKIA_SOURCE_DIR" \
+        $out/bin/neovide
+
       wrapProgram $out/bin/neovide \
         --prefix LD_LIBRARY_PATH : ${libPath}
     '';
@@ -127,12 +134,14 @@ rustPlatform.buildRustPackage rec {
     install -m444 -Dt $out/share/applications assets/neovide.desktop
   '';
 
+  disallowedReferences = [ SKIA_SOURCE_DIR ];
+
   meta = with lib; {
     description = "This is a simple graphical user interface for Neovim.";
     homepage = "https://github.com/Kethku/neovide";
     license = with licenses; [ mit ];
     maintainers = with maintainers; [ ck3d ];
-    platforms = platforms.linux;
+    platforms = platforms.all;
     mainProgram = "neovide";
   };
 }

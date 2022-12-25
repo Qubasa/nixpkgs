@@ -1,47 +1,77 @@
 { lib
+, argon2-cffi
 , buildPythonPackage
-, fetchFromGitHub
-, python
-, notebook
-, pythonOlder
+, fetchPypi
+, ipykernel
+, ipython_genutils
+, jinja2
+, jupyter-client
+, jupyter_core
 , jupyter_server
-, pytestCheckHook
+, nbconvert
+, nbformat
+, nest-asyncio
+, notebook
+, notebook-shim
+, prometheus-client
 , pytest-tornasync
+, pytestCheckHook
+, pythonOlder
+, pyzmq
+, send2trash
+, terminado
+, tornado
+, traitlets
 }:
 
 buildPythonPackage rec {
   pname = "nbclassic";
-  version = "0.4.3";
-  disabled = pythonOlder "3.6";
+  version = "0.4.7";
+  format = "setuptools";
 
-  # tests only on github
-  src = fetchFromGitHub {
-    owner = "jupyterlab";
-    repo = pname;
-    rev = "refs/tags/v${version}";
-    sha256 = "sha256-5sof5EOqzK7kNHSXp7eJl3ZagZRWF74e08ahqJId2Z8=";
+  disabled = pythonOlder "3.7";
+
+  src = fetchPypi {
+    inherit pname version;
+    hash = "sha256-HgRwWDtVCJxCeUDtMbioZv/vfMqxAUlOQJ7+Wse6mJc=";
   };
 
-  propagatedBuildInputs = [ jupyter_server notebook ];
+  propagatedBuildInputs = [
+    argon2-cffi
+    ipykernel
+    ipython_genutils
+    jinja2
+    jupyter-client
+    jupyter_core
+    jupyter_server
+    nbconvert
+    nbformat
+    nest-asyncio
+    notebook
+    notebook-shim
+    prometheus-client
+    pyzmq
+    send2trash
+    terminado
+    tornado
+    traitlets
+  ];
 
-  preCheck = ''
-    cd nbclassic
-    mv conftest.py tests
-    cd tests
-
-    export PYTHONPATH=$out/${python.sitePackages}:$PYTHONPATH
-  '';
   checkInputs = [
-    pytestCheckHook
     pytest-tornasync
+    pytestCheckHook
+  ];
+
+  pythonImportsCheck = [
+    "nbclassic"
   ];
 
   __darwinAllowLocalNetworking = true;
 
   meta = with lib; {
-    description = "Jupyter lab environment notebook server extension.";
-    license = with licenses; [ bsd3 ];
+    description = "Jupyter lab environment notebook server extension";
     homepage = "https://github.com/jupyterlab/nbclassic";
-    maintainers = [ maintainers.elohmeier ];
+    license = with licenses; [ bsd3 ];
+    maintainers = with maintainers; [ elohmeier ];
   };
 }

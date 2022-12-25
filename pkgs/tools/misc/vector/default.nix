@@ -1,6 +1,7 @@
 { stdenv
 , lib
 , fetchFromGitHub
+, fetchpatch
 , rustPlatform
 , pkg-config
 , llvmPackages
@@ -16,21 +17,22 @@
 , tzdata
 , cmake
 , perl
-  # kafka is optional but one of the most used features
-, enableKafka ? true
-  # TODO investigate adding "api" "api-client" "vrl-cli" and various "vendor-*"
+  # nix has a problem with the `?` in the feature list
+  # enabling kafka will produce a vector with no features at all
+, enableKafka ? false
+  # TODO investigate adding "vrl-cli" and various "vendor-*"
   # "disk-buffer" is using leveldb TODO: investigate how useful
   # it would be, perhaps only for massive scale?
-, features ? ([ "sinks" "sources" "transforms" "vrl-cli" ]
+, features ? ([ "api" "api-client" "sinks" "sources" "transforms" "vrl-cli" ]
     # the second feature flag is passed to the rdkafka dependency
     # building on linux fails without this feature flag (both x86_64 and AArch64)
-    ++ lib.optionals enableKafka [ "rdkafka/gssapi-vendored" ]
+    ++ lib.optionals enableKafka [ "rdkafka?/gssapi-vendored" ]
     ++ lib.optional stdenv.targetPlatform.isUnix "unix")
 }:
 
 let
   pname = "vector";
-  version = "0.22.3";
+  version = "0.25.0";
 in
 rustPlatform.buildRustPackage {
   inherit pname version;
@@ -39,10 +41,10 @@ rustPlatform.buildRustPackage {
     owner = "vectordotdev";
     repo = pname;
     rev = "v${version}";
-    sha256 = "sha256-62oPttkdahTeMsd9lpd9/tc95kluVJuWxzP94i+gWhA=";
+    hash = "sha256-2hCgHf7iBPl9BQITXyUDwgAz/i2HhXT4eczWrExCUDk=";
   };
 
-  cargoSha256 = "sha256-WWX47pbva7ZmPR6hBstJ5VqOwu3mkhhsHK3LHHqQjDE=";
+  cargoHash = "sha256-E23m8/XCEXeEpz1itIzCit9RpoB1/PRrYVWxt+VVfxA=";
   nativeBuildInputs = [ pkg-config cmake perl ];
   buildInputs = [ oniguruma openssl protobuf rdkafka zstd ]
     ++ lib.optionals stdenv.isDarwin [ Security libiconv coreutils CoreServices ];
@@ -107,6 +109,7 @@ rustPlatform.buildRustPackage {
     homepage = "https://github.com/timberio/vector";
     license = with licenses; [ asl20 ];
     maintainers = with maintainers; [ thoughtpolice happysalada ];
-    platforms = with platforms; linux;
+    platforms = with platforms; all;
   };
 }
+

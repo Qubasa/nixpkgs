@@ -20,9 +20,9 @@ in
 {
   options.services.parsedmarc = {
 
-    enable = lib.mkEnableOption ''
+    enable = lib.mkEnableOption (lib.mdDoc ''
       parsedmarc, a DMARC report monitoring service
-    '';
+    '');
 
     provision = {
       localMail = {
@@ -494,7 +494,7 @@ in
             Group = "parsedmarc";
             DynamicUser = true;
             RuntimeDirectory = "parsedmarc";
-            RuntimeDirectoryMode = 0700;
+            RuntimeDirectoryMode = "0700";
             CapabilityBoundingSet = "";
             PrivateDevices = true;
             PrivateMounts = true;

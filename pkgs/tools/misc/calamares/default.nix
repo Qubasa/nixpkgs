@@ -7,12 +7,12 @@
 
 mkDerivation rec {
   pname = "calamares";
-  version = "3.2.60";
+  version = "3.2.61";
 
   # release including submodule
   src = fetchurl {
     url = "https://github.com/calamares/calamares/releases/download/v${version}/${pname}-${version}.tar.gz";
-    sha256 = "sha256-nsbEn04jFs0wWNQCwqtl7/8C4/CaACjVDwNZ5RVObIw=";
+    sha256 = "sha256-dZG5tgc4vbp7neK42lRiqyEAbbBqAG8N0hrFuDJxHdI=";
   };
 
   patches = lib.optionals nixos-extensions [
@@ -36,6 +36,8 @@ mkDerivation rec {
     # Fix setting the kayboard layout on GNOME wayland
     # By default the module uses the setxkbmap, which will not change the keyboard
     ./waylandkbd.patch
+    # Change default location where calamares searches for locales
+    ./supportedlocale.patch
   ];
 
   nativeBuildInputs = [ cmake extra-cmake-modules ];

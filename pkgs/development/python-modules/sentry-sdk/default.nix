@@ -19,7 +19,7 @@
 , django
 , falcon
 , flask
-, flask_login
+, flask-login
 , httpx
 , pure-eval
 , pyramid
@@ -46,7 +46,7 @@
 
 buildPythonPackage rec {
   pname = "sentry-sdk";
-  version = "1.9.0";
+  version = "1.10.1";
   format = "setuptools";
 
   disabled = pythonOlder "3.7";
@@ -55,7 +55,7 @@ buildPythonPackage rec {
     owner = "getsentry";
     repo = "sentry-python";
     rev = version;
-    hash = "sha256-sZpM9wgybyt/5Rw3X05whLvQNMC55o+s7eYA4QJdj6c=";
+    hash = "sha256-wNI92LVGFN+7LPxnrezPeF7dSS5UgwCuF62/ux3rik4=";
   };
 
   propagatedBuildInputs = [

@@ -209,7 +209,7 @@ in
         readOnly = true;
         type = types.bool;
         default = inInitrd || inSystem;
-        defaultText = literalDocBook "<literal>true</literal> if ZFS filesystem support is enabled";
+        defaultText = literalMD "`true` if ZFS filesystem support is enabled";
         description = lib.mdDoc "True if ZFS filesystem support is enabled";
       };
 
@@ -224,6 +224,15 @@ in
           more likely to hit an undiscovered bug compared to running a released
           version of ZFS on Linux.
           '';
+      };
+
+      allowHibernation = mkOption {
+        type = types.bool;
+        default = false;
+        description = lib.mdDoc ''
+          Allow hibernation support, this may be a unsafe option depending on your
+          setup. Make sure to NOT use Swap on ZFS.
+        '';
       };
 
       extraPools = mkOption {
@@ -277,12 +286,12 @@ in
       forceImportAll = mkOption {
         type = types.bool;
         default = false;
-        description = ''
+        description = lib.mdDoc ''
           Forcibly import all ZFS pool(s).
 
-          If you set this option to <literal>false</literal> and NixOS subsequently fails to
+          If you set this option to `false` and NixOS subsequently fails to
           import your non-root ZFS pool(s), you should manually import each pool with
-          "zpool import -f &lt;pool-name&gt;", and then reboot. You should only need to do
+          "zpool import -f \<pool-name\>", and then reboot. You should only need to do
           this once.
         '';
       };
@@ -399,7 +408,7 @@ in
     };
 
     services.zfs.autoScrub = {
-      enable = mkEnableOption "periodic scrubbing of ZFS pools";
+      enable = mkEnableOption (lib.mdDoc "periodic scrubbing of ZFS pools");
 
       interval = mkOption {
         default = "Sun, 02:00";
@@ -426,7 +435,7 @@ in
       type = types.either (types.enum [ "disabled" "all" ]) (types.listOf types.str);
       default = "disabled";
       example = [ "tank" "dozer" ];
-      description = ''
+      description = lib.mdDoc ''
         After importing, expand each device in the specified pools.
 
         Set the value to the plain string "all" to expand all pools on boot:
@@ -440,7 +449,7 @@ in
     };
 
     services.zfs.zed = {
-      enableMail = mkEnableOption "ZED's ability to send emails" // {
+      enableMail = mkEnableOption (lib.mdDoc "ZED's ability to send emails") // {
         default = cfgZfs.package.enableMail;
         defaultText = literalExpression "config.${optZfs.package}.enableMail";
       };
@@ -498,6 +507,10 @@ in
 
       boot = {
         kernelModules = [ "zfs" ];
+        # https://github.com/openzfs/zfs/issues/260
+        # https://github.com/openzfs/zfs/issues/12842
+        # https://github.com/NixOS/nixpkgs/issues/106093
+        kernelParams = lib.optionals (!config.boot.zfs.allowHibernation) [ "nohibernate" ];
 
         extraModulePackages = [
           (if config.boot.zfs.enableUnstable then

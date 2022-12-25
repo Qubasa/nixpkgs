@@ -56,7 +56,7 @@ let
     in lib.appendToName "with-plugins" ( symlinkJoin {
       inherit (yosys) name;
       paths = paths ++ [ yosys ] ;
-      buildInputs = [ makeWrapper ];
+      nativeBuildInputs = [ makeWrapper ];
       postBuild = ''
         wrapProgram $out/bin/yosys \
           --set NIX_YOSYS_PLUGIN_DIRS $out/share/yosys/plugins \
@@ -72,18 +72,27 @@ let
 
 in stdenv.mkDerivation rec {
   pname   = "yosys";
-  version = "0.20";
+  version = "0.22";
 
   src = fetchFromGitHub {
     owner = "YosysHQ";
     repo  = "yosys";
     rev   = "${pname}-${version}";
-    hash  = "sha256-0oDF6wLcWlDG2hWFjIL+oQmICQl/H6YAwDzgTiuF298=";
+    hash  = "sha256-us4GiulqkzcwD2iuNXB5eTd3iqgUdvj9Nd2p/9TJerQ=";
   };
 
   enableParallelBuilding = true;
   nativeBuildInputs = [ pkg-config bison flex ];
-  buildInputs = [ tcl readline libffi python3 protobuf zlib ];
+  buildInputs = [
+    tcl
+    readline
+    libffi
+    protobuf
+    zlib
+    (python3.withPackages (pp: with pp; [
+      click
+    ]))
+  ];
 
   makeFlags = [ "ENABLE_PROTOBUF=1" "PREFIX=${placeholder "out"}"];
 

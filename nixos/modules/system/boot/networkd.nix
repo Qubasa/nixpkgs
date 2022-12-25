@@ -451,6 +451,7 @@ let
           "Multicast"
           "AllMulticast"
           "Unmanaged"
+          "Group"
           "RequiredForOnline"
           "RequiredFamilyForOnline"
           "ActivationPolicy"
@@ -463,6 +464,8 @@ let
         (assertValueOneOf "AllMulticast" boolValues)
         (assertValueOneOf "Promiscuous" boolValues)
         (assertValueOneOf "Unmanaged" boolValues)
+        (assertInt "Group")
+        (assertRange "Group" 0 2147483647)
         (assertValueOneOf "RequiredForOnline" (boolValues ++ [
           "missing"
           "off"
@@ -498,7 +501,6 @@ let
           "LinkLocalAddressing"
           "IPv4LLRoute"
           "DefaultRouteOnDevice"
-          "IPv6Token"
           "LLMNR"
           "MulticastDNS"
           "DNSOverTLS"
@@ -523,7 +525,7 @@ let
           "IPv6ProxyNDP"
           "IPv6ProxyNDPAddress"
           "IPv6SendRA"
-          "DHCPv6PrefixDelegation"
+          "DHCPPrefixDelegation"
           "IPv6MTUBytes"
           "Bridge"
           "Bond"
@@ -566,12 +568,11 @@ let
         (assertValueOneOf "IPv4ProxyARP" boolValues)
         (assertValueOneOf "IPv6ProxyNDP" boolValues)
         (assertValueOneOf "IPv6SendRA" boolValues)
-        (assertValueOneOf "DHCPv6PrefixDelegation" boolValues)
+        (assertValueOneOf "DHCPPrefixDelegation" boolValues)
         (assertByteFormat "IPv6MTUBytes")
         (assertValueOneOf "ActiveSlave" boolValues)
         (assertValueOneOf "PrimarySlave" boolValues)
         (assertValueOneOf "ConfigureWithoutCarrier" boolValues)
-        (assertValueOneOf "IgnoreCarrierLoss" boolValues)
         (assertValueOneOf "KeepConfiguration" (boolValues ++ ["static" "dhcp-on-stop" "dhcp"]))
       ];
 
@@ -583,6 +584,7 @@ let
           "Label"
           "PreferredLifetime"
           "Scope"
+          "RouteMetric"
           "HomeAddress"
           "DuplicateAddressDetection"
           "ManageTemporaryAddress"
@@ -591,6 +593,7 @@ let
         ])
         (assertHasField "Address")
         (assertValueOneOf "PreferredLifetime" ["forever" "infinity" "0" 0])
+        (assertInt "RouteMetric")
         (assertValueOneOf "HomeAddress" boolValues)
         (assertValueOneOf "DuplicateAddressDetection" ["ipv4" "ipv6" "both" "none"])
         (assertValueOneOf "ManageTemporaryAddress" boolValues)
@@ -616,6 +619,7 @@ let
           "User"
           "SuppressPrefixLength"
           "Type"
+          "SuppressInterfaceGroup"
         ])
         (assertInt "TypeOfService")
         (assertRange "TypeOfService" 0 255)
@@ -629,6 +633,7 @@ let
         (assertInt "SuppressPrefixLength")
         (assertRange "SuppressPrefixLength" 0 128)
         (assertValueOneOf "Type" ["blackhole" "unreachable" "prohibit"])
+        (assertRange "SuppressInterfaceGroup" 0 2147483647)
       ];
 
       sectionRoute = checkUnitConfig "Route" [
@@ -708,6 +713,9 @@ let
           "BlackList"
           "RequestOptions"
           "SendOption"
+          "FallbackLeaseLifetimeSec"
+          "Label"
+          "Use6RD"
         ])
         (assertValueOneOf "UseDNS" boolValues)
         (assertValueOneOf "RoutesToDNS" boolValues)
@@ -730,6 +738,8 @@ let
         (assertPort "ListenPort")
         (assertValueOneOf "SendRelease" boolValues)
         (assertValueOneOf "SendDecline" boolValues)
+        (assertValueOneOf "FallbackLeaseLifetimeSec" ["forever" "infinity"])
+        (assertValueOneOf "Use6RD" boolValues)
       ];
 
       sectionDHCPv6 = checkUnitConfig "DHCPv6" [
@@ -742,7 +752,6 @@ let
           "MUDURL"
           "RequestOptions"
           "SendVendorOption"
-          "ForceDHCPv6PDOtherInformation"
           "PrefixDelegationHint"
           "WithoutRA"
           "SendOption"
@@ -751,27 +760,33 @@ let
           "DUIDType"
           "DUIDRawData"
           "IAID"
+          "UseDelegatedPrefix"
         ])
         (assertValueOneOf "UseAddress" boolValues)
         (assertValueOneOf "UseDNS" boolValues)
         (assertValueOneOf "UseNTP" boolValues)
         (assertInt "RouteMetric")
         (assertValueOneOf "RapidCommit" boolValues)
-        (assertValueOneOf "ForceDHCPv6PDOtherInformation" boolValues)
-        (assertValueOneOf "WithoutRA" ["solicit" "information-request"])
+        (assertValueOneOf "WithoutRA" ["no" "solicit" "information-request"])
         (assertRange "SendOption" 1 65536)
         (assertInt "IAID")
+        (assertValueOneOf "UseDelegatedPrefix" boolValues)
       ];
 
-      sectionDHCPv6PrefixDelegation = checkUnitConfig "DHCPv6PrefixDelegation" [
+      sectionDHCPPrefixDelegation = checkUnitConfig "DHCPPrefixDelegation" [
         (assertOnlyFields [
+          "UplinkInterface"
           "SubnetId"
           "Announce"
           "Assign"
           "Token"
+          "ManageTemporaryAddress"
+          "RouteMetric"
         ])
         (assertValueOneOf "Announce" boolValues)
         (assertValueOneOf "Assign" boolValues)
+        (assertValueOneOf "ManageTemporaryAddress" boolValues)
+        (assertRange "RouteMetric" 0 4294967295)
       ];
 
       sectionIPv6AcceptRA = checkUnitConfig "IPv6AcceptRA" [
@@ -789,6 +804,10 @@ let
           "RouteAllowList"
           "DHCPv6Client"
           "RouteMetric"
+          "UseMTU"
+          "UseGateway"
+          "UseRoutePrefix"
+          "Token"
         ])
         (assertValueOneOf "UseDNS" boolValues)
         (assertValueOneOf "UseDomains" (boolValues ++ ["route"]))
@@ -796,14 +815,19 @@ let
         (assertValueOneOf "UseAutonomousPrefix" boolValues)
         (assertValueOneOf "UseOnLinkPrefix" boolValues)
         (assertValueOneOf "DHCPv6Client" (boolValues ++ ["always"]))
+        (assertValueOneOf "UseMTU" boolValues)
+        (assertValueOneOf "UseGateway" boolValues)
+        (assertValueOneOf "UseRoutePrefix" boolValues)
       ];
 
       sectionDHCPServer = checkUnitConfig "DHCPServer" [
         (assertOnlyFields [
+          "ServerAddress"
           "PoolOffset"
           "PoolSize"
           "DefaultLeaseTimeSec"
           "MaxLeaseTimeSec"
+          "UplinkInterface"
           "EmitDNS"
           "DNS"
           "EmitNTP"
@@ -817,10 +841,15 @@ let
           "EmitLPR"
           "LPR"
           "EmitRouter"
+          "Router"
           "EmitTimezone"
           "Timezone"
           "SendOption"
           "SendVendorOption"
+          "BindToInterface"
+          "RelayTarget"
+          "RelayAgentCircuitId"
+          "RelayAgentRemoteId"
         ])
         (assertInt "PoolOffset")
         (assertMinimum "PoolOffset" 0)
@@ -834,6 +863,7 @@ let
         (assertValueOneOf "EmitLPR" boolValues)
         (assertValueOneOf "EmitRouter" boolValues)
         (assertValueOneOf "EmitTimezone" boolValues)
+        (assertValueOneOf "BindToInterface" boolValues)
       ];
 
       sectionIPv6SendRA = checkUnitConfig "IPv6SendRA" [
@@ -842,6 +872,7 @@ let
           "OtherInformation"
           "RouterLifetimeSec"
           "RouterPreference"
+          "UplinkInterface"
           "EmitDNS"
           "DNS"
           "EmitDomains"
@@ -862,9 +893,19 @@ let
           "Prefix"
           "PreferredLifetimeSec"
           "ValidLifetimeSec"
+          "Token"
         ])
         (assertValueOneOf "AddressAutoconfiguration" boolValues)
         (assertValueOneOf "OnLink" boolValues)
+      ];
+
+      sectionIPv6RoutePrefix = checkUnitConfig "IPv6RoutePrefix" [
+        (assertOnlyFields [
+          "Route"
+          "LifetimeSec"
+        ])
+        (assertHasField "Route")
+        (assertInt "LifetimeSec")
       ];
 
       sectionDHCPServerStaticLease = checkUnitConfig "DHCPServerStaticLease" [
@@ -1230,6 +1271,21 @@ let
     };
   };
 
+  ipv6RoutePrefixOptions = {
+    options = {
+      ipv6RoutePrefixConfig = mkOption {
+        default = {};
+        example = { Route = "fd00::/64"; };
+        type = types.addCheck (types.attrsOf unitOption) check.network.sectionIPv6RoutePrefix;
+        description = lib.mdDoc ''
+          Each attribute in this set specifies an option in the
+          `[IPv6RoutePrefix]` section of the unit.  See
+          {manpage}`systemd.network(5)` for details.
+        '';
+      };
+    };
+  };
+
   dhcpServerStaticLeaseOptions = {
     options = {
       dhcpServerStaticLeaseConfig = mkOption {
@@ -1302,12 +1358,17 @@ let
     };
 
     dhcpV6PrefixDelegationConfig = mkOption {
+      visible = false;
+      apply = _: throw "The option `systemd.network.networks.<name>.dhcpV6PrefixDelegationConfig` has been renamed to `systemd.network.networks.<name>.dhcpPrefixDelegationConfig`.";
+    };
+
+    dhcpPrefixDelegationConfig = mkOption {
       default = {};
       example = { SubnetId = "auto"; Announce = true; };
-      type = types.addCheck (types.attrsOf unitOption) check.network.sectionDHCPv6PrefixDelegation;
+      type = types.addCheck (types.attrsOf unitOption) check.network.sectionDHCPPrefixDelegation;
       description = lib.mdDoc ''
         Each attribute in this set specifies an option in the
-        `[DHCPv6PrefixDelegation]` section of the unit. See
+        `[DHCPPrefixDelegation]` section of the unit. See
         {manpage}`systemd.network(5)` for details.
       '';
     };
@@ -1368,6 +1429,16 @@ let
       type = with types; listOf (submodule ipv6PrefixOptions);
       description = lib.mdDoc ''
         A list of ipv6Prefix sections to be added to the unit.  See
+        {manpage}`systemd.network(5)` for details.
+      '';
+    };
+
+    ipv6RoutePrefixes = mkOption {
+      default = [];
+      example = [ { ipv6RoutePrefixConfig = { Route = "fd00::/64"; LifetimeSec = 3600; }; } ];
+      type = with types; listOf (submodule ipv6RoutePrefixOptions);
+      description = lib.mdDoc ''
+        A list of ipv6RoutePrefix sections to be added to the unit.  See
         {manpage}`systemd.network(5)` for details.
       '';
     };
@@ -1743,9 +1814,9 @@ let
           [DHCPv6]
           ${attrsToSection def.dhcpV6Config}
         ''
-        + optionalString (def.dhcpV6PrefixDelegationConfig != { }) ''
-          [DHCPv6PrefixDelegation]
-          ${attrsToSection def.dhcpV6PrefixDelegationConfig}
+        + optionalString (def.dhcpPrefixDelegationConfig != { }) ''
+          [DHCPPrefixDelegation]
+          ${attrsToSection def.dhcpPrefixDelegationConfig}
         ''
         + optionalString (def.ipv6AcceptRAConfig != { }) ''
           [IPv6AcceptRA]
@@ -1762,6 +1833,10 @@ let
         + flip concatMapStrings def.ipv6Prefixes (x: ''
           [IPv6Prefix]
           ${attrsToSection x.ipv6PrefixConfig}
+        '')
+        + flip concatMapStrings def.ipv6RoutePrefixes (x: ''
+          [IPv6RoutePrefix]
+          ${attrsToSection x.ipv6RoutePrefixConfig}
         '')
         + flip concatMapStrings def.dhcpServerStaticLeases (x: ''
           [DHCPServerStaticLease]
@@ -1812,7 +1887,7 @@ in
     };
 
     systemd.network.units = mkOption {
-      description = "Definition of networkd units.";
+      description = lib.mdDoc "Definition of networkd units.";
       default = {};
       internal = true;
       type = with types; attrsOf (submodule (

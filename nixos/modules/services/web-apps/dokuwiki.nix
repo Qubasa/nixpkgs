@@ -7,7 +7,6 @@ let
   eachSite = cfg.sites;
   user = "dokuwiki";
   webserver = config.services.${cfg.webserver};
-  stateDir = hostName: "/var/lib/dokuwiki/${hostName}/data";
 
   dokuwikiAclAuthConfig = hostName: cfg: pkgs.writeText "acl.auth-${hostName}.php" ''
     # acl.auth.php
@@ -60,7 +59,7 @@ let
   siteOpts = { config, lib, name, ... }:
     {
       options = {
-        enable = mkEnableOption "DokuWiki web application.";
+        enable = mkEnableOption (lib.mdDoc "DokuWiki web application.");
 
         package = mkOption {
           type = types.package;
@@ -137,11 +136,16 @@ let
         usersFile = mkOption {
           type = with types; nullOr str;
           default = if config.aclUse then "/var/lib/dokuwiki/${name}/users.auth.php" else null;
-          description = ''
+          description = lib.mdDoc ''
             Location of the dokuwiki users file. List of users. Format:
-            login:passwordhash:Real Name:email:groups,comma,separated
-            Create passwordHash easily by using:$ mkpasswd -5 password `pwgen 8 1`
-            Example: <link xlink:href="https://github.com/splitbrain/dokuwiki/blob/master/conf/users.auth.php.dist"/>
+
+                login:passwordhash:Real Name:email:groups,comma,separated
+
+            Create passwordHash easily by using:
+
+                mkpasswd -5 password `pwgen 8 1`
+
+            Example: <https://github.com/splitbrain/dokuwiki/blob/master/conf/users.auth.php.dist>
             '';
           example = "/var/lib/dokuwiki/${name}/users.auth.php";
         };
@@ -160,9 +164,12 @@ let
         plugins = mkOption {
           type = types.listOf types.path;
           default = [];
-          description = ''
+          description = lib.mdDoc ''
                 List of path(s) to respective plugin(s) which are copied from the 'plugin' directory.
-                <note><para>These plugins need to be packaged before use, see example.</para></note>
+
+                ::: {.note}
+                These plugins need to be packaged before use, see example.
+                :::
           '';
           example = literalExpression ''
                 let
@@ -188,9 +195,12 @@ let
         templates = mkOption {
           type = types.listOf types.path;
           default = [];
-          description = ''
+          description = lib.mdDoc ''
                 List of path(s) to respective template(s) which are copied from the 'tpl' directory.
-                <note><para>These templates need to be packaged before use, see example.</para></note>
+
+                ::: {.note}
+                These templates need to be packaged before use, see example.
+                :::
           '';
           example = literalExpression ''
                 let
@@ -314,16 +324,17 @@ in
 
   {
     systemd.tmpfiles.rules = flatten (mapAttrsToList (hostName: cfg: [
-      "d ${stateDir hostName}/attic 0750 ${user} ${webserver.group} - -"
-      "d ${stateDir hostName}/cache 0750 ${user} ${webserver.group} - -"
-      "d ${stateDir hostName}/index 0750 ${user} ${webserver.group} - -"
-      "d ${stateDir hostName}/locks 0750 ${user} ${webserver.group} - -"
-      "d ${stateDir hostName}/media 0750 ${user} ${webserver.group} - -"
-      "d ${stateDir hostName}/media_attic 0750 ${user} ${webserver.group} - -"
-      "d ${stateDir hostName}/media_meta 0750 ${user} ${webserver.group} - -"
-      "d ${stateDir hostName}/meta 0750 ${user} ${webserver.group} - -"
-      "d ${stateDir hostName}/pages 0750 ${user} ${webserver.group} - -"
-      "d ${stateDir hostName}/tmp 0750 ${user} ${webserver.group} - -"
+      "d ${cfg.stateDir}/attic 0750 ${user} ${webserver.group} - -"
+      "d ${cfg.stateDir}/cache 0750 ${user} ${webserver.group} - -"
+      "d ${cfg.stateDir}/index 0750 ${user} ${webserver.group} - -"
+      "d ${cfg.stateDir}/locks 0750 ${user} ${webserver.group} - -"
+      "d ${cfg.stateDir}/log 0750 ${user} ${webserver.group} - -"
+      "d ${cfg.stateDir}/media 0750 ${user} ${webserver.group} - -"
+      "d ${cfg.stateDir}/media_attic 0750 ${user} ${webserver.group} - -"
+      "d ${cfg.stateDir}/media_meta 0750 ${user} ${webserver.group} - -"
+      "d ${cfg.stateDir}/meta 0750 ${user} ${webserver.group} - -"
+      "d ${cfg.stateDir}/pages 0750 ${user} ${webserver.group} - -"
+      "d ${cfg.stateDir}/tmp 0750 ${user} ${webserver.group} - -"
     ] ++ lib.optional (cfg.aclFile != null) "C ${cfg.aclFile} 0640 ${user} ${webserver.group} - ${pkg hostName cfg}/share/dokuwiki/conf/acl.auth.php.dist"
     ++ lib.optional (cfg.usersFile != null) "C ${cfg.usersFile} 0640 ${user} ${webserver.group} - ${pkg hostName cfg}/share/dokuwiki/conf/users.auth.php.dist"
     ) eachSite);
@@ -347,7 +358,7 @@ in
           };
 
           "~ ^/data/" = {
-            root = "${stateDir hostName}";
+            root = "${cfg.stateDir}";
             extraConfig = "internal;";
           };
 

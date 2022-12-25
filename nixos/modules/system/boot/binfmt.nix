@@ -256,7 +256,7 @@ in {
             interpreterSandboxPath = mkOption {
               internal = true;
               default = null;
-              description = ''
+              description = lib.mdDoc ''
                 Path of the interpreter to expose in the build sandbox.
               '';
               type = types.nullOr types.path;
@@ -321,5 +321,6 @@ in {
       "proc-sys-fs-binfmt_misc.mount"
       "systemd-binfmt.service"
     ];
+    systemd.services.systemd-binfmt.restartTriggers = [ (builtins.toJSON config.boot.binfmt.registrations) ];
   };
 }

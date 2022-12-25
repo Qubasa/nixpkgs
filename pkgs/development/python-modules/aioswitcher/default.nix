@@ -8,19 +8,22 @@
 , pytest-resource-path
 , pytest-sugar
 , pytestCheckHook
+, pythonOlder
 , time-machine
 }:
 
 buildPythonPackage rec {
   pname = "aioswitcher";
-  version = "2.0.9";
+  version = "3.2.0";
   format = "pyproject";
+
+  disabled = pythonOlder "3.9";
 
   src = fetchFromGitHub {
     owner = "TomerFi";
     repo = pname;
     rev = "refs/tags/${version}";
-    sha256 = "sha256-vsMQG664ySMQfdl4tGJKMY0MZXVl39QaFxu7kMtZWCM=";
+    hash = "sha256-Vob5p0+SlZR2eHj5Br2pWp3FCxW+zgY6crh8jrkreT0=";
   };
 
   nativeBuildInputs = [
@@ -54,7 +57,9 @@ buildPythonPackage rec {
     "test_hexadecimale_timestamp_to_localtime_with_the_current_timestamp_should_return_a_time_string"
   ];
 
-  pythonImportsCheck = [ "aioswitcher" ];
+  pythonImportsCheck = [
+    "aioswitcher"
+  ];
 
   meta = with lib; {
     description = "Python module to interact with Switcher water heater";

@@ -25,6 +25,7 @@
 , udev
 , libxcb
 , libxkbcommon
+, libxcrypt
 , lshw
 , mesa
 , nspr
@@ -54,11 +55,11 @@
 
 stdenv.mkDerivation rec {
   pname = "webex";
-  version = "42.8.0.22907";
+  version = "42.10.0.24000";
 
   src = fetchurl {
-    url = "https://binaries.webex.com/WebexDesktop-Ubuntu-Blue/20220712081040/Webex_ubuntu.7z";
-    sha256 = "b83950cdcf978a3beda93de27b25b70554fc82fcf072a5a7ea858d2ce0d176ac";
+    url = "https://binaries.webex.com/WebexDesktop-Ubuntu-Gold/20221019145240/Webex_ubuntu.7z";
+    sha256 = "03b77a3fcce76f04cf684bcdecb3bcce97c5a8b6cc36b40967cc14fa9a46c102";
   };
 
   buildInputs = [
@@ -91,6 +92,7 @@ stdenv.mkDerivation rec {
     udev
     libxcb
     libxkbcommon
+    libxcrypt
     libX11
     libXcomposite
     libXcursor
@@ -154,7 +156,7 @@ stdenv.mkDerivation rec {
     #!nix-shell -i bash -p curl jq common-updater-scripts
     set -eou pipefail;
 
-    channel=blue
+    channel=gold # blue, green, gold
     manifest=$(curl -s "https://client-upgrade-a.wbx2.com/client-upgrade/api/v1/webexteamsdesktop/upgrade/@me?channel=$channel&model=ubuntu" | jq '.manifest')
 
     url=$(jq -r '.packageLocation' <<< "$manifest")

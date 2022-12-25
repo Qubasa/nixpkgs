@@ -61,22 +61,22 @@ in {
         description = lib.mdDoc "Which Redis derivation to use.";
       };
 
-      vmOverCommit = mkEnableOption ''
+      vmOverCommit = mkEnableOption (lib.mdDoc ''
         setting of vm.overcommit_memory to 1
         (Suggested for Background Saving: http://redis.io/topics/faq)
-      '';
+      '');
 
       servers = mkOption {
         type = with types; attrsOf (submodule ({config, name, ...}@args: {
           options = {
-            enable = mkEnableOption ''
+            enable = mkEnableOption (lib.mdDoc ''
               Redis server.
 
               Note that the NixOS module for Redis disables kernel support
               for Transparent Huge Pages (THP),
               because this features causes major performance problems for Redis,
               e.g. (https://redis.io/topics/latency).
-            '';
+            '');
 
             user = mkOption {
               type = types.str;
@@ -103,6 +103,13 @@ in {
               description = lib.mdDoc ''
                 Whether to open ports in the firewall for the server.
               '';
+            };
+
+            extraParams = mkOption {
+              type = with types; listOf str;
+              default = [];
+              description = lib.mdDoc "Extra parameters to append to redis-server invocation";
+              example = [ "--sentinel" ];
             };
 
             bind = mkOption {
@@ -340,16 +347,24 @@ in {
       after = [ "network.target" ];
 
       serviceConfig = {
-        ExecStart = "${cfg.package}/bin/redis-server /run/${redisName name}/redis.conf";
-        ExecStartPre = [("+"+pkgs.writeShellScript "${redisName name}-credentials" (''
-            install -o '${conf.user}' -m 600 ${redisConfig conf.settings} /run/${redisName name}/redis.conf
-          '' + optionalString (conf.requirePassFile != null) ''
-            {
-              printf requirePass' '
-              cat ${escapeShellArg conf.requirePassFile}
-            } >>/run/${redisName name}/redis.conf
-          '')
-        )];
+        ExecStart = "${cfg.package}/bin/redis-server /var/lib/${redisName name}/redis.conf ${escapeShellArgs conf.extraParams}";
+        ExecStartPre = "+"+pkgs.writeShellScript "${redisName name}-prep-conf" (let
+          redisConfVar = "/var/lib/${redisName name}/redis.conf";
+          redisConfRun = "/run/${redisName name}/nixos.conf";
+          redisConfStore = redisConfig conf.settings;
+        in ''
+          touch "${redisConfVar}" "${redisConfRun}"
+          chown '${conf.user}' "${redisConfVar}" "${redisConfRun}"
+          chmod 0600 "${redisConfVar}" "${redisConfRun}"
+          if [ ! -s ${redisConfVar} ]; then
+            echo 'include "${redisConfRun}"' > "${redisConfVar}"
+          fi
+          echo 'include "${redisConfStore}"' > "${redisConfRun}"
+          ${optionalString (conf.requirePassFile != null) ''
+            {echo -n "requirepass "
+            cat ${escapeShellArg conf.requirePassFile}} >> "${redisConfRun}"
+          ''}
+        '');
         Type = "notify";
         # User and group
         User = conf.user;

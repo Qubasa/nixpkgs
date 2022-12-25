@@ -104,44 +104,44 @@ in {
 
   options = {
     services.mastodon = {
-      enable = lib.mkEnableOption "Mastodon, a federated social network server";
+      enable = lib.mkEnableOption (lib.mdDoc "Mastodon, a federated social network server");
 
       configureNginx = lib.mkOption {
-        description = ''
+        description = lib.mdDoc ''
           Configure nginx as a reverse proxy for mastodon.
           Note that this makes some assumptions on your setup, and sets settings that will
           affect other virtualHosts running on your nginx instance, if any.
           Alternatively you can configure a reverse-proxy of your choice to serve these paths:
 
-          <literal>/ -> $(nix-instantiate --eval '&lt;nixpkgs&gt;' -A mastodon.outPath)/public</literal>
+          `/ -> $(nix-instantiate --eval '<nixpkgs>' -A mastodon.outPath)/public`
 
-          <literal>/ -> 127.0.0.1:{{ webPort }} </literal>(If there was no file in the directory above.)
+          `/ -> 127.0.0.1:{{ webPort }} `(If there was no file in the directory above.)
 
-          <literal>/system/ -> /var/lib/mastodon/public-system/</literal>
+          `/system/ -> /var/lib/mastodon/public-system/`
 
-          <literal>/api/v1/streaming/ -> 127.0.0.1:{{ streamingPort }}</literal>
+          `/api/v1/streaming/ -> 127.0.0.1:{{ streamingPort }}`
 
           Make sure that websockets are forwarded properly. You might want to set up caching
           of some requests. Take a look at mastodon's provided nginx configuration at
-          <literal>https://github.com/mastodon/mastodon/blob/master/dist/nginx.conf</literal>.
+          `https://github.com/mastodon/mastodon/blob/master/dist/nginx.conf`.
         '';
         type = lib.types.bool;
         default = false;
       };
 
       user = lib.mkOption {
-        description = ''
+        description = lib.mdDoc ''
           User under which mastodon runs. If it is set to "mastodon",
           that user will be created, otherwise it should be set to the
           name of a user created elsewhere.  In both cases,
-          <package>mastodon</package> and a package containing only
-          the shell script <literal>mastodon-env</literal> will be added to
+          `mastodon` and a package containing only
+          the shell script `mastodon-env` will be added to
           the user's package set. To run a command from
-          <package>mastodon</package> such as <literal>tootctl</literal>
+          `mastodon` such as `tootctl`
           with the environment configured by this module use
-          <literal>mastodon-env</literal>, as in:
+          `mastodon-env`, as in:
 
-          <literal>mastodon-env tootctl accounts create newuser --email newuser@example.com</literal>
+          `mastodon-env tootctl accounts create newuser --email newuser@example.com`
         '';
         type = lib.types.str;
         default = "mastodon";
@@ -425,6 +425,39 @@ in {
           Do automatic database migrations.
         '';
       };
+
+      mediaAutoRemove = {
+        enable = lib.mkOption {
+          type = lib.types.bool;
+          default = true;
+          example = false;
+          description = lib.mdDoc ''
+            Automatically remove remote media attachments and preview cards older than the configured amount of days.
+
+            Recommended in https://docs.joinmastodon.org/admin/setup/.
+          '';
+        };
+
+        startAt = lib.mkOption {
+          type = lib.types.str;
+          default = "daily";
+          example = "hourly";
+          description = lib.mdDoc ''
+            How often to remove remote media.
+
+            The format is described in {manpage}`systemd.time(7)`.
+          '';
+        };
+
+        olderThanDays = lib.mkOption {
+          type = lib.types.int;
+          default = 30;
+          example = 14;
+          description = lib.mdDoc ''
+            How old remote media needs to be in order to be removed.
+          '';
+        };
+      };
     };
   };
 
@@ -475,7 +508,6 @@ in {
       } // cfgService;
 
       after = [ "network.target" ];
-      wantedBy = [ "multi-user.target" ];
     };
 
     systemd.services.mastodon-init-db = lib.mkIf cfg.automaticMigrations {
@@ -500,16 +532,21 @@ in {
         # System Call Filtering
         SystemCallFilter = [ ("~" + lib.concatStringsSep " " (systemCallsList ++ [ "@resources" ])) "@chown" "pipe" "pipe2" ];
       } // cfgService;
-      after = [ "mastodon-init-dirs.service" "network.target" ] ++ (if databaseActuallyCreateLocally then [ "postgresql.service" ] else []);
-      wantedBy = [ "multi-user.target" ];
+      after = [ "network.target" "mastodon-init-dirs.service" ]
+        ++ lib.optional databaseActuallyCreateLocally "postgresql.service";
+      requires = [ "mastodon-init-dirs.service" ]
+        ++ lib.optional databaseActuallyCreateLocally "postgresql.service";
     };
 
     systemd.services.mastodon-streaming = {
-      after = [ "network.target" ]
-        ++ (if databaseActuallyCreateLocally then [ "postgresql.service" ] else [])
-        ++ (if cfg.automaticMigrations then [ "mastodon-init-db.service" ] else [ "mastodon-init-dirs.service" ]);
-      description = "Mastodon streaming";
+      after = [ "network.target" "mastodon-init-dirs.service" ]
+        ++ lib.optional databaseActuallyCreateLocally "postgresql.service"
+        ++ lib.optional cfg.automaticMigrations "mastodon-init-db.service";
+      requires = [ "mastodon-init-dirs.service" ]
+        ++ lib.optional databaseActuallyCreateLocally "postgresql.service"
+        ++ lib.optional cfg.automaticMigrations "mastodon-init-db.service";
       wantedBy = [ "multi-user.target" ];
+      description = "Mastodon streaming";
       environment = env // (if cfg.enableUnixSocket
         then { SOCKET = "/run/mastodon-streaming/streaming.socket"; }
         else { PORT = toString(cfg.streamingPort); }
@@ -529,11 +566,14 @@ in {
     };
 
     systemd.services.mastodon-web = {
-      after = [ "network.target" ]
-        ++ (if databaseActuallyCreateLocally then [ "postgresql.service" ] else [])
-        ++ (if cfg.automaticMigrations then [ "mastodon-init-db.service" ] else [ "mastodon-init-dirs.service" ]);
-      description = "Mastodon web";
+      after = [ "network.target" "mastodon-init-dirs.service" ]
+        ++ lib.optional databaseActuallyCreateLocally "postgresql.service"
+        ++ lib.optional cfg.automaticMigrations "mastodon-init-db.service";
+      requires = [ "mastodon-init-dirs.service" ]
+        ++ lib.optional databaseActuallyCreateLocally "postgresql.service"
+        ++ lib.optional cfg.automaticMigrations "mastodon-init-db.service";
       wantedBy = [ "multi-user.target" ];
+      description = "Mastodon web";
       environment = env // (if cfg.enableUnixSocket
         then { SOCKET = "/run/mastodon-web/web.socket"; }
         else { PORT = toString(cfg.webPort); }
@@ -554,11 +594,14 @@ in {
     };
 
     systemd.services.mastodon-sidekiq = {
-      after = [ "network.target" ]
-        ++ (if databaseActuallyCreateLocally then [ "postgresql.service" ] else [])
-        ++ (if cfg.automaticMigrations then [ "mastodon-init-db.service" ] else [ "mastodon-init-dirs.service" ]);
-      description = "Mastodon sidekiq";
+      after = [ "network.target" "mastodon-init-dirs.service" ]
+        ++ lib.optional databaseActuallyCreateLocally "postgresql.service"
+        ++ lib.optional cfg.automaticMigrations "mastodon-init-db.service";
+      requires = [ "mastodon-init-dirs.service" ]
+        ++ lib.optional databaseActuallyCreateLocally "postgresql.service"
+        ++ lib.optional cfg.automaticMigrations "mastodon-init-db.service";
       wantedBy = [ "multi-user.target" ];
+      description = "Mastodon sidekiq";
       environment = env // {
         PORT = toString(cfg.sidekiqPort);
         DB_POOL = toString cfg.sidekiqThreads;
@@ -573,6 +616,22 @@ in {
         SystemCallFilter = [ ("~" + lib.concatStringsSep " " systemCallsList) "@chown" "pipe" "pipe2" ];
       } // cfgService;
       path = with pkgs; [ file imagemagick ffmpeg ];
+    };
+
+    systemd.services.mastodon-media-auto-remove = lib.mkIf cfg.mediaAutoRemove.enable {
+      description = "Mastodon media auto remove";
+      environment = env;
+      serviceConfig = {
+        Type = "oneshot";
+        script = let
+          olderThanDays = toString cfg.mediaAutoRemove.olderThanDays;
+        in ''
+          ${cfg.package}/bin/tootctl media remove --days=${olderThanDays}
+          ${cfg.package}/bin/tootctl preview_cards remove --days=${olderThanDays}
+        '';
+        EnvironmentFile = "/var/lib/mastodon/.secrets_env";
+        startAt = cfg.mediaAutoRemove.startAt;
+      } // cfgService;
     };
 
     services.nginx = lib.mkIf cfg.configureNginx {

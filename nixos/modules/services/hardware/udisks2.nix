@@ -19,7 +19,7 @@ in
 
     services.udisks2 = {
 
-      enable = mkEnableOption "udisks2, a DBus service that allows applications to query and manipulate storage devices.";
+      enable = mkEnableOption (lib.mdDoc "udisks2, a DBus service that allows applications to query and manipulate storage devices.");
 
       settings = mkOption rec {
         type = types.attrsOf settingsFormat.type;
@@ -62,7 +62,12 @@ in
 
     environment.systemPackages = [ pkgs.udisks2 ];
 
-    environment.etc = mapAttrs' (name: value: nameValuePair "udisks2/${name}" { source = value; } ) configFiles;
+    environment.etc = (mapAttrs' (name: value: nameValuePair "udisks2/${name}" { source = value; } ) configFiles) // {
+      # We need to make sure /etc/libblockdev/conf.d is populated to avoid
+      # warnings
+      "libblockdev/conf.d/00-default.cfg".source = "${pkgs.libblockdev}/etc/libblockdev/conf.d/00-default.cfg";
+      "libblockdev/conf.d/10-lvm-dbus.cfg".source = "${pkgs.libblockdev}/etc/libblockdev/conf.d/10-lvm-dbus.cfg";
+    };
 
     security.polkit.enable = true;
 

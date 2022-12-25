@@ -82,6 +82,8 @@ in
     ./lightdm-greeters/enso-os.nix
     ./lightdm-greeters/pantheon.nix
     ./lightdm-greeters/tiny.nix
+    ./lightdm-greeters/slick.nix
+    ./lightdm-greeters/mobile.nix
     (mkRenamedOptionModule [ "services" "xserver" "displayManager" "lightdm" "autoLogin" "enable" ] [
       "services"
       "xserver"
@@ -310,7 +312,6 @@ in
       home = "/var/lib/lightdm";
       group = "lightdm";
       uid = config.ids.uids.lightdm;
-      shell = pkgs.bash;
     };
 
     systemd.tmpfiles.rules = [

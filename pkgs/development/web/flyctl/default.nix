@@ -2,16 +2,16 @@
 
 buildGoModule rec {
   pname = "flyctl";
-  version = "0.0.372";
+  version = "0.0.429";
 
   src = fetchFromGitHub {
     owner = "superfly";
     repo = "flyctl";
     rev = "v${version}";
-    sha256 = "sha256-KsSaBzAjiexyhUmYEFEHhWuRROt553Lhkm1idlT8n5s=";
+    sha256 = "sha256-rx+5wHd6RyvsoL6176zBCgAZLCAXfdOIgZ41Vq48rdI=";
   };
 
-  vendorSha256 = "sha256-E6QeWu88MXMMfZAM7vMIGXpJQuduX6GTj3tXvlE9hFo=";
+  vendorSha256 = "sha256-pc9+m6oZGYBqDwE642HB4Ku549L3bMA52jWSmzV3tHc=";
 
   subPackages = [ "." ];
 
@@ -42,6 +42,7 @@ buildGoModule rec {
       --bash <($out/bin/flyctl completion bash) \
       --fish <($out/bin/flyctl completion fish) \
       --zsh <($out/bin/flyctl completion zsh)
+    ln -s $out/bin/flyctl $out/bin/fly
   '';
 
   passthru.tests.version = testers.testVersion {

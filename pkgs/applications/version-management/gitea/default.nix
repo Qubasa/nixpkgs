@@ -14,12 +14,12 @@
 
 buildGoPackage rec {
   pname = "gitea";
-  version = "1.17.0";
+  version = "1.17.3";
 
   # not fetching directly from the git repo, because that lacks several vendor files for the web UI
   src = fetchurl {
-    url = "https://github.com/go-gitea/gitea/releases/download/v${version}/gitea-src-${version}.tar.gz";
-    sha256 = "sha256-oBbAg2xQ58dLBCjhcKMoUf32ckoFfnFQHL3z3pAKW1Y=";
+    url = "https://dl.gitea.io/gitea/${version}/gitea-src-${version}.tar.gz";
+    sha256 = "sha256-NUkEgKt5OETo751UHcocPH7lEIgyBf6Rl/Nz0nbNH3g=";
   };
 
   patches = [
@@ -61,7 +61,7 @@ buildGoPackage rec {
 
   goPackagePath = "code.gitea.io/gitea";
 
-  passthru.tests.gitea = nixosTests.gitea;
+  passthru.tests = nixosTests.gitea;
 
   meta = with lib; {
     description = "Git with a cup of tea";

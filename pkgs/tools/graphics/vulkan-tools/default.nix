@@ -21,17 +21,17 @@
 
 stdenv.mkDerivation rec {
   pname = "vulkan-tools";
-  version = "1.3.211.0";
+  version = "1.3.231.0";
 
   # It's not strictly necessary to have matching versions here, however
   # since we're using the SDK version we may as well be consistent with
   # the rest of nixpkgs.
-  src = (assert version == vulkan-headers.version;
+  src = (assert (version) == vulkan-headers.version;
     fetchFromGitHub {
       owner = "KhronosGroup";
       repo = "Vulkan-Tools";
       rev = "sdk-${version}";
-      sha256 = "sha256-iXsWTKNllPZy1Kpo3JHzEEus3Hu9LofvMB3c4Gn6/DM=";
+      hash = "sha256-6oimP4ISa0dX4bLU3Nch8Ur6MzEMQscnL8EfRrqT/Es=";
     });
 
   nativeBuildInputs = [

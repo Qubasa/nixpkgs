@@ -12,11 +12,11 @@
 
 buildPythonPackage rec {
   pname = "google-cloud-kms";
-  version = "2.12.0";
+  version = "2.12.3";
 
   src = fetchPypi {
     inherit pname version;
-    sha256 = "sha256-ySlCL0Ukppob6Iuu2+fVQjPDsAnmK1Yvbd2I8+DVylk=";
+    sha256 = "sha256-ooWxYH4B8HY9ybWj0GQqUnfiFXzLCqyXGGZsocV9Od0=";
   };
 
   propagatedBuildInputs = [ grpc-google-iam-v1 google-api-core libcst proto-plus ];

@@ -1,6 +1,6 @@
 { lib
 , stdenv
-, fetchFromGitHub
+, fetchurl
 , pkg-config
 , glib
 , freetype
@@ -30,7 +30,7 @@
 }:
 
 let
-  version = "5.0.1";
+  version = "5.2.0";
   inherit (lib) optional optionals optionalString;
   mesonFeatureFlag = opt: b:
     "-D${opt}=${if b then "enabled" else "disabled"}";
@@ -40,11 +40,9 @@ stdenv.mkDerivation {
   pname = "harfbuzz${optionalString withIcu "-icu"}";
   inherit version;
 
-  src = fetchFromGitHub {
-    owner = "harfbuzz";
-    repo = "harfbuzz";
-    rev = version;
-    sha256 = "sha256-01hpSTesPpUO2T9v1sq3VvCSFEOMyaxbHhX0vS1ms/k=";
+  src = fetchurl {
+    url = "https://github.com/harfbuzz/harfbuzz/releases/download/${version}/harfbuzz-${version}.tar.xz";
+    sha256 = "0b4lpkidwx0lf8slczjji652yll6g5zgmm5lmisnb4s7gf8r8nkk";
   };
 
   postPatch = ''

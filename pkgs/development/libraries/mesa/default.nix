@@ -1,19 +1,21 @@
-{ stdenv, lib, fetchurl, fetchpatch, buildPackages
+{ stdenv, lib, fetchurl
 , meson, pkg-config, ninja
 , intltool, bison, flex, file, python3Packages, wayland-scanner
 , expat, libdrm, xorg, wayland, wayland-protocols, openssl
 , llvmPackages, libffi, libomxil-bellagio, libva-minimal
 , libelf, libvdpau
 , libglvnd, libunwind
-, vulkan-loader
+, vulkan-loader, glslang
 , galliumDrivers ? ["auto"]
 , vulkanDrivers ? ["auto"]
 , eglPlatforms ? [ "x11" ] ++ lib.optionals stdenv.isLinux [ "wayland" ]
+, vulkanLayers ? lib.optionals (!stdenv.isDarwin) [ "device-select" "overlay" ] # No Vulkan support on Darwin
 , OpenGL, Xplugin
 , withValgrind ? lib.meta.availableOn stdenv.hostPlatform valgrind-light && !valgrind-light.meta.broken, valgrind-light
 , enableGalliumNine ? stdenv.isLinux
 , enableOSMesa ? stdenv.isLinux
 , enableOpenCL ? stdenv.isLinux && stdenv.isx86_64
+, enablePatentEncumberedCodecs ? true
 , libclc
 , jdupes
 }:
@@ -34,8 +36,7 @@ with lib;
 let
   # Release calendar: https://www.mesa3d.org/release-calendar.html
   # Release frequency: https://www.mesa3d.org/releasing.html#schedule
-  # 22.1 on darwin won't build: https://gitlab.freedesktop.org/mesa/mesa/-/issues/6519
-  version = if stdenv.isDarwin then "22.0.4" else "22.1.4";
+  version = "22.2.2";
   branch  = versions.major version;
 
 self = stdenv.mkDerivation {
@@ -44,15 +45,13 @@ self = stdenv.mkDerivation {
 
   src = fetchurl {
     urls = [
+      "https://archive.mesa3d.org/mesa-${version}.tar.xz"
       "https://mesa.freedesktop.org/archive/mesa-${version}.tar.xz"
       "ftp://ftp.freedesktop.org/pub/mesa/mesa-${version}.tar.xz"
       "ftp://ftp.freedesktop.org/pub/mesa/${version}/mesa-${version}.tar.xz"
       "ftp://ftp.freedesktop.org/pub/mesa/older-versions/${branch}.x/${version}/mesa-${version}.tar.xz"
     ];
-    sha256 = {
-      "22.1.4" = "0xhbcjqy3g5dfxhr4flmqncmsjnwljfqm9idx92jm43jifz8q3b7";
-      "22.0.4" = "1m0y8wgy48hmcidsr7sbk5hcw3v0qr8359fd2x34fvl2z9c1z5y7";
-    }.${version};
+    sha256 = "2de11fb74fc5cc671b818e49fe203cea0cd1d8b69756e97cdb06a2f4e78948f9";
   };
 
   # TODO:
@@ -61,39 +60,21 @@ self = stdenv.mkDerivation {
   patches = [
     # fixes pkgsMusl.mesa build
     ./musl.patch
-    (fetchpatch {
-      url = "https://raw.githubusercontent.com/void-linux/void-packages/b9f58f303ae23754c95d5d1fe87a98b5a2d8f271/srcpkgs/mesa/patches/musl-endian.patch";
-      sha256 = "sha256-eRc91qCaFlVzrxFrNUPpAHd1gsqKsLCCN0IW8pBQcqk=";
-    })
-    (fetchpatch {
-      url = "https://raw.githubusercontent.com/void-linux/void-packages/b9f58f303ae23754c95d5d1fe87a98b5a2d8f271/srcpkgs/mesa/patches/musl-stacksize.patch";
-      sha256 = "sha256-bEp0AWddsw1Pc3rxdKN8fsrX4x2TQEzMUa5afhLXGsg=";
-    })
 
     ./opencl.patch
     ./disk_cache-include-dri-driver-path-in-cache-key.patch
-  ] ++ optionals (stdenv.isDarwin && stdenv.isAarch64) [
-    # Fix aarch64-darwin build, remove when upstreaam supports it out of the box.
-    # See: https://gitlab.freedesktop.org/mesa/mesa/-/issues/1020
-    ./aarch64-darwin.patch
   ];
 
   postPatch = ''
     patchShebangs .
-
-    substituteInPlace meson.build --replace \
-      "find_program('pkg-config')" \
-      "find_program('${buildPackages.pkg-config.targetPrefix}pkg-config')"
 
     # The drirc.d directory cannot be installed to $drivers as that would cause a cyclic dependency:
     substituteInPlace src/util/xmlconfig.c --replace \
       'DATADIR "/drirc.d"' '"${placeholder "out"}/share/drirc.d"'
     substituteInPlace src/util/meson.build --replace \
       "get_option('datadir')" "'${placeholder "out"}/share'"
-  '' + lib.optionalString (stdenv.hostPlatform != stdenv.buildPlatform) ''
-    substituteInPlace meson.build --replace \
-      "find_program('nm')" \
-      "find_program('${stdenv.cc.targetPrefix}nm')"
+    substituteInPlace src/amd/vulkan/meson.build --replace \
+      "get_option('datadir')" "'${placeholder "out"}/share'"
   '';
 
   outputs = [ "out" "dev" "drivers" ]
@@ -138,7 +119,9 @@ self = stdenv.mkDerivation {
   ] ++ optionals enableOpenCL [
     "-Dgallium-opencl=icd" # Enable the gallium OpenCL frontend
     "-Dclang-libdir=${llvmPackages.clang-unwrapped.lib}/lib"
-  ];
+  ] ++ optional enablePatentEncumberedCodecs
+    "-Dvideo-codecs=h264dec,h264enc,h265dec,h265enc,vc1dec"
+  ++ optional (vulkanLayers != []) "-D vulkan-layers=${builtins.concatStringsSep "," vulkanLayers}";
 
   buildInputs = with xorg; [
     expat llvmPackages.libllvm libglvnd xorgproto
@@ -159,7 +142,7 @@ self = stdenv.mkDerivation {
     meson pkg-config ninja
     intltool bison flex file
     python3Packages.python python3Packages.Mako
-    jdupes
+    jdupes glslang
   ] ++ lib.optionals (elem "wayland" eglPlatforms) [
     wayland-scanner
   ];
@@ -214,6 +197,11 @@ self = stdenv.mkDerivation {
     # move libOSMesa to $osmesa, as it's relatively big
     mkdir -p $osmesa/lib
     mv -t $osmesa/lib/ $out/lib/libOSMesa*
+  '' + lib.optionalString (vulkanLayers != []) ''
+    mv -t $drivers/lib $out/lib/libVkLayer*
+    for js in $drivers/share/vulkan/{im,ex}plicit_layer.d/*.json; do
+      substituteInPlace "$js" --replace '"libVkLayer_' '"'"$drivers/lib/libVkLayer_"
+    done
   '';
 
   postFixup = optionalString stdenv.isLinux ''

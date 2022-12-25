@@ -89,7 +89,7 @@ stdenv.mkDerivation rec {
     # executable wrapper
     makeWrapper '${electron}/bin/electron' "$out/bin/${executableName}" \
       --add-flags "$out/share/element/electron" \
-      --add-flags "\''${NIXOS_OZONE_WL:+\''${WAYLAND_DISPLAY:+--enable-features=UseOzonePlatform --ozone-platform=wayland}}"
+      --add-flags "\''${NIXOS_OZONE_WL:+\''${WAYLAND_DISPLAY:+--ozone-platform-hint=auto --enable-features=WaylandWindowDecorations}}"
 
     runHook postInstall
   '';
@@ -116,12 +116,12 @@ stdenv.mkDerivation rec {
 
   passthru.updateScript = ./update.sh;
 
-  meta = {
+  meta = with lib; {
     description = "Matrix client / Element Desktop fork";
     homepage = "https://schildi.chat/";
     changelog = "https://github.com/SchildiChat/schildichat-desktop/releases";
-    maintainers = lib.teams.matrix.members ++ [ lib.maintainers.kloenk ];
-    license = lib.licenses.asl20;
-    platforms = lib.platforms.all;
+    maintainers = teams.matrix.members ++ (with maintainers; [ kloenk yuka ]);
+    license = licenses.asl20;
+    platforms = platforms.all;
   };
 }

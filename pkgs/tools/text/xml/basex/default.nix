@@ -2,11 +2,11 @@
 
 stdenv.mkDerivation rec {
   pname = "basex";
-  version = "10.0";
+  version = "10.2";
 
   src = fetchurl {
     url = "http://files.basex.org/releases/${version}/BaseX${builtins.replaceStrings ["."] [""] version}.zip";
-    hash = "sha256-3NWmgvMEWdj3h7b/kg4u3EdQupgldYc/SiPO2vzF140=";
+    hash = "sha256-byx1gY/tzUmdi120tQzUywj9XroLyxYVMb4UilkChNk=";
   };
 
   nativeBuildInputs = [ unzip copyDesktopItems ];

@@ -14,16 +14,16 @@
 
 buildGoModule rec {
   pname = "wails";
-  version = "2.0.0-beta.43";
+  version = "2.2.0";
 
   src = fetchFromGitHub {
     owner = "wailsapp";
     repo = pname;
     rev = "v${version}";
-    sha256 = "sha256-IX60xXU1sV39EI2nC/oL+s/RfE0apSJ2nMza6Av864I=";
+    sha256 = "sha256-g5tZUVOZ2ywD2vS9B3y3GHaoABr2rSIZGUOsdUJOL8Q=";
   } + "/v2";
 
-  vendorSha256 = "sha256-KB6fzyeeHCl164ZnDIy9auUC7Qzm8rVMo3XxXbeYCgY=";
+  vendorSha256 = "sha256-jRW8SROt0CON17xZ+I3WiQow7yC1ly7pPHgbpEr1kW8=";
 
   proxyVendor = true;
 

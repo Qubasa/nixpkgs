@@ -100,12 +100,6 @@ let
 
   fileSystems = filter utils.fsNeededForBoot config.system.build.fileSystems;
 
-  fstab = pkgs.writeText "initrd-fstab" (lib.concatMapStringsSep "\n"
-    ({ fsType, mountPoint, device, options, autoFormat, autoResize, ... }@fs: let
-        opts = options ++ optional autoFormat "x-systemd.makefs" ++ optional autoResize "x-systemd.growfs";
-        finalDevice = if (lib.elem "bind" options) then "/sysroot${device}" else device;
-      in "${finalDevice} /sysroot${mountPoint} ${fsType} ${lib.concatStringsSep "," opts}") fileSystems);
-
   needMakefs = lib.any (fs: fs.autoFormat) fileSystems;
   needGrowfs = lib.any (fs: fs.autoResize) fileSystems;
 
@@ -138,12 +132,15 @@ let
 
 in {
   options.boot.initrd.systemd = {
-    enable = mkEnableOption ''systemd in initrd.
+    enable = mkEnableOption (lib.mdDoc "systemd in initrd") // {
+      description = lib.mdDoc ''
+        Whether to enable systemd in initrd.
 
-      Note: This is in very early development and is highly
-      experimental. Most of the features NixOS supports in initrd are
-      not yet supported by the intrd generated with this option.
-    '';
+        Note: This is in very early development and is highly
+        experimental. Most of the features NixOS supports in initrd are
+        not yet supported by the intrd generated with this option.
+      '';
+    };
 
     package = (mkPackageOption pkgs "systemd" {
       default = "systemdStage1";
@@ -335,7 +332,10 @@ in {
   config = mkIf (config.boot.initrd.enable && cfg.enable) {
     system.build = { inherit initialRamdisk; };
 
-    boot.initrd.availableKernelModules = [ "autofs4" ]; # systemd needs this for some features
+    boot.initrd.availableKernelModules = [
+      "autofs4"           # systemd needs this for some features
+      "tpm-tis" "tpm-crb" # systemd-cryptenroll
+    ];
 
     boot.initrd.systemd = {
       initrdBin = [pkgs.bash pkgs.coreutils cfg.package.kmod cfg.package] ++ config.system.fsPackages;
@@ -353,8 +353,6 @@ in {
           [Manager]
           DefaultEnvironment=PATH=/bin:/sbin ${optionalString (isBool cfg.emergencyAccess && cfg.emergencyAccess) "SYSTEMD_SULOGIN_FORCE=1"}
         '';
-
-        "/etc/fstab".source = fstab;
 
         "/lib/modules".source = "${modulesClosure}/lib/modules";
         "/lib/firmware".source = "${modulesClosure}/lib/firmware";
@@ -377,6 +375,8 @@ in {
         "/etc/os-release".source = config.boot.initrd.osRelease;
         "/etc/initrd-release".source = config.boot.initrd.osRelease;
 
+      } // optionalAttrs (config.environment.etc ? "modprobe.d/nixos.conf") {
+        "/etc/modprobe.d/nixos.conf".source = config.environment.etc."modprobe.d/nixos.conf".source;
       };
 
       storePaths = [
@@ -406,6 +406,17 @@ in {
 
         # so NSS can look up usernames
         "${pkgs.glibc}/lib/libnss_files.so.2"
+      ] ++ optionals cfg.package.withCryptsetup [
+        # tpm2 support
+        "${cfg.package}/lib/cryptsetup/libcryptsetup-token-systemd-tpm2.so"
+        pkgs.tpm2-tss
+
+        # fido2 support
+        "${cfg.package}/lib/cryptsetup/libcryptsetup-token-systemd-fido2.so"
+        "${pkgs.libfido2}/lib/libfido2.so.1"
+
+        # the unwrapped systemd-cryptsetup executable
+        "${cfg.package}/lib/systemd/.systemd-cryptsetup-wrapped"
       ] ++ jobScripts;
 
       targets.initrd.aliases = ["default.target"];

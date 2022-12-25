@@ -9,6 +9,7 @@ let
     callPackage
     fetchFromGitHub
     fetchurl
+    fetchpatch
     nixosTests;
 
   since = version: lib.versionAtLeast nodejs.version version;
@@ -38,14 +39,7 @@ final: prev: {
     ];
   };
 
-  "@hyperspace/cli" = prev."@hyperspace/cli".override {
-    nativeBuildInputs = [ pkgs.makeWrapper ];
-    buildInputs = [ final.node-gyp-build ];
-    postInstall = ''wrapProgram "$out/bin/hyp" --prefix PATH : ${ lib.makeBinPath [ nodejs ] }'';
-  };
-  hyperspace-cli = final."@hyperspace/cli";
-
-  "@medable/mdctl-cli" = prev."@medable/mdctl-cli".override {
+  "@medable/mdctl-cli" = prev."@medable/mdctl-cli".override (oldAttrs: {
     nativeBuildInputs = with pkgs; with darwin.apple_sdk.frameworks; [
       glib
       libsecret
@@ -59,11 +53,13 @@ final: prev: {
       final.node-pre-gyp
       nodejs
     ];
-  };
+
+    meta = oldAttrs.meta // { broken = since "16"; };
+  });
   mdctl-cli = final."@medable/mdctl-cli";
 
   autoprefixer = prev.autoprefixer.override {
-    nativeBuildInputs = [ pkgs.makeWrapper ];
+    nativeBuildInputs = [ pkgs.buildPackages.makeWrapper ];
     postInstall = ''
       wrapProgram "$out/bin/autoprefixer" \
         --prefix NODE_PATH : ${final.postcss}/lib/node_modules
@@ -74,7 +70,7 @@ final: prev: {
   };
 
   aws-azure-login = prev.aws-azure-login.override (oldAttrs: {
-    nativeBuildInputs = [ pkgs.makeWrapper ];
+    nativeBuildInputs = [ pkgs.buildPackages.makeWrapper ];
     prePatch = ''
       export PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=1
     '';
@@ -97,10 +93,21 @@ final: prev: {
 
   bitwarden-cli = prev."@bitwarden/cli".override {
     name = "bitwarden-cli";
+    nativeBuildInputs = with pkgs; [
+      pkg-config
+    ] ++ lib.optionals stdenv.isDarwin [
+      darwin.apple_sdk.frameworks.CoreText
+    ];
+    buildInputs = with pkgs; [
+      pixman
+      cairo
+      pango
+      giflib
+    ];
   };
 
   bower2nix = prev.bower2nix.override {
-    nativeBuildInputs = [ pkgs.makeWrapper ];
+    nativeBuildInputs = [ pkgs.buildPackages.makeWrapper ];
     postInstall = ''
       for prog in bower2nix fetch-bower; do
         wrapProgram "$out/bin/$prog" --prefix PATH : ${lib.makeBinPath [ pkgs.git pkgs.nix ]}
@@ -109,7 +116,7 @@ final: prev: {
   };
 
   carbon-now-cli = prev.carbon-now-cli.override {
-    nativeBuildInputs = [ pkgs.makeWrapper ];
+    nativeBuildInputs = [ pkgs.buildPackages.makeWrapper ];
     prePatch = ''
       export PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=1
     '';
@@ -132,10 +139,15 @@ final: prev: {
     meta = oldAttrs.meta // { broken = true; }; # use the top-level package instead
   });
 
+  eask = prev."@emacs-eask/cli".override {
+    name = "eask";
+  };
+
   # NOTE: this is a stub package to fetch npm dependencies for
   # ../../applications/video/epgstation
   epgstation = prev."epgstation-../../applications/video/epgstation".override (oldAttrs: {
-    buildInputs = [ final.node-pre-gyp final.node-gyp-build ];
+    buildInputs = [ pkgs.postgresql ];
+    nativeBuildInputs = [ final.node-pre-gyp final.node-gyp-build pkgs.which ];
     meta = oldAttrs.meta // { platforms = lib.platforms.none; };
   });
 
@@ -151,13 +163,20 @@ final: prev: {
   });
 
   fast-cli = prev.fast-cli.override {
-    nativeBuildInputs = [ pkgs.makeWrapper ];
+    nativeBuildInputs = [ pkgs.buildPackages.makeWrapper ];
     prePatch = ''
       export PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=1
     '';
     postInstall = ''
       wrapProgram $out/bin/fast \
         --set PUPPETEER_EXECUTABLE_PATH ${pkgs.chromium.outPath}/bin/chromium
+    '';
+  };
+
+  fauna-shell = prev.fauna-shell.override {
+    # printReleaseNotes just pulls them from GitHub which is not allowed in sandbox
+    preRebuild = ''
+      sed -i 's|"node ./tools/printReleaseNotes"|"true"|' node_modules/faunadb/package.json
     '';
   };
 
@@ -170,8 +189,18 @@ final: prev: {
     meta = oldAttrs.meta // { broken = since "10"; };
   });
 
+  graphite-cli = prev."@withgraphite/graphite-cli".override {
+    name = "graphite-cli";
+    nativeBuildInputs = [ pkgs.installShellFiles ];
+    postInstall = ''
+      installShellCompletion --cmd gt \
+        --bash <($out/bin/gt completion) \
+        --zsh <($out/bin/gt completion)
+    '';
+  };
+
   graphql-language-service-cli = prev.graphql-language-service-cli.override {
-    nativeBuildInputs = [ pkgs.makeWrapper ];
+    nativeBuildInputs = [ pkgs.buildPackages.makeWrapper ];
     postInstall = ''
       wrapProgram "$out/bin/graphql-lsp" \
         --prefix NODE_PATH : ${final.graphql}/lib/node_modules
@@ -184,7 +213,7 @@ final: prev: {
 
   ijavascript = prev.ijavascript.override (oldAttrs: {
     preRebuild = ''
-      export NPM_CONFIG_ZMQ_EXTERNAL=true
+      export npm_config_zmq_external=true
     '';
     buildInputs = oldAttrs.buildInputs ++ [ final.node-gyp-build pkgs.zeromq ];
   });
@@ -207,6 +236,10 @@ final: prev: {
       libsecret
       final.node-gyp-build
       final.node-pre-gyp
+
+      pixman
+      cairo
+      pango
     ] ++ lib.optionals stdenv.isDarwin [
       darwin.apple_sdk.frameworks.AppKit
       darwin.apple_sdk.frameworks.Security
@@ -226,8 +259,17 @@ final: prev: {
     '';
   };
 
+  keyoxide = prev.keyoxide.override {
+    nativeBuildInputs = [ pkgs.pkg-config ];
+    buildInputs = with pkgs; [
+      pixman
+      cairo
+      pango
+    ];
+  };
+
   makam =  prev.makam.override {
-    nativeBuildInputs = [ pkgs.makeWrapper ];
+    nativeBuildInputs = [ pkgs.buildPackages.makeWrapper ];
     postFixup = ''
       wrapProgram "$out/bin/makam" --prefix PATH : ${lib.makeBinPath [ nodejs ]}
       ${
@@ -238,7 +280,7 @@ final: prev: {
     '';
   };
 
-  manta = prev.manta.override {
+  manta = prev.manta.override ( oldAttrs: {
     nativeBuildInputs = with pkgs; [ nodejs-14_x installShellFiles ];
     postInstall = ''
       # create completions, following upstream procedure https://github.com/joyent/node-manta/blob/v5.2.3/Makefile#L85-L91
@@ -249,13 +291,14 @@ final: prev: {
         installShellCompletion --cmd $cmd --bash <(./bin/$cmd --completion)
       done
     '';
-  };
+    meta = oldAttrs.meta // { maintainers = with lib.maintainers; [ teutat3s ]; };
+  });
 
   mermaid-cli = prev."@mermaid-js/mermaid-cli".override (
   if stdenv.isDarwin
   then {}
   else {
-    nativeBuildInputs = [ pkgs.makeWrapper ];
+    nativeBuildInputs = [ pkgs.buildPackages.makeWrapper ];
     prePatch = ''
       export PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=1
     '';
@@ -275,7 +318,7 @@ final: prev: {
   };
 
   node-gyp = prev.node-gyp.override {
-    nativeBuildInputs = [ pkgs.makeWrapper ];
+    nativeBuildInputs = [ pkgs.buildPackages.makeWrapper ];
     # Teach node-gyp to use nodejs headers locally rather that download them form https://nodejs.org.
     # This is important when build nodejs packages in sandbox.
     postInstall = ''
@@ -294,16 +337,23 @@ final: prev: {
   };
 
   node2nix = prev.node2nix.override {
-    nativeBuildInputs = [ pkgs.makeWrapper ];
-    # We need to use master because of a fix that replaces git:// url to https://.
+    # Get latest commit for misc fixes
     src = fetchFromGitHub {
       owner = "svanderburg";
       repo = "node2nix";
-      rev = "68f5735f9a56737e3fedceb182705985e3ab8799";
-      sha256 = "sha256-NK6gDTkGx0GG7yPTwgtFC4ttQZPfcLaLp8W8OOMO6bg=";
+      rev = "026360084db8a27095aafdac7125d7f1a93046c8";
+      sha256 = "sha256-zO/xGG10v7HGv58RLX5SFd7QOXAL2vRxCRM8IfRZ8JA=";
     };
-
-    postInstall = ''
+    nativeBuildInputs = [ pkgs.buildPackages.makeWrapper ];
+    postInstall = let
+      # Needed to fix Node.js 16+ - PR svanderburg/node2nix#302
+      npmPatch = fetchpatch {
+        name = "emit-lockfile-v2-and-fix-bin-links-with-npmv7.patch";
+        url = "https://github.com/svanderburg/node2nix/commit/375a055041b5ee49ca5fb3f74a58ca197c90c7d5.patch";
+        hash = "sha256-uVYrXptJILojeur9s2O+J/f2vyPNCaZMn1GM/NoC5n8=";
+      };
+    in ''
+      patch -d $out/lib/node_modules/node2nix -p1 < ${npmPatch}
       wrapProgram "$out/bin/node2nix" --prefix PATH : ${lib.makeBinPath [ pkgs.nix ]}
     '';
   };
@@ -315,8 +365,12 @@ final: prev: {
     '';
   };
 
+  photoprism-frontend = prev."photoprism-frontend-../../servers/photoprism".override {
+    meta.broken = true; # use the top-level package instead
+  };
+
   pnpm = prev.pnpm.override {
-    nativeBuildInputs = [ pkgs.makeWrapper ];
+    nativeBuildInputs = [ pkgs.buildPackages.makeWrapper ];
 
     preRebuild = ''
       sed 's/"link:/"file:/g' --in-place package.json
@@ -335,7 +389,7 @@ final: prev: {
   };
 
   postcss-cli = prev.postcss-cli.override (oldAttrs: {
-    nativeBuildInputs = [ pkgs.makeWrapper ];
+    nativeBuildInputs = [ pkgs.buildPackages.makeWrapper ];
     postInstall = ''
       wrapProgram "$out/bin/postcss" \
         --prefix NODE_PATH : ${final.postcss}/lib/node_modules \
@@ -354,13 +408,13 @@ final: prev: {
   # version. Then change the correct hash to this package. The PR should hold
   # two commits: one for the engines and the other one for the node package.
   prisma = prev.prisma.override rec {
-    nativeBuildInputs = [ pkgs.makeWrapper ];
+    nativeBuildInputs = [ pkgs.buildPackages.makeWrapper ];
 
     inherit (pkgs.prisma-engines) version;
 
     src = fetchurl {
       url = "https://registry.npmjs.org/prisma/-/prisma-${version}.tgz";
-      sha512 = "sha512-HuYqnTDgH8atjPGtYmY0Ql9XrrJnfW7daG1PtAJRW0E6gJxc50lY3vrIDn0yjMR3TvRlypjTcspQX8DT+xD4Sg==";
+      sha512 = "sha512-9Aeg4qiKlv9Wsjz4NO8k2CzRzlvS3A4FYVJ5+28sBBZ0eEwbiVOE/Jj7v6rZC1tFW2s4GSICQOAyuOjc6WsNew==";
     };
     postInstall = with pkgs; ''
       wrapProgram "$out/bin/prisma" \
@@ -380,9 +434,9 @@ final: prev: {
 
   pulp = prev.pulp.override {
     # tries to install purescript
-    npmFlags = "--ignore-scripts";
+    npmFlags = builtins.toString [ "--ignore-scripts" ];
 
-    nativeBuildInputs = [ pkgs.makeWrapper ];
+    nativeBuildInputs = [ pkgs.buildPackages.makeWrapper ];
     postInstall =  ''
       wrapProgram "$out/bin/pulp" --suffix PATH : ${lib.makeBinPath [
         pkgs.purescript
@@ -392,7 +446,7 @@ final: prev: {
 
   reveal-md = prev.reveal-md.override (
     lib.optionalAttrs (!stdenv.isDarwin) {
-      nativeBuildInputs = [ pkgs.makeWrapper ];
+      nativeBuildInputs = [ pkgs.buildPackages.makeWrapper ];
       prePatch = ''
         export PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=1
       '';
@@ -414,7 +468,7 @@ final: prev: {
 
   tailwindcss = prev.tailwindcss.override {
     plugins = [ ];
-    nativeBuildInputs = [ pkgs.makeWrapper ];
+    nativeBuildInputs = [ pkgs.buildPackages.makeWrapper ];
     postInstall = ''
       nodePath=""
       for p in "$out" "${final.postcss}" $plugins; do
@@ -439,7 +493,7 @@ final: prev: {
   };
 
   tedicross = prev."tedicross-git+https://github.com/TediCross/TediCross.git#v0.8.7".override {
-    nativeBuildInputs = [ pkgs.makeWrapper ];
+    nativeBuildInputs = with pkgs; [ makeWrapper libtool autoconf ];
     postInstall = ''
       makeWrapper '${nodejs}/bin/node' "$out/bin/tedicross" \
         --add-flags "$out/lib/node_modules/tedicross/main.js"
@@ -466,21 +520,30 @@ final: prev: {
 
   thelounge-theme-flat-blue = prev.thelounge-theme-flat-blue.override {
     nativeBuildInputs = [ final.node-pre-gyp ];
+    # TODO: needed until upstream pins thelounge version 4.3.1+ (which fixes dependency on old sqlite3 and transitively very old node-gyp 3.x)
+    preRebuild = ''
+      rm -r node_modules/node-gyp
+    '';
   };
 
   thelounge-theme-flat-dark = prev.thelounge-theme-flat-dark.override {
     nativeBuildInputs = [ final.node-pre-gyp ];
+    # TODO: needed until upstream pins thelounge version 4.3.1+ (which fixes dependency on old sqlite3 and transitively very old node-gyp 3.x)
+    preRebuild = ''
+      rm -r node_modules/node-gyp
+    '';
   };
 
-  triton = prev.triton.override {
+  triton = prev.triton.override (oldAttrs: {
     nativeBuildInputs = [ pkgs.installShellFiles ];
     postInstall = ''
       installShellCompletion --cmd triton --bash <($out/bin/triton completion)
     '';
-  };
+    meta = oldAttrs.meta // { maintainers = with lib.maintainers; [ teutat3s ]; };
+  });
 
   ts-node = prev.ts-node.override {
-    nativeBuildInputs = [ pkgs.makeWrapper ];
+    nativeBuildInputs = [ pkgs.buildPackages.makeWrapper ];
     postInstall = ''
       wrapProgram "$out/bin/ts-node" \
       --prefix NODE_PATH : ${final.typescript}/lib/node_modules
@@ -488,7 +551,7 @@ final: prev: {
   };
 
   tsun = prev.tsun.override {
-    nativeBuildInputs = [ pkgs.makeWrapper ];
+    nativeBuildInputs = [ pkgs.buildPackages.makeWrapper ];
     postInstall = ''
       wrapProgram "$out/bin/tsun" \
       --prefix NODE_PATH : ${final.typescript}/lib/node_modules
@@ -496,7 +559,7 @@ final: prev: {
   };
 
   typescript-language-server = prev.typescript-language-server.override {
-    nativeBuildInputs = [ pkgs.makeWrapper ];
+    nativeBuildInputs = [ pkgs.buildPackages.makeWrapper ];
     postInstall = ''
       wrapProgram "$out/bin/typescript-language-server" \
         --suffix PATH : ${lib.makeBinPath [ final.typescript ]}
@@ -524,8 +587,8 @@ final: prev: {
       postInstall = ''
         cd node_modules
         for dep in ${final.vega-cli}/lib/node_modules/vega-cli/node_modules/*; do
-          if [[ ! -d $dep ]]; then
-            ln -s "${final.vega-cli}/lib/node_modules/vega-cli/node_modules/$dep"
+          if [[ ! -d ''${dep##*/} ]]; then
+            ln -s "${final.vega-cli}/lib/node_modules/vega-cli/node_modules/''${dep##*/}"
           fi
         done
       '';
@@ -553,8 +616,12 @@ final: prev: {
     buildInputs = [ final.node-gyp-build ];
   };
 
+  wrangler = prev.wrangler.override (oldAttrs: {
+    meta = oldAttrs.meta // { broken = before "16.13"; };
+  });
+
   yaml-language-server = prev.yaml-language-server.override {
-    nativeBuildInputs = [ pkgs.makeWrapper ];
+    nativeBuildInputs = [ pkgs.buildPackages.makeWrapper ];
     postInstall = ''
       wrapProgram "$out/bin/yaml-language-server" \
       --prefix NODE_PATH : ${final.prettier}/lib/node_modules

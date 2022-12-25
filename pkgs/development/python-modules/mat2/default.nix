@@ -1,9 +1,10 @@
 { lib
 , stdenv
 , buildPythonPackage
-, python
+, unittestCheckHook
 , pythonOlder
 , fetchFromGitLab
+, fetchpatch
 , substituteAll
 , bubblewrap
 , exiftool
@@ -17,7 +18,8 @@
 , mutagen
 , pygobject3
 , pycairo
-, dolphinIntegration ? false, plasma5Packages
+, dolphinIntegration ? false
+, plasma5Packages
 }:
 
 buildPythonPackage rec {
@@ -51,6 +53,11 @@ buildPythonPackage rec {
     (substituteAll {
       src = ./fix_poppler.patch;
       poppler_path = "${poppler_gi}/lib/girepository-1.0";
+    })
+    # https://0xacab.org/jvoisin/mat2/-/issues/178
+    (fetchpatch {
+      url = "https://0xacab.org/jvoisin/mat2/-/commit/618e0a8e3984fd534b95ef3dbdcb8a76502c90b5.patch";
+      hash = "sha256-l9UFim3hGj+d2uKITiDG1OnqGeo2McBIiRSmK0Vidg8=";
     })
   ] ++ lib.optionals (stdenv.hostPlatform.isLinux) [
     (substituteAll {
@@ -92,9 +99,9 @@ buildPythonPackage rec {
     install -Dm 444 dolphin/mat2.desktop -t "$out/share/kservices5/ServiceMenus"
   '';
 
-  checkPhase = ''
-    ${python.interpreter} -m unittest discover -v
-  '';
+  checkInputs = [ unittestCheckHook ];
+
+  unittestFlagsArray = [ "-v" ];
 
   meta = with lib; {
     description = "A handy tool to trash your metadata";

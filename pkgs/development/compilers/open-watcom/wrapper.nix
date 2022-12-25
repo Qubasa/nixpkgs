@@ -18,7 +18,7 @@ let
         "binnt"
         (lib.optionalString is32bit "binw")
       ] else if (isDarwin && is64bit) then [
-        "osx64"
+        "bino64"
       ] else [
         (lib.optionalString is64bit "binl64")
         "binl"
@@ -36,7 +36,7 @@ let
 
       paths = [ open-watcom ];
 
-      buildInputs = [ makeWrapper ];
+      nativeBuildInputs = [ makeWrapper ];
 
       postBuild = ''
         mkdir $out/bin

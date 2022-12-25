@@ -2,7 +2,6 @@
 , lib
 , stdenv
 , fetchFromGitHub
-, fetchpatch
 , addOpenGLRunpath
 , docutils
 , perl
@@ -24,6 +23,7 @@
 , waylandSupport ? stdenv.isLinux
   , wayland
   , wayland-protocols
+  , wayland-scanner
   , libxkbcommon
 
 , x11Support ? stdenv.isLinux
@@ -60,7 +60,7 @@
 , libpngSupport      ? true,           libpng
 , openalSupport      ? true,           openalSoft
 , pulseSupport       ? config.pulseaudio or stdenv.isLinux, libpulseaudio
-, rubberbandSupport  ? stdenv.isLinux, rubberband
+, rubberbandSupport  ? true,           rubberband
 , screenSaverSupport ? true,           libXScrnSaver
 , sdl2Support        ? true,           SDL2
 , sixelSupport       ? false,          libsixel
@@ -100,6 +100,10 @@ in stdenv.mkDerivation rec {
   NIX_LDFLAGS = lib.optionalString x11Support "-lX11 -lXext "
     + lib.optionalString stdenv.isDarwin "-framework CoreFoundation";
 
+  # These flags are not supported and cause the build
+  # to fail, even when cross compilation itself works.
+  dontAddWafCrossFlags = true;
+
   wafConfigureFlags = [
     "--enable-libmpv-shared"
     "--enable-manpage-build"
@@ -127,7 +131,8 @@ in stdenv.mkDerivation rec {
     python3
     wafHook
     which
-  ] ++ lib.optionals swiftSupport [ swift ];
+  ] ++ lib.optionals swiftSupport [ swift ]
+    ++ lib.optionals waylandSupport [ wayland-scanner ];
 
   buildInputs = [
     ffmpeg

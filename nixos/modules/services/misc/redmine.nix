@@ -49,7 +49,7 @@ in
   # interface
   options = {
     services.redmine = {
-      enable = mkEnableOption "Redmine";
+      enable = mkEnableOption (lib.mdDoc "Redmine");
 
       package = mkOption {
         type = types.package;
@@ -161,7 +161,7 @@ in
         };
 
         port = mkOption {
-          type = types.int;
+          type = types.port;
           default = if cfg.database.type == "postgresql" then 5432 else 3306;
           defaultText = literalExpression "3306";
           description = lib.mdDoc "Database host port.";

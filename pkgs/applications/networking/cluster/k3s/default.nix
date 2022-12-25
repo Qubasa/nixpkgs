@@ -22,6 +22,7 @@
 , zstd
 , yq-go
 , nixosTests
+, pkgsBuildBuild
 }:
 
 with lib;
@@ -46,15 +47,15 @@ with lib;
 # Those pieces of software we entirely ignore upstream's handling of, and just
 # make sure they're in the path if desired.
 let
-  k3sVersion = "1.24.3+k3s1";     # k3s git tag
-  k3sCommit = "990ba0e88c90f8ed8b50e0ccd375937b841b176e"; # k3s git commit at the above version
-  k3sRepoSha256 = "0slw2j7d7ccj7k9z06l5ch3nxi07jbm6xijs774hisyv25jx94rd";
-  k3sVendorSha256 = "sha256-8jWpTUE/tJf2qpFjdsV+0i8hRf6JqATwr/YbXrZa/iA=";
+  k3sVersion = "1.25.3+k3s1";     # k3s git tag
+  k3sCommit = "f2585c1671b31b4b34bddbb3bf4e7d69662b0821"; # k3s git commit at the above version
+  k3sRepoSha256 = "0zwf3iwjcidx14zw36s1hr0q8wmmbfc0rfqwd7fmpjq597h8zkms";
+  k3sVendorSha256 = "sha256-U67tJRGqPFk5AfRe7I50zKGC9HJ2oh+iI/C7qF/76BQ=";
 
   # taken from ./manifests/traefik.yaml, extracted from '.spec.chart' https://github.com/k3s-io/k3s/blob/v1.23.3%2Bk3s1/scripts/download#L9
   # The 'patch' and 'minor' versions are currently hardcoded as single digits only, so ignore the trailing two digits. Weird, I know.
-  traefikChartVersion = "10.19.3";
-  traefikChartSha256 = "04zg5li957svgscdmkzmzjkwljaljyav68rzxmhakkwgav6q9058";
+  traefikChartVersion = "12.0.0";
+  traefikChartSha256 = "1sqmi71fi3ad5dh5fmsp9mv80x6pkgqwi4r9fr8l6i9sdnai6f1a";
 
   # taken from ./scripts/version.sh VERSION_ROOT https://github.com/k3s-io/k3s/blob/v1.23.3%2Bk3s1/scripts/version.sh#L47
   k3sRootVersion = "0.11.0";
@@ -66,17 +67,17 @@ let
 
   # taken from go.mod, the 'github.com/containerd/containerd' line
   # run `grep github.com/containerd/containerd go.mod | head -n1 | awk '{print $4}'`
-  containerdVersion = "1.5.13-k3s1";
-  containerdSha256 = "09bj4ghwbsj9whkv1d5icqs52k64m449j8b73dmak2wz62fbzbvp";
+  containerdVersion = "1.5.13-k3s2";
+  containerdSha256 = "1pfr2ji4aij9js90gf4a3hqnhyw5hshcjdccm62l700j68gs5z97";
 
   # run `grep github.com/kubernetes-sigs/cri-tools go.mod | head -n1 | awk '{print $4}'` in the k3s repo at the tag
-  criCtlVersion = "1.24.0-k3s1";
+  criCtlVersion = "1.25.0-k3s1";
 
   baseMeta = {
     description = "A lightweight Kubernetes distribution";
     license = licenses.asl20;
     homepage = "https://k3s.io";
-    maintainers = with maintainers; [ euank mic92 superherointj ];
+    maintainers = with maintainers; [ euank mic92 ];
     platforms = platforms.linux;
   };
 
@@ -240,7 +241,11 @@ buildGoModule rec {
 
     substituteInPlace scripts/package-cli \
       --replace '"''${GO}" generate' \
-                'GOFLAGS="" "''${GO}" generate'
+                'GOFLAGS="" \
+                 GOOS="${pkgsBuildBuild.go.GOOS}" \
+                 GOARCH="${pkgsBuildBuild.go.GOARCH}" \
+                 CC="${pkgsBuildBuild.stdenv.cc}/bin/cc" \
+                 "''${GO}" generate'
   '';
 
   # Important utilities used by the kubelet, see

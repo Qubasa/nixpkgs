@@ -2,8 +2,10 @@
 # Do not edit!
 
 {
-  version = "2022.8.4";
+  version = "2022.11.2";
   components = {
+    "3_day_blinds" = ps: with ps; [
+    ];
     "abode" = ps: with ps; [
       abodepy
     ];
@@ -51,6 +53,21 @@
     "airthings" = ps: with ps; [
       airthings-cloud
     ];
+    "airthings_ble" = ps: with ps; [
+      aiohttp-cors
+      airthings-ble
+      bleak-retry-connector
+      bleak
+      bluetooth-adapters
+      bluetooth-auto-recovery
+      dbus-fast
+      fnvhash
+      home-assistant-frontend
+      pillow
+      pyserial
+      pyudev
+      sqlalchemy
+    ];
     "airtouch4" = ps: with ps; [
       airtouch4pyapi
     ];
@@ -84,10 +101,6 @@
     "amazon_polly" = ps: with ps; [
       boto3
     ];
-    "ambee" = ps: with ps; [
-      aiohttp-cors
-      ambee
-    ];
     "amberelectric" = ps: with ps; [
       amberelectric
     ];
@@ -101,6 +114,8 @@
     "amcrest" = ps: with ps; [
       amcrest
       ha-ffmpeg
+    ];
+    "amp_motorization" = ps: with ps; [
     ];
     "ampio" = ps: with ps; [
       asmog
@@ -124,7 +139,6 @@
     "anel_pwrctrl" = ps: with ps; [
     ]; # missing inputs: anel_pwrctrl-homeassistant
     "anthemav" = ps: with ps; [
-      aiohttp-cors
     ]; # missing inputs: anthemav
     "apache_kafka" = ps: with ps; [
       aiokafka
@@ -193,7 +207,22 @@
       pyatome
     ];
     "august" = ps: with ps; [
+      aiohttp-cors
+      bleak-retry-connector
+      bleak
+      bluetooth-adapters
+      bluetooth-auto-recovery
+      dbus-fast
+      fnvhash
+      home-assistant-frontend
+      pillow
+      pyserial
+      pyudev
+      sqlalchemy
+      yalexs-ble
       yalexs
+    ];
+    "august_ble" = ps: with ps; [
     ];
     "aurora" = ps: with ps; [
       auroranoaa
@@ -273,9 +302,28 @@
     "blinksticklight" = ps: with ps; [
       BlinkStick
     ];
+    "bliss_automation" = ps: with ps; [
+    ];
+    "bloc_blinds" = ps: with ps; [
+    ];
     "blockchain" = ps: with ps; [
     ]; # missing inputs: python-blockchain-api
     "bloomsky" = ps: with ps; [
+    ];
+    "bluemaestro" = ps: with ps; [
+      aiohttp-cors
+      bleak-retry-connector
+      bleak
+      bluemaestro-ble
+      bluetooth-adapters
+      bluetooth-auto-recovery
+      dbus-fast
+      fnvhash
+      home-assistant-frontend
+      pillow
+      pyserial
+      pyudev
+      sqlalchemy
     ];
     "blueprint" = ps: with ps; [
     ];
@@ -284,13 +332,31 @@
     ];
     "bluetooth" = ps: with ps; [
       aiohttp-cors
+      bleak-retry-connector
       bleak
       bluetooth-adapters
+      bluetooth-auto-recovery
+      dbus-fast
+      fnvhash
+      home-assistant-frontend
+      pillow
+      pyserial
+      pyudev
+      sqlalchemy
     ];
     "bluetooth_le_tracker" = ps: with ps; [
       aiohttp-cors
+      bleak-retry-connector
       bleak
       bluetooth-adapters
+      bluetooth-auto-recovery
+      dbus-fast
+      fnvhash
+      home-assistant-frontend
+      pillow
+      pyserial
+      pyudev
+      sqlalchemy
     ];
     "bluetooth_tracker" = ps: with ps; [
       bt-proximity
@@ -309,7 +375,9 @@
       zeroconf
     ];
     "braviatv" = ps: with ps; [
-      bravia-tv
+      pybravia
+    ];
+    "brel_home" = ps: with ps; [
     ];
     "broadlink" = ps: with ps; [
       broadlink
@@ -326,12 +394,33 @@
       brunt
     ];
     "bsblan" = ps: with ps; [
-      bsblan
+      python-bsblan
+    ];
+    "bswitch" = ps: with ps; [
     ];
     "bt_home_hub_5" = ps: with ps; [
     ]; # missing inputs: bthomehub5-devicelist
     "bt_smarthub" = ps: with ps; [
     ]; # missing inputs: btsmarthub_devicelist
+    "bthome" = ps: with ps; [
+      aiohttp-cors
+      bleak-retry-connector
+      bleak
+      bluetooth-adapters
+      bluetooth-auto-recovery
+      bthome-ble
+      dbus-fast
+      fnvhash
+      home-assistant-frontend
+      pillow
+      pyserial
+      pyudev
+      sqlalchemy
+    ];
+    "bticino" = ps: with ps; [
+    ];
+    "bubendorff" = ps: with ps; [
+    ];
     "buienradar" = ps: with ps; [
       buienradar
     ];
@@ -390,10 +479,6 @@
     ];
     "clicksend_tts" = ps: with ps; [
     ];
-    "climacell" = ps: with ps; [
-      pyclimacell
-      pytomorrowio
-    ];
     "climate" = ps: with ps; [
     ];
     "cloud" = ps: with ps; [
@@ -447,6 +532,8 @@
     ];
     "cover" = ps: with ps; [
     ];
+    "cozytouch" = ps: with ps; [
+    ];
     "cppm_tracker" = ps: with ps; [
     ]; # missing inputs: clearpasspy
     "cpuspeed" = ps: with ps; [
@@ -464,6 +551,8 @@
       pycups
     ];
     "currencylayer" = ps: with ps; [
+    ];
+    "dacia" = ps: with ps; [
     ];
     "daikin" = ps: with ps; [
       pydaikin
@@ -496,13 +585,17 @@
       aiodiscover
       aiohttp-cors
       async-upnp-client
+      bleak-retry-connector
       bleak
       bluetooth-adapters
+      bluetooth-auto-recovery
+      dbus-fast
       fnvhash
       hass-nabucasa
       home-assistant-frontend
       ifaddr
       pillow
+      psutil-home-assistant
       pyserial
       pyudev
       scapy
@@ -560,6 +653,10 @@
     "dialogflow" = ps: with ps; [
       aiohttp-cors
     ];
+    "diaz" = ps: with ps; [
+    ];
+    "digital_loggers" = ps: with ps; [
+    ];
     "digital_ocean" = ps: with ps; [
       digital-ocean
     ];
@@ -579,10 +676,10 @@
       zeroconf
     ];
     "dlib_face_detect" = ps: with ps; [
-      face_recognition
+      face-recognition
     ];
     "dlib_face_identify" = ps: with ps; [
-      face_recognition
+      face-recognition
     ];
     "dlink" = ps: with ps; [
     ]; # missing inputs: pyW215
@@ -611,6 +708,8 @@
     "doorbird" = ps: with ps; [
       aiohttp-cors
       doorbirdpy
+    ];
+    "dooya" = ps: with ps; [
     ];
     "dovado" = ps: with ps; [
     ]; # missing inputs: dovado
@@ -657,7 +756,11 @@
       pyeconet
     ];
     "ecovacs" = ps: with ps; [
-    ]; # missing inputs: sucks
+    ]; # missing inputs: py-sucks
+    "ecowitt" = ps: with ps; [
+      aioecowitt
+      aiohttp-cors
+    ];
     "eddystone_temperature" = ps: with ps; [
       construct
     ]; # missing inputs: beacontools
@@ -748,14 +851,37 @@
     ]; # missing inputs: epsonprinter
     "eq3btsmart" = ps: with ps; [
       aiohttp-cors
+      bleak-retry-connector
       bleak
       bluetooth-adapters
+      bluetooth-auto-recovery
       construct
+      dbus-fast
+      fnvhash
+      home-assistant-frontend
+      pillow
+      pyserial
+      pyudev
+      sqlalchemy
     ]; # missing inputs: python-eq3bt
+    "escea" = ps: with ps; [
+      pescea
+    ];
     "esphome" = ps: with ps; [
       aioesphomeapi
       aiohttp-cors
+      bleak-retry-connector
+      bleak
+      bluetooth-adapters
+      bluetooth-auto-recovery
+      dbus-fast
+      fnvhash
+      home-assistant-frontend
       ifaddr
+      pillow
+      pyserial
+      pyudev
+      sqlalchemy
       zeroconf
     ];
     "etherscan" = ps: with ps; [
@@ -812,6 +938,9 @@
     "file" = ps: with ps; [
       file-read-backwards
     ];
+    "file_upload" = ps: with ps; [
+      aiohttp-cors
+    ];
     "filesize" = ps: with ps; [
     ];
     "filter" = ps: with ps; [
@@ -839,15 +968,26 @@
     ];
     "fjaraskupan" = ps: with ps; [
       aiohttp-cors
+      bleak-retry-connector
       bleak
       bluetooth-adapters
+      bluetooth-auto-recovery
+      dbus-fast
       fjaraskupan
+      fnvhash
+      home-assistant-frontend
+      pillow
+      pyserial
+      pyudev
+      sqlalchemy
     ];
     "fleetgo" = ps: with ps; [
       ritassist
     ];
     "flexit" = ps: with ps; [
       pymodbus
+    ];
+    "flexom" = ps: with ps; [
     ];
     "flic" = ps: with ps; [
       pyflic
@@ -865,10 +1005,6 @@
     ];
     "flume" = ps: with ps; [
       pyflume
-    ];
-    "flunearyou" = ps: with ps; [
-      aiohttp-cors
-      pyflunearyou
     ];
     "flux" = ps: with ps; [
     ];
@@ -889,6 +1025,8 @@
       forecast-solar
     ];
     "forked_daapd" = ps: with ps; [
+      aiohttp-cors
+      spotipy
     ]; # missing inputs: pyforked-daapd pylibrespot-java
     "fortios" = ps: with ps; [
       fortiosapi
@@ -934,6 +1072,9 @@
     "frontier_silicon" = ps: with ps; [
       afsapi
     ];
+    "fully_kiosk" = ps: with ps; [
+      python-fullykiosk
+    ];
     "futurenow" = ps: with ps; [
       pyfnip
     ];
@@ -942,12 +1083,15 @@
     "garages_amsterdam" = ps: with ps; [
       garages-amsterdam
     ];
+    "gaviota" = ps: with ps; [
+    ];
     "gc100" = ps: with ps; [
     ]; # missing inputs: python-gc100
     "gdacs" = ps: with ps; [
       aio-georss-gdacs
     ];
     "generic" = ps: with ps; [
+      aiohttp-cors
       av
       pillow
     ];
@@ -1026,6 +1170,10 @@
     "google_pubsub" = ps: with ps; [
       google-cloud-pubsub
     ];
+    "google_sheets" = ps: with ps; [
+      aiohttp-cors
+      gspread
+    ];
     "google_translate" = ps: with ps; [
       gtts
     ];
@@ -1036,9 +1184,18 @@
     ];
     "govee_ble" = ps: with ps; [
       aiohttp-cors
+      bleak-retry-connector
       bleak
       bluetooth-adapters
+      bluetooth-auto-recovery
+      dbus-fast
+      fnvhash
       govee-ble
+      home-assistant-frontend
+      pillow
+      pyserial
+      pyudev
+      sqlalchemy
     ];
     "gpsd" = ps: with ps; [
       gps3
@@ -1082,9 +1239,11 @@
       fnvhash
       home-assistant-frontend
       pillow
+      psutil-home-assistant
       sqlalchemy
     ];
     "hardware" = ps: with ps; [
+      psutil-home-assistant
     ];
     "harman_kardon_avr" = ps: with ps; [
       hkavr
@@ -1099,6 +1258,8 @@
       pillow
       sqlalchemy
     ];
+    "havana_shade" = ps: with ps; [
+    ];
     "haveibeenpwned" = ps: with ps; [
     ];
     "hddtemp" = ps: with ps; [
@@ -1108,11 +1269,15 @@
     ];
     "heatmiser" = ps: with ps; [
     ]; # missing inputs: heatmiserV3
+    "heiwa" = ps: with ps; [
+    ];
     "heos" = ps: with ps; [
       pyheos
     ];
     "here_travel_time" = ps: with ps; [
       herepy
+    ];
+    "hi_kumo" = ps: with ps; [
     ];
     "hikvision" = ps: with ps; [
     ]; # missing inputs: pyhik
@@ -1150,22 +1315,28 @@
     "homeassistant" = ps: with ps; [
     ];
     "homeassistant_alerts" = ps: with ps; [
+    ];
+    "homeassistant_sky_connect" = ps: with ps; [
       aiohttp-cors
+      psutil-home-assistant
+      pyserial
+      pyudev
     ];
     "homeassistant_yellow" = ps: with ps; [
       aiohttp-cors
       fnvhash
       home-assistant-frontend
       pillow
+      psutil-home-assistant
       sqlalchemy
     ];
     "homekit" = ps: with ps; [
-      hap-python
       pyqrcode
       pyturbojpeg
       aiohttp-cors
       base36
       fnvhash
+      hap-python
       ha-ffmpeg
       ifaddr
       zeroconf
@@ -1173,9 +1344,18 @@
     "homekit_controller" = ps: with ps; [
       aiohomekit
       aiohttp-cors
+      bleak-retry-connector
       bleak
       bluetooth-adapters
+      bluetooth-auto-recovery
+      dbus-fast
+      fnvhash
+      home-assistant-frontend
       ifaddr
+      pillow
+      pyserial
+      pyudev
+      sqlalchemy
       zeroconf
     ];
     "homematic" = ps: with ps; [
@@ -1214,12 +1394,14 @@
       aiohue
     ];
     "huisbaasje" = ps: with ps; [
-      huisbaasje-client
+      energyflip-client
     ];
     "humidifier" = ps: with ps; [
     ];
     "hunterdouglas_powerview" = ps: with ps; [
       aiopvapi
+    ];
+    "hurrican_shutters_wholesale" = ps: with ps; [
     ];
     "hvv_departures" = ps: with ps; [
       pygti
@@ -1236,7 +1418,23 @@
     "iammeter" = ps: with ps; [
     ]; # missing inputs: iammeter
     "iaqualink" = ps: with ps; [
+      h2
       iaqualink
+    ];
+    "ibeacon" = ps: with ps; [
+      aiohttp-cors
+      bleak-retry-connector
+      bleak
+      bluetooth-adapters
+      bluetooth-auto-recovery
+      dbus-fast
+      fnvhash
+      home-assistant-frontend
+      ibeacon-ble
+      pillow
+      pyserial
+      pyudev
+      sqlalchemy
     ];
     "icloud" = ps: with ps; [
       pyicloud
@@ -1277,9 +1475,18 @@
     ];
     "inkbird" = ps: with ps; [
       aiohttp-cors
+      bleak-retry-connector
       bleak
       bluetooth-adapters
+      bluetooth-auto-recovery
+      dbus-fast
+      fnvhash
+      home-assistant-frontend
       inkbird-ble
+      pillow
+      pyserial
+      pyudev
+      sqlalchemy
     ];
     "input_boolean" = ps: with ps; [
     ];
@@ -1292,6 +1499,8 @@
     "input_select" = ps: with ps; [
     ];
     "input_text" = ps: with ps; [
+    ];
+    "inspired_shades" = ps: with ps; [
     ];
     "insteon" = ps: with ps; [
       aiohttp-cors
@@ -1342,6 +1551,8 @@
     "islamic_prayer_times" = ps: with ps; [
       prayer-times-calculator
     ];
+    "ismartwindow" = ps: with ps; [
+    ];
     "iss" = ps: with ps; [
     ]; # missing inputs: pyiss
     "isy994" = ps: with ps; [
@@ -1365,6 +1576,9 @@
     "juicenet" = ps: with ps; [
       python-juicenet
     ];
+    "justnimbus" = ps: with ps; [
+      justnimbus
+    ];
     "kaiterra" = ps: with ps; [
     ]; # missing inputs: kaiterra-async-client
     "kaleidescape" = ps: with ps; [
@@ -1380,11 +1594,41 @@
       aiokef
       getmac
     ];
+    "kegtron" = ps: with ps; [
+      aiohttp-cors
+      bleak-retry-connector
+      bleak
+      bluetooth-adapters
+      bluetooth-auto-recovery
+      dbus-fast
+      fnvhash
+      home-assistant-frontend
+      kegtron-ble
+      pillow
+      pyserial
+      pyudev
+      sqlalchemy
+    ];
     "keyboard" = ps: with ps; [
     ]; # missing inputs: pyuserinput
     "keyboard_remote" = ps: with ps; [
       aionotify
       evdev
+    ];
+    "keymitt_ble" = ps: with ps; [
+      pymicrobot
+      aiohttp-cors
+      bleak-retry-connector
+      bleak
+      bluetooth-adapters
+      bluetooth-auto-recovery
+      dbus-fast
+      fnvhash
+      home-assistant-frontend
+      pillow
+      pyserial
+      pyudev
+      sqlalchemy
     ];
     "kira" = ps: with ps; [
       pykira
@@ -1420,8 +1664,14 @@
     "lacrosse" = ps: with ps; [
       pylacrosse
     ];
+    "lacrosse_view" = ps: with ps; [
+    ]; # missing inputs: lacrosse-view
     "lametric" = ps: with ps; [
-      lmnotify
+      aiohttp-cors
+      demetriek
+    ];
+    "landisgyr_heat_meter" = ps: with ps; [
+      ultraheat-api
     ];
     "lannouncer" = ps: with ps; [
     ];
@@ -1437,11 +1687,31 @@
     "lcn" = ps: with ps; [
       pypck
     ];
+    "led_ble" = ps: with ps; [
+      aiohttp-cors
+      bleak-retry-connector
+      bleak
+      bluetooth-adapters
+      bluetooth-auto-recovery
+      dbus-fast
+      fnvhash
+      home-assistant-frontend
+      led-ble
+      pillow
+      pyserial
+      pyudev
+      sqlalchemy
+    ];
+    "legrand" = ps: with ps; [
+    ];
     "lg_netcast" = ps: with ps; [
       pylgnetcast
     ];
     "lg_soundbar" = ps: with ps; [
       temescal
+    ];
+    "lidarr" = ps: with ps; [
+      aiopyarr
     ];
     "life360" = ps: with ps; [
       life360
@@ -1450,8 +1720,9 @@
       aiohttp-cors
       aiolifx
       aiolifx-effects
+      aiolifx-themes
       ifaddr
-    ]; # missing inputs: aiolifx-connection
+    ];
     "lifx_cloud" = ps: with ps; [
     ];
     "light" = ps: with ps; [
@@ -1530,6 +1801,8 @@
     "lutron_caseta" = ps: with ps; [
       pylutron-caseta
     ];
+    "luxaflex" = ps: with ps; [
+    ];
     "lw12wifi" = ps: with ps; [
     ]; # missing inputs: lw12
     "lyric" = ps: with ps; [
@@ -1557,6 +1830,10 @@
       home-assistant-frontend
       pillow
       sqlalchemy
+    ];
+    "marantz" = ps: with ps; [
+    ];
+    "martec" = ps: with ps; [
     ];
     "marytts" = ps: with ps; [
     ]; # missing inputs: speak2mary
@@ -1593,6 +1870,20 @@
     ];
     "melissa" = ps: with ps; [
     ]; # missing inputs: py-melissa-climate
+    "melnor" = ps: with ps; [
+      aiohttp-cors
+      bleak-retry-connector
+      bleak
+      bluetooth-adapters
+      bluetooth-auto-recovery
+      dbus-fast
+      fnvhash
+      home-assistant-frontend
+      pillow
+      pyserial
+      pyudev
+      sqlalchemy
+    ]; # missing inputs: melnor-bluetooth
     "meraki" = ps: with ps; [
       aiohttp-cors
     ];
@@ -1634,7 +1925,6 @@
       aiohttp-cors
     ];
     "miflora" = ps: with ps; [
-      aiohttp-cors
     ];
     "mikrotik" = ps: with ps; [
       librouteros
@@ -1654,15 +1944,23 @@
       minio
     ];
     "mitemp_bt" = ps: with ps; [
-      aiohttp-cors
     ];
     "mjpeg" = ps: with ps; [
     ];
     "moat" = ps: with ps; [
       aiohttp-cors
+      bleak-retry-connector
       bleak
       bluetooth-adapters
+      bluetooth-auto-recovery
+      dbus-fast
+      fnvhash
+      home-assistant-frontend
       moat-ble
+      pillow
+      pyserial
+      pyudev
+      sqlalchemy
     ];
     "mobile_app" = ps: with ps; [
       pynacl
@@ -1816,6 +2114,8 @@
     "nexia" = ps: with ps; [
       nexia
     ];
+    "nexity" = ps: with ps; [
+    ];
     "nextbus" = ps: with ps; [
       py-nextbusnext
     ];
@@ -1827,6 +2127,9 @@
     ];
     "nfandroidtv" = ps: with ps; [
     ]; # missing inputs: notifications-android-tv
+    "nibe_heatpump" = ps: with ps; [
+      tenacity
+    ]; # missing inputs: nibe
     "nightscout" = ps: with ps; [
       py-nightscout
     ];
@@ -1846,14 +2149,18 @@
       aiohttp-cors
       getmac
       ifaddr
+      mac-vendor-lookup
       netmap
-    ]; # missing inputs: mac-vendor-lookup
+    ];
     "nmbs" = ps: with ps; [
     ]; # missing inputs: pyrail
     "no_ip" = ps: with ps; [
     ];
     "noaa_tides" = ps: with ps; [
     ]; # missing inputs: noaa-coops
+    "nobo_hub" = ps: with ps; [
+      pynobo
+    ];
     "norway_air" = ps: with ps; [
       pymetno
     ];
@@ -1881,6 +2188,8 @@
     ];
     "nut" = ps: with ps; [
       pynut2
+    ];
+    "nutrichef" = ps: with ps; [
     ];
     "nws" = ps: with ps; [
       pynws
@@ -1942,7 +2251,6 @@
     "openalpr_cloud" = ps: with ps; [
     ];
     "openalpr_local" = ps: with ps; [
-      aiohttp-cors
     ];
     "opencv" = ps: with ps; [
       numpy
@@ -1954,6 +2262,7 @@
       openevsewifi
     ];
     "openexchangerates" = ps: with ps; [
+      aioopenexchangerates
     ];
     "opengarage" = ps: with ps; [
       open-garage
@@ -1982,6 +2291,21 @@
     ];
     "opple" = ps: with ps; [
       pyoppleio
+    ];
+    "oralb" = ps: with ps; [
+      aiohttp-cors
+      bleak-retry-connector
+      bleak
+      bluetooth-adapters
+      bluetooth-auto-recovery
+      dbus-fast
+      fnvhash
+      home-assistant-frontend
+      oralb-ble
+      pillow
+      pyserial
+      pyudev
+      sqlalchemy
     ];
     "oru" = ps: with ps; [
     ]; # missing inputs: oru
@@ -2031,6 +2355,8 @@
       home-assistant-frontend
       pillow
       sqlalchemy
+    ];
+    "pcs_lighting" = ps: with ps; [
     ];
     "peco" = ps: with ps; [
       peco
@@ -2124,6 +2450,9 @@
     "proxy" = ps: with ps; [
       pillow
     ];
+    "prusalink" = ps: with ps; [
+      pyprusalink
+    ];
     "ps4" = ps: with ps; [
     ]; # missing inputs: pyps4-2ndscreen
     "pulseaudio_loopback" = ps: with ps; [
@@ -2136,7 +2465,7 @@
       aiohttp-cors
     ];
     "pushbullet" = ps: with ps; [
-      pushbullet
+      pushbullet-py
     ];
     "pushover" = ps: with ps; [
       pushover-complete
@@ -2156,6 +2485,21 @@
     ];
     "qbittorrent" = ps: with ps; [
     ]; # missing inputs: python-qbittorrent
+    "qingping" = ps: with ps; [
+      aiohttp-cors
+      bleak-retry-connector
+      bleak
+      bluetooth-adapters
+      bluetooth-auto-recovery
+      dbus-fast
+      fnvhash
+      home-assistant-frontend
+      pillow
+      pyserial
+      pyudev
+      qingping-ble
+      sqlalchemy
+    ];
     "qld_bushfire" = ps: with ps; [
       georss-qld-bushfire-alert-client
     ];
@@ -2184,12 +2528,12 @@
       rachiopy
     ];
     "radarr" = ps: with ps; [
+      aiopyarr
     ];
     "radio_browser" = ps: with ps; [
       radios
     ];
     "radiotherm" = ps: with ps; [
-      aiohttp-cors
       radiotherm
     ];
     "rainbird" = ps: with ps; [
@@ -2212,10 +2556,13 @@
       fnvhash
       home-assistant-frontend
       pillow
+      psutil-home-assistant
       sqlalchemy
     ];
     "raspyrfm" = ps: with ps; [
     ]; # missing inputs: raspyrfm-client
+    "raven_rock_mfg" = ps: with ps; [
+    ];
     "rdw" = ps: with ps; [
       vehicle
     ];
@@ -2256,6 +2603,8 @@
     ];
     "rest_command" = ps: with ps; [
     ];
+    "rexel" = ps: with ps; [
+    ];
     "rflink" = ps: with ps; [
       rflink
     ];
@@ -2282,6 +2631,8 @@
     ];
     "rmvtransport" = ps: with ps; [
       pyrmvtransport
+    ];
+    "roborock" = ps: with ps; [
     ];
     "rocketchat" = ps: with ps; [
     ]; # missing inputs: rocketchat-API
@@ -2354,6 +2705,8 @@
     ]; # missing inputs: satel_integra
     "scene" = ps: with ps; [
     ];
+    "schedule" = ps: with ps; [
+    ];
     "schluter" = ps: with ps; [
     ]; # missing inputs: py-schluter
     "scrape" = ps: with ps; [
@@ -2361,6 +2714,8 @@
       jsonpath
       lxml
       xmltodict
+    ];
+    "screenaway" = ps: with ps; [
     ];
     "screenlogic" = ps: with ps; [
       screenlogicpy
@@ -2393,11 +2748,37 @@
       fnvhash
       sqlalchemy
     ];
-    "sensorpush" = ps: with ps; [
+    "sensorblue" = ps: with ps; [
+    ];
+    "sensorpro" = ps: with ps; [
       aiohttp-cors
+      bleak-retry-connector
       bleak
       bluetooth-adapters
+      bluetooth-auto-recovery
+      dbus-fast
+      fnvhash
+      home-assistant-frontend
+      pillow
+      pyserial
+      pyudev
+      sensorpro-ble
+      sqlalchemy
+    ];
+    "sensorpush" = ps: with ps; [
+      aiohttp-cors
+      bleak-retry-connector
+      bleak
+      bluetooth-adapters
+      bluetooth-auto-recovery
+      dbus-fast
+      fnvhash
+      home-assistant-frontend
+      pillow
+      pyserial
+      pyudev
       sensorpush-ble
+      sqlalchemy
     ];
     "sentry" = ps: with ps; [
       sentry-sdk
@@ -2426,6 +2807,7 @@
     "shell_command" = ps: with ps; [
     ];
     "shelly" = ps: with ps; [
+      aiohttp-cors
       aioshelly
     ];
     "shiftr" = ps: with ps; [
@@ -2450,10 +2832,11 @@
       pysignalclirestapi
     ];
     "simplepush" = ps: with ps; [
-      aiohttp-cors
     ]; # missing inputs: simplepush
     "simplisafe" = ps: with ps; [
       simplisafe-python
+    ];
+    "simply_automated" = ps: with ps; [
     ];
     "simulated" = ps: with ps; [
     ];
@@ -2493,8 +2876,14 @@
       aiohttp-cors
       pysmappee
     ];
+    "smart_blinds" = ps: with ps; [
+    ];
+    "smart_home" = ps: with ps; [
+    ];
     "smart_meter_texas" = ps: with ps; [
       smart-meter-texas
+    ];
+    "smarther" = ps: with ps; [
     ];
     "smartthings" = ps: with ps; [
       pyturbojpeg
@@ -2526,6 +2915,21 @@
     "snmp" = ps: with ps; [
       pysnmplib
     ];
+    "snooz" = ps: with ps; [
+      aiohttp-cors
+      bleak-retry-connector
+      bleak
+      bluetooth-adapters
+      bluetooth-auto-recovery
+      dbus-fast
+      fnvhash
+      home-assistant-frontend
+      pillow
+      pyserial
+      pysnooz
+      pyudev
+      sqlalchemy
+    ];
     "solaredge" = ps: with ps; [
       solaredge
       stringcase
@@ -2540,6 +2944,8 @@
     ];
     "soma" = ps: with ps; [
       pysoma
+    ];
+    "somfy" = ps: with ps; [
     ];
     "somfy_mylink" = ps: with ps; [
       somfy-mylink-synergy
@@ -2565,7 +2971,6 @@
       pysdcp
     ];
     "soundtouch" = ps: with ps; [
-      aiohttp-cors
       libsoundtouch
     ];
     "spaceapi" = ps: with ps; [
@@ -2617,7 +3022,6 @@
       statsd
     ];
     "steam_online" = ps: with ps; [
-      aiohttp-cors
       steamodd
     ];
     "steamist" = ps: with ps; [
@@ -2669,17 +3073,31 @@
     ];
     "switch_as_x" = ps: with ps; [
     ];
+    "switchbee" = ps: with ps; [
+      pyswitchbee
+    ];
     "switchbot" = ps: with ps; [
       pyswitchbot
       aiohttp-cors
+      bleak-retry-connector
       bleak
       bluetooth-adapters
+      bluetooth-auto-recovery
+      dbus-fast
+      fnvhash
+      home-assistant-frontend
+      pillow
+      pyserial
+      pyudev
+      sqlalchemy
     ];
     "switcher_kis" = ps: with ps; [
       aioswitcher
     ];
     "switchmate" = ps: with ps; [
     ]; # missing inputs: pySwitchmate
+    "symfonisk" = ps: with ps; [
+    ];
     "syncthing" = ps: with ps; [
       aiosyncthing
     ];
@@ -2718,7 +3136,8 @@
       tailscale
     ];
     "tank_utility" = ps: with ps; [
-    ]; # missing inputs: tank_utility
+      tank-utility
+    ];
     "tankerkoenig" = ps: with ps; [
       pytankerkoenig
     ];
@@ -2755,7 +3174,8 @@
     "telnet" = ps: with ps; [
     ];
     "temper" = ps: with ps; [
-    ]; # missing inputs: temperusb
+      temperusb
+    ];
     "template" = ps: with ps; [
     ];
     "tensorflow" = ps: with ps; [
@@ -2769,6 +3189,38 @@
     ];
     "tfiac" = ps: with ps; [
     ]; # missing inputs: pytfiac
+    "thermobeacon" = ps: with ps; [
+      aiohttp-cors
+      bleak-retry-connector
+      bleak
+      bluetooth-adapters
+      bluetooth-auto-recovery
+      dbus-fast
+      fnvhash
+      home-assistant-frontend
+      pillow
+      pyserial
+      pyudev
+      sqlalchemy
+      thermobeacon-ble
+    ];
+    "thermoplus" = ps: with ps; [
+    ];
+    "thermopro" = ps: with ps; [
+      aiohttp-cors
+      bleak-retry-connector
+      bleak
+      bluetooth-adapters
+      bluetooth-auto-recovery
+      dbus-fast
+      fnvhash
+      home-assistant-frontend
+      pillow
+      pyserial
+      pyudev
+      sqlalchemy
+      thermopro-ble
+    ];
     "thermoworks_smoke" = ps: with ps; [
       stringcase
     ]; # missing inputs: thermoworks_smoke
@@ -2791,6 +3243,21 @@
     ]; # missing inputs: tikteck
     "tile" = ps: with ps; [
       pytile
+    ];
+    "tilt_ble" = ps: with ps; [
+      aiohttp-cors
+      bleak-retry-connector
+      bleak
+      bluetooth-adapters
+      bluetooth-auto-recovery
+      dbus-fast
+      fnvhash
+      home-assistant-frontend
+      pillow
+      pyserial
+      pyudev
+      sqlalchemy
+      tilt-ble
     ];
     "time_date" = ps: with ps; [
     ];
@@ -2909,6 +3376,8 @@
     "ukraine_alarm" = ps: with ps; [
       uasiren
     ];
+    "ultraloq" = ps: with ps; [
+    ];
     "unifi" = ps: with ps; [
       aiounifi
     ];
@@ -2943,6 +3412,8 @@
       ifaddr
       zeroconf
     ];
+    "uprise_smart_shades" = ps: with ps; [
+    ];
     "uptime" = ps: with ps; [
     ];
     "uptimerobot" = ps: with ps; [
@@ -2953,9 +3424,6 @@
       pyserial
       pyudev
     ];
-    "uscis" = ps: with ps; [
-      aiohttp-cors
-    ]; # missing inputs: uscisstatus
     "usgs_earthquakes_feed" = ps: with ps; [
       aio-geojson-usgs-earthquakes
     ];
@@ -3093,7 +3561,8 @@
     ]; # missing inputs: wirelesstagpy
     "withings" = ps: with ps; [
       aiohttp-cors
-    ]; # missing inputs: withings-api
+      withings-api
+    ];
     "wiz" = ps: with ps; [
       aiohttp-cors
       ifaddr
@@ -3142,8 +3611,17 @@
     ];
     "xiaomi_ble" = ps: with ps; [
       aiohttp-cors
+      bleak-retry-connector
       bleak
       bluetooth-adapters
+      bluetooth-auto-recovery
+      dbus-fast
+      fnvhash
+      home-assistant-frontend
+      pillow
+      pyserial
+      pyudev
+      sqlalchemy
       xiaomi-ble
     ];
     "xiaomi_miio" = ps: with ps; [
@@ -3161,6 +3639,21 @@
     ]; # missing inputs: xs1-api-client
     "yale_smart_alarm" = ps: with ps; [
       yalesmartalarmclient
+    ];
+    "yalexs_ble" = ps: with ps; [
+      aiohttp-cors
+      bleak-retry-connector
+      bleak
+      bluetooth-adapters
+      bluetooth-auto-recovery
+      dbus-fast
+      fnvhash
+      home-assistant-frontend
+      pillow
+      pyserial
+      pyudev
+      sqlalchemy
+      yalexs-ble
     ];
     "yamaha" = ps: with ps; [
       rxv
@@ -3201,6 +3694,7 @@
       py-zabbix
     ];
     "zamg" = ps: with ps; [
+      zamg
     ];
     "zengge" = ps: with ps; [
       bluepy
@@ -3274,6 +3768,7 @@
     "airly"
     "airnow"
     "airthings"
+    "airthings_ble"
     "airtouch4"
     "airvisual"
     "airzone"
@@ -3283,13 +3778,14 @@
     "alert"
     "alexa"
     "almond"
-    "ambee"
     "amberelectric"
     "ambiclimate"
     "ambient_station"
     "analytics"
+    "android_ip_webcam"
     "androidtv"
     "apache_kafka"
+    "apcupsd"
     "api"
     "apple_tv"
     "application_credentials"
@@ -3317,6 +3813,7 @@
     "blackbird"
     "blebox"
     "blink"
+    "bluemaestro"
     "blueprint"
     "bluetooth"
     "bluetooth_le_tracker"
@@ -3328,6 +3825,7 @@
     "brother"
     "brunt"
     "bsblan"
+    "bthome"
     "buienradar"
     "button"
     "caldav"
@@ -3336,7 +3834,7 @@
     "canary"
     "cast"
     "cert_expiry"
-    "climacell"
+    "clicksend_tts"
     "climate"
     "cloud"
     "cloudflare"
@@ -3382,6 +3880,7 @@
     "dnsip"
     "doorbird"
     "dsmr"
+    "dsmr_reader"
     "dte_energy_bridge"
     "duckdns"
     "dunehd"
@@ -3389,6 +3888,7 @@
     "eafm"
     "ecobee"
     "econet"
+    "ecowitt"
     "efergy"
     "eight_sleep"
     "elgato"
@@ -3403,6 +3903,7 @@
     "enphase_envoy"
     "environment_canada"
     "epson"
+    "escea"
     "esphome"
     "everlights"
     "evil_genius_labs"
@@ -3417,6 +3918,7 @@
     "fibaro"
     "fido"
     "file"
+    "file_upload"
     "filesize"
     "filter"
     "fireservicerota"
@@ -3428,7 +3930,6 @@
     "flipr"
     "flo"
     "flume"
-    "flunearyou"
     "flux"
     "flux_led"
     "folder"
@@ -3444,6 +3945,7 @@
     "fritzbox_callmonitor"
     "fronius"
     "frontend"
+    "fully_kiosk"
     "garages_amsterdam"
     "gdacs"
     "generic"
@@ -3466,6 +3968,7 @@
     "google_assistant"
     "google_domains"
     "google_pubsub"
+    "google_sheets"
     "google_translate"
     "google_travel_time"
     "google_wifi"
@@ -3484,6 +3987,7 @@
     "harmony"
     "hassio"
     "hddtemp"
+    "hdmi_cec"
     "heos"
     "here_travel_time"
     "hisense_aehw4a1"
@@ -3495,6 +3999,7 @@
     "home_plus_control"
     "homeassistant"
     "homeassistant_alerts"
+    "homeassistant_sky_connect"
     "homeassistant_yellow"
     "homekit"
     "homekit_controller"
@@ -3513,6 +4018,7 @@
     "hyperion"
     "ialarm"
     "iaqualink"
+    "ibeacon"
     "icloud"
     "ifttt"
     "ign_sismologia"
@@ -3543,7 +4049,10 @@
     "jellyfin"
     "jewish_calendar"
     "juicenet"
+    "justnimbus"
     "keenetic_ndms2"
+    "kegtron"
+    "keymitt_ble"
     "kira"
     "kmtronic"
     "knx"
@@ -3551,12 +4060,17 @@
     "konnected"
     "kraken"
     "kulersky"
+    "lametric"
+    "landisgyr_heat_meter"
     "lastfm"
     "launch_library"
     "laundrify"
     "lcn"
+    "led_ble"
     "lg_soundbar"
+    "lidarr"
     "life360"
+    "lifx"
     "light"
     "litterrobot"
     "local_file"
@@ -3632,7 +4146,9 @@
     "nextdns"
     "nightscout"
     "nina"
+    "nmap_tracker"
     "no_ip"
+    "nobo_hub"
     "notify"
     "notify_events"
     "notion"
@@ -3652,12 +4168,14 @@
     "open_meteo"
     "openalpr_cloud"
     "openerz"
+    "openexchangerates"
     "opengarage"
     "openhardwaremonitor"
     "opentherm_gw"
     "openuv"
     "openweathermap"
     "opnsense"
+    "oralb"
     "overkiz"
     "ovo_energy"
     "owntracks"
@@ -3683,12 +4201,15 @@
     "prometheus"
     "prosegur"
     "proximity"
+    "prusalink"
     "pure_energie"
     "push"
     "pushbullet"
+    "pushover"
     "pvoutput"
     "pvpc_hourly_pricing"
     "python_script"
+    "qingping"
     "qld_bushfire"
     "qnap_qsw"
     "rachio"
@@ -3727,6 +4248,7 @@
     "safe_mode"
     "samsungtv"
     "scene"
+    "schedule"
     "scrape"
     "screenlogic"
     "script"
@@ -3737,6 +4259,7 @@
     "senseme"
     "sensibo"
     "sensor"
+    "sensorpro"
     "sensorpush"
     "sentry"
     "senz"
@@ -3765,6 +4288,7 @@
     "smtp"
     "snips"
     "snmp"
+    "snooz"
     "solaredge"
     "solarlog"
     "solax"
@@ -3797,6 +4321,7 @@
     "surepetcare"
     "switch"
     "switch_as_x"
+    "switchbee"
     "switchbot"
     "switcher_kis"
     "syncthing"
@@ -3816,9 +4341,12 @@
     "tellduslive"
     "template"
     "tesla_wall_connector"
+    "thermobeacon"
+    "thermopro"
     "threshold"
     "tibber"
     "tile"
+    "tilt_ble"
     "time_date"
     "timer"
     "tod"
@@ -3875,6 +4403,7 @@
     "vlc_telnet"
     "voicerss"
     "volumio"
+    "volvooncall"
     "vulcan"
     "vultr"
     "wake_on_lan"
@@ -3891,6 +4420,7 @@
     "whois"
     "wiffi"
     "wilight"
+    "withings"
     "wiz"
     "wled"
     "workday"
@@ -3903,6 +4433,7 @@
     "xiaomi_ble"
     "xiaomi_miio"
     "yale_smart_alarm"
+    "yalexs_ble"
     "yamaha"
     "yamaha_musiccast"
     "yandex_transport"
@@ -3910,6 +4441,7 @@
     "yeelight"
     "yolink"
     "youless"
+    "zamg"
     "zeroconf"
     "zerproc"
     "zha"

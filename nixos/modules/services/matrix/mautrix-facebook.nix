@@ -17,7 +17,7 @@ let
 in {
   options = {
     services.mautrix-facebook = {
-      enable = mkEnableOption "Mautrix-Facebook, a Matrix-Facebook hybrid puppeting/relaybot bridge";
+      enable = mkEnableOption (lib.mdDoc "Mautrix-Facebook, a Matrix-Facebook hybrid puppeting/relaybot bridge");
 
       settings = mkOption rec {
         apply = recursiveUpdate default;
@@ -25,6 +25,7 @@ in {
         default = {
           homeserver = {
             address = "http://localhost:8008";
+            software = "standard";
           };
 
           appservice = rec {
@@ -44,6 +45,12 @@ in {
             encryption = {
               allow = true;
               default = true;
+
+              verification_levels = {
+                receive = "cross-signed-tofu";
+                send = "cross-signed-tofu";
+                share = "cross-signed-tofu";
+              };
             };
             username_template = "facebook_{userid}";
           };
@@ -116,6 +123,8 @@ in {
   };
 
   config = mkIf cfg.enable {
+    users.groups.mautrix-facebook = {};
+
     users.users.mautrix-facebook = {
       group = "mautrix-facebook";
       isSystemUser = true;

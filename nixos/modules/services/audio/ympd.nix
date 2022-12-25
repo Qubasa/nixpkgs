@@ -12,7 +12,7 @@ in {
 
     services.ympd = {
 
-      enable = mkEnableOption "ympd, the MPD Web GUI";
+      enable = mkEnableOption (lib.mdDoc "ympd, the MPD Web GUI");
 
       webPort = mkOption {
         type = types.either types.str types.port; # string for backwards compat
@@ -29,7 +29,7 @@ in {
         };
 
         port = mkOption {
-          type = types.int;
+          type = types.port;
           default = config.services.mpd.network.port;
           defaultText = literalExpression "config.services.mpd.network.port";
           description = lib.mdDoc "The port where MPD is listening.";

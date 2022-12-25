@@ -18,13 +18,13 @@
 
 python3Packages.buildPythonApplication rec  {
   pname = "grapejuice";
-  version = "5.2.2";
+  version = "6.2.2";
 
   src = fetchFromGitLab {
     owner = "BrinkerVII";
     repo = "grapejuice";
     rev = "v${version}";
-    sha256 = "sha256-YEAYoZF1Lf0ykB13cuRf5sOR1HIxwdcibyJLgP3g4Jk=";
+    sha256 = "sha256-wwM3q8Z4bYZod7/KcGc/PXlyLQxLRPkF1TdtFcg8mNE=";
   };
 
   nativeBuildInputs = [
@@ -56,7 +56,9 @@ python3Packages.buildPythonApplication rec  {
 
   makeWrapperArgs = [
     "\${gappsWrapperArgs[@]}"
-    "--prefix PATH : ${lib.makeBinPath [ xdg-user-dirs xdg-utils wine winetricks pciutils glxinfo ]}"
+    "--prefix PATH : ${lib.makeBinPath [ xdg-user-dirs wine winetricks pciutils glxinfo ]}"
+    # make xdg-open overrideable at runtime
+    "--suffix PATH : ${lib.makeBinPath [ xdg-utils ]}"
   ];
 
   postPatch = ''

@@ -11,7 +11,7 @@ in
 {
   options = {
     services.solr = {
-      enable = mkEnableOption "Solr";
+      enable = mkEnableOption (lib.mdDoc "Solr");
 
       package = mkOption {
         type = types.package;
@@ -21,7 +21,7 @@ in
       };
 
       port = mkOption {
-        type = types.int;
+        type = types.port;
         default = 8983;
         description = lib.mdDoc "Port on which Solr is ran.";
       };

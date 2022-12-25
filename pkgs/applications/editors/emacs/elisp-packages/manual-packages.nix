@@ -160,9 +160,9 @@
 
   urweb-mode = callPackage ./urweb-mode { };
 
-  # Packages made the classical callPackage way
+  voicemacs = callPackage ./voicemacs { };
 
-  apheleia = callPackage ./apheleia { };
+  # Packages made the classical callPackage way
 
   ebuild-mode = callPackage ./ebuild-mode { };
 
@@ -181,6 +181,8 @@
   header-file-mode = callPackage ./header-file-mode { };
 
   helm-words = callPackage ./helm-words { };
+
+  idris2-mode = callPackage ./idris2-mode { };
 
   isearch-plus = callPackage ./isearch-plus { };
 
@@ -233,6 +235,8 @@
 
   tree-sitter-langs = callPackage ./tree-sitter-langs { final = self; };
   tsc = callPackage ./tsc { };
+
+  yes-no = callPackage ./yes-no { };
 
   youtube-dl = callPackage ./youtube-dl { };
 

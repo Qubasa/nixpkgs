@@ -48,12 +48,12 @@ in
     hardware.sane.enable = mkOption {
       type = types.bool;
       default = false;
-      description = ''
+      description = lib.mdDoc ''
         Enable support for SANE scanners.
 
-        <note><para>
-          Users in the "scanner" group will gain access to the scanner, or the "lp" group if it's also a printer.
-        </para></note>
+        ::: {.note}
+        Users in the "scanner" group will gain access to the scanner, or the "lp" group if it's also a printer.
+        :::
       '';
     };
 
@@ -66,14 +66,16 @@ in
     hardware.sane.extraBackends = mkOption {
       type = types.listOf types.path;
       default = [];
-      description = ''
+      description = lib.mdDoc ''
         Packages providing extra SANE backends to enable.
 
-        <note><para>
-          The example contains the package for HP scanners.
-        </para></note>
+        ::: {.note}
+        The example contains the package for HP scanners, and the package for
+        Apple AirScan and Microsoft WSD support (supports many
+        vendors/devices).
+        :::
       '';
-      example = literalExpression "[ pkgs.hplipWithPlugin ]";
+      example = literalExpression "[ pkgs.hplipWithPlugin pkgs.sane-airscan ]";
     };
 
     hardware.sane.disabledDefaultBackends = mkOption {
@@ -89,7 +91,7 @@ in
     hardware.sane.configDir = mkOption {
       type = types.str;
       internal = true;
-      description = "The value of SANE_CONFIG_DIR.";
+      description = lib.mdDoc "The value of SANE_CONFIG_DIR.";
     };
 
     hardware.sane.netConf = mkOption {
