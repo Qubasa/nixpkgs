@@ -337,8 +337,6 @@ with pkgs;
   # ValueError: ZIP does not support timestamps before 1980
   ensureNewerSourcesForZipFilesHook = ensureNewerSourcesHook { year = "1980"; };
 
-  uprof = callPackage ../os-specific/linux/uprof {};
-
   updateAutotoolsGnuConfigScriptsHook = makeSetupHook
     { substitutions = { gnu_config = gnu-config;}; }
     ../build-support/setup-hooks/update-autotools-gnu-config-scripts.sh;
@@ -2926,8 +2924,6 @@ with pkgs;
   sshs = callPackage ../development/tools/sshs { };
 
   titaniumenv = callPackage ../development/mobile/titaniumenv { };
-
-  talon = qt5.callPackage ../development/tools/analysis/talon { };
 
   abootimg = callPackage ../development/mobile/abootimg {};
 
@@ -21975,21 +21971,6 @@ with pkgs;
         else stdenv;
     });
 
-  qt513 = recurseIntoAttrs (makeOverridable
-    (import ../development/libraries/qt-5/5.13) {
-      inherit newScope;
-      inherit lib stdenv fetchurl fetchpatch fetchFromGitHub makeSetupHook makeWrapper;
-      inherit bison;
-      inherit cups;
-      inherit dconf;
-      inherit harfbuzz;
-      inherit libGL;
-      inherit perl;
-      inherit gtk3;
-      inherit (gst_all_1) gstreamer gst-plugins-base;
-      inherit llvmPackages_5;
-    });
-
   qt514 = recurseIntoAttrs (makeOverridable
     (import ../development/libraries/qt-5/5.14) {
       inherit newScope;
@@ -22017,12 +21998,6 @@ with pkgs;
     inherit lib pkgs;
     qt5 = qt512;
   });
-
-  libsForQt513 = recurseIntoAttrs (import ./qt5-packages.nix {
-    inherit lib pkgs;
-    qt5 = qt513;
-  });
-
 
   libsForQt514 = recurseIntoAttrs (import ./qt5-packages.nix {
     inherit lib pkgs;
@@ -29577,8 +29552,6 @@ with pkgs;
     openssl = openssl_1_1;
   };
 
-  imhex = callPackage ../tools/security/imhex {};
-
   image-roll = callPackage ../applications/graphics/image-roll { };
 
   imagej = callPackage ../applications/graphics/imagej { };
@@ -31855,8 +31828,6 @@ with pkgs;
   seq24 = callPackage ../applications/audio/seq24 { };
 
   seq66 = qt5.callPackage ../applications/audio/seq66 { };
-
-  sejda = callPackage ../applications/misc/sejda { };
 
   setbfree = callPackage ../applications/audio/setbfree { };
 
@@ -37182,6 +37153,8 @@ with pkgs;
 
   rmfuse = callPackage ../tools/filesystems/rmfuse {};
 
+  rmount = callPackage ../tools/filesystems/rmount {};
+
   romdirfs = callPackage ../tools/filesystems/romdirfs {
     stdenv = gccStdenv;
   };
@@ -37819,8 +37792,6 @@ with pkgs;
   simplenote = callPackage ../applications/misc/simplenote { };
 
   hy = with python3Packages; toPythonApplication hy;
-
-  vtune = callPackage ../tools/misc/vtune {};
 
   wmic-bin = callPackage ../servers/monitoring/plugins/wmic-bin.nix { };
 
