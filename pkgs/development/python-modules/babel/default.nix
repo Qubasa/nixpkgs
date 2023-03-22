@@ -1,20 +1,19 @@
-{ stdenv, lib, buildPythonPackage, fetchPypi, pytz, pytestCheckHook, freezegun }:
+{ stdenv, lib, buildPythonPackage, fetchPypi, pythonOlder, pytz, pytestCheckHook, freezegun }:
 
 buildPythonPackage rec {
   pname = "babel";
-  version = "2.10.3";
+  version = "2.12.1";
+  disabled = pythonOlder "3.7";
 
   src = fetchPypi {
     pname = "Babel";
     inherit version;
-    sha256 = "sha256-dhRVNxHul0kPcyEm3Ad/jQrghOvGqW4j2xSCr6vbLFE=";
+    hash = "sha256-zC2ZmZzQHURCCuclohyeNxGzqtx5dtYUf2IthYGWNFU=";
   };
 
-  propagatedBuildInputs = [ pytz ];
+  propagatedBuildInputs = lib.optional (pythonOlder "3.9") pytz;
 
-  checkInputs = [ pytestCheckHook freezegun ];
-
-  doCheck = !stdenv.isDarwin;
+  nativeCheckInputs = [ pytestCheckHook freezegun ];
 
   meta = with lib; {
     homepage = "https://babel.pocoo.org/";

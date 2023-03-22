@@ -11,6 +11,8 @@
 , sha256
 , patches ? []
 , fd
+, ripgrep
+, wezterm
 , firefox
 , thunderbird
 }:
@@ -163,10 +165,8 @@ in stdenv.mkDerivation rec {
   ];
 
   buildInputs = [ openssl ]
-    ++ optionals stdenv.isDarwin [ Security ]
+    ++ optionals stdenv.isDarwin [ libiconv Security ]
     ++ optional (!withBundledLLVM) llvmShared;
-
-  depsTargetTargetPropagated = optionals stdenv.isDarwin [ libiconv ];
 
   outputs = [ "out" "man" "doc" ];
   setOutputFlags = false;
@@ -193,9 +193,7 @@ in stdenv.mkDerivation rec {
 
   configurePlatforms = [];
 
-  # https://github.com/NixOS/nixpkgs/pull/21742#issuecomment-272305764
-  # https://github.com/rust-lang/rust/issues/30181
-  # enableParallelBuilding = false;
+  enableParallelBuilding = true;
 
   setupHooks = ./setup-hook.sh;
 
@@ -204,13 +202,15 @@ in stdenv.mkDerivation rec {
   passthru = {
     llvm = llvmShared;
     inherit llvmPackages;
-    tests = { inherit fd; } // lib.optionalAttrs stdenv.hostPlatform.isLinux { inherit firefox thunderbird; };
+    tests = {
+      inherit fd ripgrep wezterm;
+    } // lib.optionalAttrs stdenv.hostPlatform.isLinux { inherit firefox thunderbird; };
   };
 
   meta = with lib; {
     homepage = "https://www.rust-lang.org/";
     description = "A safe, concurrent, practical language";
-    maintainers = with maintainers; [ cstrahan globin havvy ];
+    maintainers = with maintainers; [ cstrahan globin havvy ] ++ teams.rust.members;
     license = [ licenses.mit licenses.asl20 ];
     platforms = platforms.linux ++ platforms.darwin;
   };

@@ -15,11 +15,11 @@
 
 stdenv.mkDerivation rec {
   pname = "lighttpd";
-  version = "1.4.67";
+  version = "1.4.69";
 
   src = fetchurl {
     url = "https://download.lighttpd.net/lighttpd/releases-${lib.versions.majorMinor version}.x/${pname}-${version}.tar.xz";
-    sha256 = "sha256-fgTXZ/UajYJLMuJIPvKVCYKSDUJ9EnLvRmf0nW+J81g=";
+    sha256 = "sha256-FqyNuV5xlim6YZSbmfiib+upRqgdGFIVsoN5u0EWsLQ=";
   };
 
   postPatch = ''
@@ -61,7 +61,7 @@ stdenv.mkDerivation rec {
     sed -i "s:/usr/bin/file:${file}/bin/file:g" configure
   '';
 
-  checkInputs = [ perl ];
+  nativeCheckInputs = [ perl ];
   doCheck = true;
 
   postInstall = ''

@@ -18,7 +18,7 @@
 
 buildPythonPackage rec {
   pname = "zigpy-znp";
-  version = "0.9.1";
+  version = "0.9.3";
   format = "setuptools";
 
   disabled = pythonOlder "3.7";
@@ -27,7 +27,7 @@ buildPythonPackage rec {
     owner = "zigpy";
     repo = pname;
     rev = "refs/tags/v${version}";
-    sha256 = "sha256-32QSFBzYg+E++5euCWKgbF3/uLEn1uObenmR/Wv9XZc=";
+    hash = "sha256-UTL7g9tIXtMVeBRq5Fdw5VqUB9H/LaobASwHlFPoO2s=";
   };
 
   propagatedBuildInputs = [
@@ -40,17 +40,13 @@ buildPythonPackage rec {
     zigpy
   ];
 
-  checkInputs = [
+  nativeCheckInputs = [
     pytest-asyncio
     pytest-mock
     pytest-timeout
     pytestCheckHook
   ] ++ lib.optionals (pythonOlder "3.8") [
     asynctest
-  ];
-
-  pytestFlagsArray = [
-    "--asyncio-mode=legacy"
   ];
 
   pythonImportsCheck = [

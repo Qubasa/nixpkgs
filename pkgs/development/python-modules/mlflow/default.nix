@@ -9,7 +9,7 @@
 , fetchpatch
 , fetchPypi
 , flask
-, GitPython
+, gitpython
 , gorilla
 , gunicorn
 , importlib-metadata
@@ -32,14 +32,14 @@
 
 buildPythonPackage rec {
   pname = "mlflow";
-  version = "1.30.0";
+  version = "2.1.1";
   format = "setuptools";
 
   disabled = pythonOlder "3.7";
 
   src = fetchPypi {
     inherit pname version;
-    hash = "sha256-Ln1R9uLcbMIxbnLc9BNSF8WByPTx+d3hBmqrqeCyLHo=";
+    hash = "sha256-oRazzUW7+1CaFyO/1DiL21ZqPlBF483lOQ5mf1kUmKY=";
   };
 
   propagatedBuildInputs = [
@@ -50,7 +50,7 @@ buildPythonPackage rec {
     docker
     entrypoints
     flask
-    GitPython
+    gitpython
     gorilla
     gunicorn
     importlib-metadata
@@ -81,6 +81,7 @@ buildPythonPackage rec {
   meta = with lib; {
     description = "Open source platform for the machine learning lifecycle";
     homepage = "https://github.com/mlflow/mlflow";
+    changelog = "https://github.com/mlflow/mlflow/blob/v${version}/CHANGELOG.md";
     license = licenses.asl20;
     maintainers = with maintainers; [ tbenst ];
   };

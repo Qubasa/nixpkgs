@@ -8,13 +8,13 @@
 
 stdenv.mkDerivation rec {
   pname = "corrosion";
-  version = "0.2.1";
+  version = "0.3.4";
 
   src = fetchFromGitHub {
     owner = "corrosion-rs";
     repo = "corrosion";
     rev = "v${version}";
-    hash = "sha256-nJ4ercNykECDBqecuL8cdCl4DHgbgIUmbiFBG/jiOaA=";
+    hash = "sha256-g2kA1FYt6OWb0zb3pSQ46dJMsSZpT6kLYkpIIN3XZbI=";
   };
 
   cargoRoot = "generator";
@@ -23,7 +23,7 @@ stdenv.mkDerivation rec {
     inherit src;
     sourceRoot = "${src.name}/${cargoRoot}";
     name = "${pname}-${version}";
-    hash = "sha256-4JVbHYlMOKztWPYW7tXQdvdNh/ygfpi0CY6Ly93VxsI=";
+    hash = "sha256-088qK9meyqV93ezLlBIjdp1l/n+pv+9afaJGYlXEFQc=";
   };
 
   buildInputs = lib.optional stdenv.isDarwin libiconv;
@@ -35,13 +35,6 @@ stdenv.mkDerivation rec {
     rust.cargo
     rust.rustc
   ]);
-
-  cmakeFlags = [
-    "-DRust_CARGO=${rustPlatform.rust.cargo}/bin/cargo"
-
-    # tests cannot find cargo because Rust_CARGO is unset before tests
-    "-DCORROSION_BUILD_TESTS=OFF"
-  ];
 
   meta = with lib; {
     description = "Tool for integrating Rust into an existing CMake project";

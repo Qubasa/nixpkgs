@@ -19,14 +19,14 @@ buildPythonPackage rec {
     owner = "Tinche";
     repo = pname;
     rev = "v${version}";
-    sha256 = "sha256-2itjGYusJT6sbCAgvKsI9IXeAOP7VQV0bpifFBZmnAo=";
+    hash = "sha256-2itjGYusJT6sbCAgvKsI9IXeAOP7VQV0bpifFBZmnAo=";
   };
 
   nativeBuildInputs = [
     poetry-core
   ];
 
-  checkInputs = [
+  nativeCheckInputs = [
     pytest-asyncio
     pytestCheckHook
   ];

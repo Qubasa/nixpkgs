@@ -48,13 +48,13 @@
 , pname ? "gnuradio"
 , versionAttr ? {
   major = "3.10";
-  minor = "4";
-  patch = "0";
+  minor = "5";
+  patch = "1";
 }
 }:
 
 let
-  sourceSha256 = "sha256-Ov2NGiEj3mhqYwDYXWd6wcCAv78Ux2/LWyGjQ/ukQNk=";
+  sourceSha256 = "sha256-D5Bsj70IHFOLPZQbaxkGdx7Lz94bXhCfnNfhZb3dDp4=";
   featuresInfo = {
     # Needed always
     basic = {
@@ -73,7 +73,7 @@ let
         # building with boost 1.7x fails
         ++ lib.optionals (!(hasFeature "gr-qtgui")) [ icu ];
       pythonNative = with python.pkgs; [
-        Mako
+        mako
         six
       ];
     };
@@ -120,7 +120,7 @@ let
     gnuradio-companion = {
       pythonRuntime = with python.pkgs; [
         pyyaml
-        Mako
+        mako
         numpy
         pygobject3
       ];
@@ -299,7 +299,7 @@ stdenv.mkDerivation rec {
     ./modtool-newmod-permissions.patch
   ];
   passthru = shared.passthru // {
-    # Deps that are potentially overriden and are used inside GR plugins - the same version must
+    # Deps that are potentially overridden and are used inside GR plugins - the same version must
     inherit
       boost
       volk

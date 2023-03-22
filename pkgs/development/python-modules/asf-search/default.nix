@@ -1,22 +1,24 @@
 { lib
 , buildPythonPackage
-, dateparser
 , fetchFromGitHub
+, pythonOlder
+, requests
+, shapely
+, python-dateutil
+, pytz
 , importlib-metadata
 , numpy
+, dateparser
+, jinja2
+, remotezip
 , pytestCheckHook
-, python-dateutil
-, pythonOlder
-, pytz
-, requests
 , requests-mock
-, shapely
-, wktutils
+, defusedxml
 }:
 
 buildPythonPackage rec {
   pname = "asf-search";
-  version = "5.0.2";
+  version = "6.1.0";
   format = "setuptools";
 
   disabled = pythonOlder "3.7";
@@ -25,29 +27,29 @@ buildPythonPackage rec {
     owner = "asfadmin";
     repo = "Discovery-asf_search";
     rev = "refs/tags/v${version}";
-    hash = "sha256-Jynks+c8OV0t1GoKAk4vP9jYQ0PclJHl3x8q78au5gk=";
+    hash = "sha256-3CnarUqW7/hEo4zvRGLJ+VAY5X+aacBdY1Epef523vY=";
   };
 
   propagatedBuildInputs = [
-    dateparser
-    importlib-metadata
-    numpy
-    python-dateutil
-    pytz
     requests
     shapely
-    wktutils
+    python-dateutil
+    pytz
+    importlib-metadata
+    numpy
+    dateparser
+    jinja2
+    remotezip
+  ];
+
+  nativeCheckInputs = [
+    pytestCheckHook
   ];
 
   checkInputs = [
-    pytestCheckHook
     requests-mock
+    defusedxml
   ];
-
-  postPatch = ''
-    substituteInPlace setup.py \
-      --replace "WKTUtils==" "WKTUtils>="
-  '';
 
   pythonImportsCheck = [
     "asf_search"

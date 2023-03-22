@@ -20457,6 +20457,9 @@ in {
     });
     systems = [ "cl-random" ];
     lispLibs = [ (getAttr "alexandria" pkgs) (getAttr "anaphora" pkgs) (getAttr "array-operations" pkgs) (getAttr "cl-num-utils" pkgs) (getAttr "cl-rmath" pkgs) (getAttr "cl-slice" pkgs) (getAttr "gsll" pkgs) (getAttr "let-plus" pkgs) (getAttr "lla" pkgs) ];
+    meta = {
+      broken = true;
+    };
   };
   cl-random-forest = {
     pname = "cl-random-forest";
@@ -20496,6 +20499,9 @@ in {
     });
     systems = [ "cl-random-tests" ];
     lispLibs = [ (getAttr "cl-random" pkgs) (getAttr "clunit" pkgs) ];
+    meta = {
+      broken = true;
+    };
   };
   cl-rdfxml = {
     pname = "cl-rdfxml";
@@ -25092,6 +25098,9 @@ in {
     });
     systems = [ "clml.blas.hompack" ];
     lispLibs = [ (getAttr "f2cl-lib" pkgs) ];
+    meta = {
+      broken = true;
+    };
   };
   clml_dot_blas_dot_real = {
     pname = "clml.blas.real";
@@ -37987,6 +37996,9 @@ in {
     });
     systems = [ "hu.dwim.graphviz" ];
     lispLibs = [ (getAttr "cffi" pkgs) (getAttr "hu_dot_dwim_dot_asdf" pkgs) (getAttr "metabang-bind" pkgs) ];
+    meta = {
+      broken = true;
+    };
   };
   hu_dot_dwim_dot_graphviz_dot_documentation = {
     pname = "hu.dwim.graphviz.documentation";
@@ -38026,6 +38038,9 @@ in {
     });
     systems = [ "hu.dwim.logger" ];
     lispLibs = [ (getAttr "bordeaux-threads" pkgs) (getAttr "hu_dot_dwim_dot_asdf" pkgs) (getAttr "hu_dot_dwim_dot_def" pkgs) (getAttr "hu_dot_dwim_dot_def_plus_hu_dot_dwim_dot_common" pkgs) (getAttr "hu_dot_dwim_dot_defclass-star_plus_hu_dot_dwim_dot_def" pkgs) (getAttr "hu_dot_dwim_dot_util" pkgs) (getAttr "local-time" pkgs) ];
+    meta = {
+      broken = true;
+    };
   };
   hu_dot_dwim_dot_logger_plus_iolib = {
     pname = "hu.dwim.logger+iolib";
@@ -38377,6 +38392,9 @@ in {
     });
     systems = [ "hu.dwim.quasi-quote" ];
     lispLibs = [ (getAttr "babel" pkgs) (getAttr "babel-streams" pkgs) (getAttr "hu_dot_dwim_dot_asdf" pkgs) (getAttr "hu_dot_dwim_dot_common" pkgs) (getAttr "hu_dot_dwim_dot_defclass-star_plus_hu_dot_dwim_dot_def" pkgs) (getAttr "hu_dot_dwim_dot_syntax-sugar" pkgs) (getAttr "hu_dot_dwim_dot_util" pkgs) (getAttr "hu_dot_dwim_dot_walker" pkgs) ];
+    meta = {
+      broken = true;
+    };
   };
   hu_dot_dwim_dot_quasi-quote_dot_css = {
     pname = "hu.dwim.quasi-quote.css";
@@ -38714,6 +38732,9 @@ in {
     });
     systems = [ "hu.dwim.serializer" ];
     lispLibs = [ (getAttr "babel" pkgs) (getAttr "hu_dot_dwim_dot_asdf" pkgs) (getAttr "hu_dot_dwim_dot_common" pkgs) (getAttr "hu_dot_dwim_dot_def" pkgs) (getAttr "hu_dot_dwim_dot_syntax-sugar" pkgs) (getAttr "hu_dot_dwim_dot_util" pkgs) ];
+    meta = {
+      broken = true;
+    };
   };
   hu_dot_dwim_dot_serializer_dot_documentation = {
     pname = "hu.dwim.serializer.documentation";
@@ -39375,6 +39396,9 @@ in {
     });
     systems = [ "hu.dwim.zlib" ];
     lispLibs = [ (getAttr "alexandria" pkgs) (getAttr "cffi" pkgs) (getAttr "cffi-libffi" pkgs) (getAttr "hu_dot_dwim_dot_asdf" pkgs) ];
+    meta = {
+      broken = true;
+    };
   };
   hu_dot_dwim_dot_zlib_slash_fancy = {
     pname = "hu.dwim.zlib_fancy";
@@ -46435,6 +46459,9 @@ in {
     });
     systems = [ "magicl" ];
     lispLibs = [ (getAttr "alexandria" pkgs) (getAttr "cffi" pkgs) (getAttr "cffi-libffi" pkgs) (getAttr "abstract-classes" pkgs) (getAttr "interface" pkgs) (getAttr "policy-cond" pkgs) ];
+    meta = {
+      broken = true;
+    };
   };
   magicl-examples = {
     pname = "magicl-examples";
@@ -47298,6 +47325,9 @@ in {
     });
     systems = [ "math" ];
     lispLibs = [ (getAttr "cl-utilities" pkgs) (getAttr "font-discovery" pkgs) (getAttr "gsll" pkgs) (getAttr "vgplot" pkgs) ];
+    meta = {
+      broken = true;
+    };
   };
   math_slash_appr = {
     pname = "math_appr";
@@ -47710,6 +47740,9 @@ in {
     });
     systems = [ "mcclim-bezier" ];
     lispLibs = [ (getAttr "flexichain" pkgs) (getAttr "clim" pkgs) (getAttr "clim-pdf" pkgs) (getAttr "clim-postscript" pkgs) (getAttr "mcclim-clx" pkgs) (getAttr "mcclim-null" pkgs) (getAttr "mcclim-render" pkgs) ];
+    meta = {
+      broken = true;
+    };
   };
   mcclim-bezier_slash_clx = {
     pname = "mcclim-bezier_clx";
@@ -68816,6 +68849,9 @@ in {
     });
     systems = [ "ubiquitous" ];
     lispLibs = [  ];
+    meta = {
+      broken = true;
+    };
   };
   ubiquitous-concurrent = {
     pname = "ubiquitous-concurrent";

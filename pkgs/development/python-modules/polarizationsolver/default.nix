@@ -16,7 +16,7 @@ buildPythonPackage rec {
     owner = "reinholdt";
     repo = pname;
     rev = "00424ac4d1862257a55e4b16543f63ace3fe8c22";
-    sha256 = "sha256-LACf8Xw+o/uJ3+PD/DE/o7nwKY7fv3NyYbpjCrTTnBU=";
+    hash = "sha256-LACf8Xw+o/uJ3+PD/DE/o7nwKY7fv3NyYbpjCrTTnBU=";
   };
 
   propagatedBuildInputs = [
@@ -25,7 +25,7 @@ buildPythonPackage rec {
     scipy
   ];
 
-  checkInputs = [ fields ];
+  nativeCheckInputs = [ fields ];
 
   pythonImportsCheck = [ "polarizationsolver" ];
 

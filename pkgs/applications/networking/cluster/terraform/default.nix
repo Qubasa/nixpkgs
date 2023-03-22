@@ -12,18 +12,18 @@
 }:
 
 let
-  generic = { version, sha256, vendorSha256 ? null, ... }@attrs:
-    let attrs' = builtins.removeAttrs attrs [ "version" "sha256" "vendorSha256" ];
+  generic = { version, hash, vendorHash ? null, ... }@attrs:
+    let attrs' = builtins.removeAttrs attrs [ "version" "hash" "vendorHash" ];
     in
     buildGoModule ({
       pname = "terraform";
-      inherit version vendorSha256;
+      inherit version vendorHash;
 
       src = fetchFromGitHub {
         owner = "hashicorp";
         repo = "terraform";
         rev = "v${version}";
-        inherit sha256;
+        inherit hash;
       };
 
       ldflags = [ "-s" "-w" ];
@@ -168,9 +168,9 @@ rec {
   mkTerraform = attrs: pluggable (generic attrs);
 
   terraform_1 = mkTerraform {
-    version = "1.3.4";
-    sha256 = "sha256-UaMZTBmaLHbW1mNjDrMQSPMLKRIADlVvyP2qwuAv2Zo=";
-    vendorSha256 = "sha256-Wwf2EcqtlNqcGijR8WWcdSsayJrbZO68JEBPKWHXHuw=";
+    version = "1.4.2";
+    hash = "sha256-0CxB9VOrRoudJVK96mpuQ6etsI+F2dMh4NQTKQXec9c=";
+    vendorHash = "sha256-3ZQcWatJlQ6NVoPL/7cKQO6+YCSM3Ld77iLEQK3jBDE=";
     patches = [ ./provider-path-0_15.patch ];
     passthru = {
       inherit plugins;

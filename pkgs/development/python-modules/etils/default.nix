@@ -28,14 +28,14 @@
 
 buildPythonPackage rec {
   pname = "etils";
-  version = "0.8.0";
+  version = "1.0.0";
   format = "pyproject";
 
   disabled = pythonOlder "3.7";
 
   src = fetchPypi {
     inherit pname version;
-    hash = "sha256-0dWve9nHhKJzxOHsz6qP6speBIGghxe1MT+iMdoiqQM=";
+    hash = "sha256-0QmC93AkIr6oY11ShLi+1in1GRn8EirB4eSr9F7I94U=";
   };
 
   nativeBuildInputs = [
@@ -62,7 +62,7 @@ buildPythonPackage rec {
     "etils"
   ];
 
-  checkInputs = [
+  nativeCheckInputs = [
     chex
     jaxlib
     pytest-subtests

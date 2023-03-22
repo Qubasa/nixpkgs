@@ -60,13 +60,13 @@
 
 buildPythonPackage rec {
   pname = "scancode-toolkit";
-  version = "31.1.1";
+  version = "31.2.4";
 
   disabled = pythonOlder "3.6";
 
   src = fetchPypi {
     inherit pname version;
-    hash = "sha256-/QLW+rxkDbrv/78xiXOuSNaQvY+0oYZQV0/m60CEZLk=";
+    hash = "sha256-08C3T4CoQm/6s8ERbq/m1t513zYuzVJoexlRkCvv3UY=";
   };
 
   dontConfigure = true;
@@ -129,7 +129,7 @@ buildPythonPackage rec {
     typing
   ];
 
-  checkInputs = [
+  nativeCheckInputs = [
     pytestCheckHook
   ];
 

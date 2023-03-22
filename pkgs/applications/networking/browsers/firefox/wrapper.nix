@@ -15,6 +15,7 @@
 , pciutils
 , sndio
 , libjack2
+, speechd
 }:
 
 ## configurability of the wrapper itself
@@ -30,10 +31,9 @@ let
       (lib.toUpper (lib.substring 0 1 applicationName) + lib.substring 1 (-1) applicationName)
     , nameSuffix ? ""
     , icon ? applicationName
-    , wmClass ? null
+    , wmClass ? applicationName
     , extraNativeMessagingHosts ? []
     , pkcs11Modules ? []
-    , forceWayland ? false
     , useGlvnd ? true
     , cfg ? config.${applicationName} or {}
 
@@ -61,7 +61,7 @@ let
       smartcardSupport = cfg.smartcardSupport or false;
 
       nativeMessagingHosts =
-        ([ ]
+        [ ]
           ++ lib.optional (cfg.enableBrowserpass or false) (lib.getBin browserpass)
           ++ lib.optional (cfg.enableBukubrow or false) bukubrow
           ++ lib.optional (cfg.enableTridactylNative or false) tridactyl-native
@@ -70,7 +70,7 @@ let
           ++ lib.optional (cfg.enablePlasmaBrowserIntegration or false) plasma5Packages.plasma-browser-integration
           ++ lib.optional (cfg.enableFXCastBridge or false) fx_cast_bridge
           ++ extraNativeMessagingHosts
-        );
+        ;
       libs =   lib.optionals stdenv.isLinux [ udev libva mesa libnotify xorg.libXScrnSaver cups pciutils ]
             ++ lib.optional pipewireSupport pipewire
             ++ lib.optional ffmpegSupport ffmpeg_5
@@ -83,6 +83,7 @@ let
             ++ lib.optional sndioSupport sndio
             ++ lib.optional jackSupport libjack2
             ++ lib.optional smartcardSupport opensc
+            ++ lib.optional (cfg.speechSynthesisSupport or false) speechd
             ++ pkcs11Modules;
       gtk_modules = [ libcanberra-gtk3 ];
 
@@ -97,7 +98,7 @@ let
 
       usesNixExtensions = nixExtensions != null;
 
-      nameArray = builtins.map(a: a.name) (if usesNixExtensions then nixExtensions else []);
+      nameArray = builtins.map(a: a.name) (lib.optionals usesNixExtensions nixExtensions);
 
       requiresSigning = browser ? MOZ_REQUIRE_SIGNING
                      -> toString browser.MOZ_REQUIRE_SIGNING != "";
@@ -113,7 +114,7 @@ let
         throw "nixExtensions has an invalid entry. Missing extid attribute. Please use fetchfirefoxaddon"
         else
         a
-      ) (if usesNixExtensions then nixExtensions else []);
+      ) (lib.optionals usesNixExtensions nixExtensions);
 
       enterprisePolicies =
       {
@@ -167,10 +168,10 @@ let
       inherit pname version;
 
       desktopItem = makeDesktopItem ({
-        name = applicationName;
-        exec = "${launcherName} %U";
+        name = launcherName;
+        exec = "${launcherName} --name ${wmClass} %U";
         inherit icon;
-        desktopName = "${desktopName}${nameSuffix}${lib.optionalString forceWayland " (Wayland)"}";
+        inherit desktopName;
         startupNotify = true;
         startupWMClass = wmClass;
         terminal = false;
@@ -194,7 +195,7 @@ let
               actions = {
                 profile-manager-window = {
                   name = "Profile Manager";
-                  exec = "${launcherName} --ProfileManger";
+                  exec = "${launcherName} --ProfileManager";
                 };
               };
             }
@@ -220,7 +221,7 @@ let
                 };
                 profile-manager-window = {
                   name = "Profile Manager";
-                  exec = "${launcherName} --ProfileManger";
+                  exec = "${launcherName} --ProfileManager";
                 };
               };
             }));
@@ -309,7 +310,7 @@ let
             --set MOZ_ALLOW_DOWNGRADE 1 \
             --prefix XDG_DATA_DIRS : "$GSETTINGS_SCHEMAS_PATH" \
             --suffix XDG_DATA_DIRS : '${gnome.adwaita-icon-theme}/share' \
-            ${lib.optionalString forceWayland "--set MOZ_ENABLE_WAYLAND 1"} \
+            --set-default MOZ_ENABLE_WAYLAND 1 \
             "''${oldWrapperArgs[@]}"
         #############################
         #                           #
@@ -402,7 +403,7 @@ let
       disallowedRequisites = [ stdenv.cc ];
 
       meta = browser.meta // {
-        description = browser.meta.description;
+        inherit (browser.meta) description;
         hydraPlatforms = [];
         priority = (browser.meta.priority or 0) - 1; # prefer wrapper over the package
       };

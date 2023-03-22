@@ -28,13 +28,13 @@ mkShell {
   packages = [
     (with dotnetCorePackages; combinePackages [
       sdk_3_1
-      sdk_5_0
+      sdk_6_0
     ])
   ];
 }
 ```
 
-This will produce a dotnet installation that has the dotnet 3.1, 3.0, and 2.1 sdk. The first sdk listed will have it's cli utility present in the resulting environment. Example info output:
+This will produce a dotnet installation that has the dotnet 3.1 6.0 sdk. The first sdk listed will have it's cli utility present in the resulting environment. Example info output:
 
 ```ShellSession
 $ dotnet --info
@@ -88,7 +88,7 @@ To package Dotnet applications, you can use `buildDotnetModule`. This has simila
 * `runtimeDeps` is used to wrap libraries into `LD_LIBRARY_PATH`. This is how dotnet usually handles runtime dependencies.
 * `buildType` is used to change the type of build. Possible values are `Release`, `Debug`, etc. By default, this is set to `Release`.
 * `selfContainedBuild` allows to enable the [self-contained](https://docs.microsoft.com/en-us/dotnet/core/deploying/#publish-self-contained) build flag. By default, it is set to false and generated applications have a dependency on the selected dotnet runtime. If enabled, the dotnet runtime is bundled into the executable and the built app has no dependency on Dotnet.
-* `dotnet-sdk` is useful in cases where you need to change what dotnet SDK is being used.
+* `dotnet-sdk` is useful in cases where you need to change what dotnet SDK is being used. You can also set this to the result of `dotnetSdkPackages.combinePackages`, if the project uses multiple SDKs to build.
 * `dotnet-runtime` is useful in cases where you need to change what dotnet runtime is being used. This can be either a regular dotnet runtime, or an aspnetcore.
 * `dotnet-test-sdk` is useful in cases where unit tests expect a different dotnet SDK. By default, this is set to the `dotnet-sdk` attribute.
 * `testProjectFile` is useful in cases where the regular project file does not contain the unit tests. It gets restored and build, but not installed. You may need to regenerate your nuget lockfile after setting this.
@@ -120,8 +120,7 @@ in buildDotnetModule rec {
   projectReferences = [ referencedProject ]; # `referencedProject` must contain `nupkg` in the folder structure.
 
   dotnet-sdk = dotnetCorePackages.sdk_3_1;
-  dotnet-runtime = dotnetCorePackages.net_5_0;
-  dotnetFlags = [ "--runtime linux-x64" ];
+  dotnet-runtime = dotnetCorePackages.net_6_0;
 
   executables = [ "foo" ]; # This wraps "$out/lib/$pname/foo" to `$out/bin/foo`.
   executables = []; # Don't install any executables.

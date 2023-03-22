@@ -9,13 +9,13 @@
 
 buildDotnetModule rec {
   pname = "jackett";
-  version = "0.20.2225";
+  version = "0.20.3627";
 
   src = fetchFromGitHub {
     owner = pname;
     repo = pname;
     rev = "v${version}";
-    sha256 = "HrI0B5gvN/UC9TmErwsmRc85aqCXfYYEQfPkRchHY5Q=";
+    hash = "sha512-enyxUGfS7nzy4Ej+raPbhUc+WJJQL5J3i8WhoVsYBDwlcfW0kXjljhipPqkW4bONTRKL3zLI4HbaHEW1t/Ca/g==";
   };
 
   projectFile = "src/Jackett.Server/Jackett.Server.csproj";
@@ -28,7 +28,7 @@ buildDotnetModule rec {
   runtimeDeps = [ openssl ];
 
   doCheck = !(stdenv.isDarwin && stdenv.isAarch64); # mono is not available on aarch64-darwin
-  checkInputs = [ mono ];
+  nativeCheckInputs = [ mono ];
   testProjectFile = "src/Jackett.Test/Jackett.Test.csproj";
 
   postFixup = ''
@@ -41,6 +41,7 @@ buildDotnetModule rec {
   meta = with lib; {
     description = "API Support for your favorite torrent trackers";
     homepage = "https://github.com/Jackett/Jackett/";
+    changelog = "https://github.com/Jackett/Jackett/releases/tag/v${version}";
     license = licenses.gpl2Only;
     maintainers = with maintainers; [ edwtjo nyanloutre purcell ];
   };

@@ -11,13 +11,13 @@
 
 stdenv.mkDerivation rec {
   pname = "media-downloader";
-  version = "2.6.0";
+  version = "2.9.0";
 
   src = fetchFromGitHub {
     owner = "mhogomchungu";
     repo = pname;
     rev = "${version}";
-    sha256 = "sha256-pDldAg4q6qGvRHuffKU49akDwwSTNCZPJ6AgauxgotI=";
+    sha256 = "sha256-3tVOyIwdGcSVnEJWQWh6HIsjY6uEzWkTs45qf81r/+0=";
   };
 
   nativeBuildInputs = [ cmake qt5.wrapQtAppsHook ];

@@ -7,6 +7,8 @@
 , pkg-config
 , asciidoc
 , gobject-introspection
+, buildPackages
+, withIntrospection ? stdenv.hostPlatform.emulatorAvailable buildPackages
 , python3
 , docbook-xsl-nons
 , docbook_xml_dtd_45
@@ -29,13 +31,13 @@
 
 stdenv.mkDerivation rec {
   pname = "tracker";
-  version = "3.4.1";
+  version = "3.4.2";
 
   outputs = [ "out" "dev" "devdoc" ];
 
   src = fetchurl {
     url = "mirror://gnome/sources/${pname}/${lib.versions.majorMinor version}/${pname}-${version}.tar.xz";
-    sha256 = "6p1BqfucK0KtgPwsgjJ7XHE9WUyWmwnhpJvmP7dPT64=";
+    sha256 = "Tm3xQqT3BIePypjrtaIkdQ5epUaqKqq6pyanNUC9FzE=";
   };
 
   postPatch = ''
@@ -52,16 +54,17 @@ stdenv.mkDerivation rec {
     pkg-config
     asciidoc
     gettext
+    glib
     libxslt
     wrapGAppsNoGuiHook
-    gobject-introspection
     docbook-xsl-nons
     docbook_xml_dtd_45
     (python3.pythonForBuild.withPackages (p: [ p.pygobject3 ]))
+  ] ++ lib.optionals withIntrospection [
+    gobject-introspection
   ];
 
   buildInputs = [
-    gobject-introspection
     glib
     libxml2
     sqlite
@@ -78,6 +81,8 @@ stdenv.mkDerivation rec {
 
   mesonFlags = [
     "-Ddocs=true"
+    (lib.mesonEnable "introspection" withIntrospection)
+    (lib.mesonBool "test_utils" withIntrospection)
   ] ++ (
     let
       # https://gitlab.gnome.org/GNOME/tracker/-/blob/master/meson.build#L159
@@ -117,7 +122,7 @@ stdenv.mkDerivation rec {
     runHook preCheck
 
     dbus-run-session \
-      --config-file=${dbus.daemon}/share/dbus-1/session.conf \
+      --config-file=${dbus}/share/dbus-1/session.conf \
       meson test \
         --timeout-multiplier 2 \
         --print-errorlogs

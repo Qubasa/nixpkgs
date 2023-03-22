@@ -22,7 +22,7 @@ buildPythonPackage rec {
     owner = "frenck";
     repo = "python-vehicle";
     rev = "v${version}";
-    sha256 = "sha256-dvSdYrONUEe+bdZ+9nALrOQ6gJwq9e1dLvuq08xP5tQ=";
+    hash = "sha256-dvSdYrONUEe+bdZ+9nALrOQ6gJwq9e1dLvuq08xP5tQ=";
   };
 
   nativeBuildInputs = [
@@ -35,7 +35,7 @@ buildPythonPackage rec {
     yarl
   ];
 
-  checkInputs = [
+  nativeCheckInputs = [
     aresponses
     pytest-asyncio
     pytestCheckHook

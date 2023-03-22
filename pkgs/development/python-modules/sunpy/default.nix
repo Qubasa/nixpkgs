@@ -31,14 +31,14 @@
 
 buildPythonPackage rec {
   pname = "sunpy";
-  version = "4.0.5";
+  version = "4.1.3";
   format = "setuptools";
 
   disabled = pythonOlder "3.8";
 
   src = fetchPypi {
     inherit pname version;
-    hash = "sha256-7I23WtSeZPtHULJ7sNAbOdwAuzjiPE6WW2ukKUCMODs=";
+    hash = "sha256-YNShjuLC7gBRn11oAd5Kp5CfCn92vAo/K4QNIXm/Mtc=";
   };
 
   nativeBuildInputs = [
@@ -85,7 +85,7 @@ buildPythonPackage rec {
     ];
   };
 
-  checkInputs = [
+  nativeCheckInputs = [
     hypothesis
     pytest-astropy
     pytest-mock

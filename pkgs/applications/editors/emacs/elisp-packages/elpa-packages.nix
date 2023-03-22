@@ -60,16 +60,14 @@ self: let
         else super.org-transclusion;
       rcirc-menu = markBroken super.rcirc-menu; # Missing file header
       cl-lib = null; # builtin
+      cl-print = null; # builtin
       tle = null; # builtin
       advice = null; # builtin
       seq = if lib.versionAtLeast self.emacs.version "27"
             then null
             else super.seq;
-      project = if lib.versionAtLeast self.emacs.version "28"
-                then null
-                else super.project;
       # Compilation instructions for the Ada executables:
-      # https://www.nongnu.org/ada-mode/ada-mode.html#Ada-executables
+      # https://www.nongnu.org/ada-mode/
       ada-mode = super.ada-mode.overrideAttrs (old: {
         # actually unpack source of ada-mode and wisi
         # which are both needed to compile the tools
@@ -85,15 +83,18 @@ self: let
         nativeBuildInputs = [
           buildPackages.gnat
           buildPackages.gprbuild
-          buildPackages.lzip
+          buildPackages.dos2unix
+          buildPackages.re2c
         ];
 
         buildInputs = [
           pkgs.gnatcoll-xref
         ];
 
-        preInstall = ''
+        buildPhase = ''
+          runHook preBuild
           ./build.sh -j$NIX_BUILD_CORES
+          runHook postBuild
         '';
 
         postInstall = (old.postInstall or "") + "\n" + ''

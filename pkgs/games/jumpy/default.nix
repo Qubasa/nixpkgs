@@ -2,57 +2,71 @@
 , rustPlatform
 , fetchFromGitHub
 , stdenv
+, makeWrapper
 , pkg-config
 , alsa-lib
-, libGL
-, xorg
+, libxkbcommon
 , udev
-, Cocoa
-, OpenGL
+, vulkan-loader
+, wayland
+, xorg
+, darwin
 }:
 
 rustPlatform.buildRustPackage rec {
   pname = "jumpy";
-  version = "0.4.3";
+  version = "0.6.0";
 
   src = fetchFromGitHub {
-    owner = "fishfolks";
+    owner = "fishfolk";
     repo = pname;
     rev = "v${version}";
-    sha256 = "sha256-01zhiQi6v/8ZajsdBU+4hKUCj+PRJ/vUHluOIzy/Gi8=";
+    sha256 = "sha256-vBnHNc/kCyZ8gTWhQShn4lBQECguFBzBd7xIfLBgm7A=";
   };
 
-  cargoSha256 = "sha256-AXaGuRqSFiq+Uiy+UaqPdPVyDhCogC64KZZ0Ah1Yo7A=";
+  cargoSha256 = "sha256-ZnDerzDdCLjslszSn0z0BevP5qpkuYDCDLyv66+psdo=";
 
-  nativeBuildInputs = lib.optionals stdenv.isLinux [
+  auditable = true; # TODO: remove when this is the default
+
+  nativeBuildInputs = [
+    makeWrapper
+  ] ++ lib.optionals stdenv.isLinux [
     pkg-config
   ];
 
   buildInputs = lib.optionals stdenv.isLinux [
     alsa-lib
-    libGL
-    xorg.libX11
-    xorg.libXi
+    libxkbcommon
     udev
+    vulkan-loader
+    wayland
+    xorg.libX11
+    xorg.libXcursor
+    xorg.libXi
+    xorg.libXrandr
   ] ++ lib.optionals stdenv.isDarwin [
-    Cocoa
-    OpenGL
+    darwin.apple_sdk.frameworks.Cocoa
+    rustPlatform.bindgenHook
   ];
 
-  postPatch = ''
-    substituteInPlace src/main.rs \
-      --replace ./assets $out/share/assets \
-      --replace ./mods $out/share/mods
-  '';
+  cargoBuildFlags = [ "--bin" "jumpy" ];
 
   postInstall = ''
     mkdir $out/share
-    cp -r assets mods $out/share
+    cp -r assets $out/share
+    wrapProgram $out/bin/jumpy \
+      --set-default JUMPY_ASSET_DIR $out/share/assets
+  '';
+
+  postFixup = lib.optionalString stdenv.isLinux ''
+    patchelf $out/bin/.jumpy-wrapped \
+      --add-rpath ${lib.makeLibraryPath [ vulkan-loader ]}
   '';
 
   meta = with lib; {
     description = "A tactical 2D shooter played by up to 4 players online or on a shared screen";
     homepage = "https://fishfight.org/";
+    changelog = "https://github.com/fishfolk/jumpy/releases/tag/v${version}";
     license = with licenses; [ mit /* or */ asl20 ];
     maintainers = with maintainers; [ figsoda ];
   };
