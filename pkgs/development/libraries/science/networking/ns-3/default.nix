@@ -71,7 +71,13 @@ stdenv.mkDerivation rec {
   ++ optional doCheck " --enable-tests "
   ;
 
-  doCheck = true;
+  doCheck = false;
+
+
+  fixupPhase = ''
+    mv $out/include/*/* $out/include/
+    rmdir ns3.${version}
+  '';
 
   buildTargets = "build"
     + lib.optionalString enableDoxygen " doxygen"

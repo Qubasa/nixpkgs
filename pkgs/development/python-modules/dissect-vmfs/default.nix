@@ -11,7 +11,7 @@
 
 buildPythonPackage rec {
   pname = "dissect-vmfs";
-  version = "3.3";
+  version = "3.5";
   format = "pyproject";
 
   disabled = pythonOlder "3.7";
@@ -20,7 +20,7 @@ buildPythonPackage rec {
     owner = "fox-it";
     repo = "dissect.vmfs";
     rev = "refs/tags/${version}";
-    hash = "sha256-9+1geOJ+vzy6+eGibX+BUHbtzyLhq3MPBsad98ykn3I=";
+    hash = "sha256-diCJfaR5Q3s44ZJpxZv5R0rx8aThpZzyyLn/4dqJERQ=";
   };
 
   SETUPTOOLS_SCM_PRETEND_VERSION = version;

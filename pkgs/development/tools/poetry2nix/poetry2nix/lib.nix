@@ -151,7 +151,7 @@ let
         (builtins.filter
           ({ prefix, path }: "NETRC" == prefix)
           builtins.nixPath);
-      netrc_file = lib.optionalString (pathParts != [ ]) (builtins.head pathParts).path;
+      netrc_file = if (pathParts != [ ]) then (builtins.head pathParts).path else "";
     in
     pkgs.runCommand file
       {
@@ -161,6 +161,7 @@ let
         outputHashAlgo = "sha256";
         outputHash = hash;
         NETRC = netrc_file;
+        passthru.isWheel = lib.strings.hasSuffix "whl" file;
       } ''
       python ${./fetch_from_legacy.py} ${url} ${pname} ${file}
       mv ${file} $out

@@ -24,7 +24,7 @@ in rec {
         }
         ''
           name=${shellEscape name}
-          mkdir -p "$out/$(dirname "$name")"
+          mkdir -p "$out/$(dirname -- "$name")"
           echo -n "$text" > "$out/$name"
         ''
     else
@@ -289,9 +289,9 @@ in rec {
         // optionalAttrs (config.requisite != [])
           { Requisite = toString config.requisite; }
         // optionalAttrs (config ? restartTriggers && config.restartTriggers != [])
-          { X-Restart-Triggers = toString config.restartTriggers; }
+          { X-Restart-Triggers = "${pkgs.writeText "X-Restart-Triggers" (toString config.restartTriggers)}"; }
         // optionalAttrs (config ? reloadTriggers && config.reloadTriggers != [])
-          { X-Reload-Triggers = toString config.reloadTriggers; }
+          { X-Reload-Triggers = "${pkgs.writeText "X-Reload-Triggers" (toString config.reloadTriggers)}"; }
         // optionalAttrs (config.description != "") {
           Description = config.description; }
         // optionalAttrs (config.documentation != []) {

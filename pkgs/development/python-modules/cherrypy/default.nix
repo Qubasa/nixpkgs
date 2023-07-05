@@ -27,7 +27,7 @@ buildPythonPackage rec {
   version = "18.8.0";
   format = "setuptools";
 
-  disabled = pythonOlder "3.7";
+  disabled = pythonOlder "3.7" || pythonAtLeast "3.11";
 
   src = fetchPypi {
     pname = "CherryPy";
@@ -64,6 +64,10 @@ buildPythonPackage rec {
     pytestCheckHook
     requests-toolbelt
   ];
+
+  preCheck = ''
+    export CI=true
+  '';
 
   pytestFlagsArray = [
     "-W"

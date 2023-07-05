@@ -121,7 +121,7 @@ let
           fi
         done
 
-        for i in $(find ${toString cfg.modules} -type d); do
+        for i in $(find ${toString cfg.modules} -type d | sort); do
           if test $(echo $i/*.so* | wc -w) -ne 0; then
             echo "  ModulePath \"$i\"" >> $out
           fi
@@ -725,7 +725,7 @@ in
     systemd.defaultUnit = mkIf cfg.autorun "graphical.target";
 
     systemd.services.display-manager =
-      { description = "X11 Server";
+      { description = "Display Manager";
 
         after = [ "acpid.service" "systemd-logind.service" "systemd-user-sessions.service" ];
 
@@ -776,7 +776,7 @@ in
         xorg.xf86inputevdev.out
       ];
 
-    system.extraDependencies = singleton (pkgs.runCommand "xkb-validated" {
+    system.checks = singleton (pkgs.runCommand "xkb-validated" {
       inherit (cfg) xkbModel layout xkbVariant xkbOptions;
       nativeBuildInputs = with pkgs.buildPackages; [ xkbvalidate ];
       preferLocalBuild = true;

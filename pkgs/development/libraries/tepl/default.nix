@@ -1,6 +1,7 @@
 { lib, stdenv
 , fetchurl
 , meson
+, mesonEmulatorHook
 , ninja
 , amtk
 , gnome
@@ -24,6 +25,7 @@ stdenv.mkDerivation rec {
     sha256 = "XlayBmnQzwX6HWS1jIw0LFkVgSLcUYEA0JPVnfm4cyE=";
   };
 
+  strictDeps = true;
   nativeBuildInputs = [
     meson
     ninja
@@ -31,6 +33,8 @@ stdenv.mkDerivation rec {
     pkg-config
     gtk-doc
     docbook-xsl-nons
+  ] ++ lib.optionals (!stdenv.buildPlatform.canExecute stdenv.hostPlatform) [
+    mesonEmulatorHook
   ];
 
   buildInputs = [
@@ -58,7 +62,7 @@ stdenv.mkDerivation rec {
   meta = with lib; {
     homepage = "https://wiki.gnome.org/Projects/Tepl";
     description = "Text editor product line";
-    maintainers = teams.gnome.members ++ [ maintainers.manveru ];
+    maintainers = [ maintainers.manveru ];
     license = licenses.lgpl3Plus;
     platforms = platforms.linux;
   };

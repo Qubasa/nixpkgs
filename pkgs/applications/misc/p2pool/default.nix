@@ -19,19 +19,21 @@ let
 in
 stdenv.mkDerivation rec {
   pname = "p2pool";
-  version = "2.7";
+  version = "3.5";
 
   src = fetchFromGitHub {
     owner = "SChernykh";
     repo = "p2pool";
     rev = "v${version}";
-    sha256 = "sha256-j3SVwat/LGw/iGcyNn8acR29Ob/WXDKyeCfDTsH+gxA=";
+    sha256 = "sha256-qwdEmDfH+TE0WF2HIVCn23RlzelLBvCOu9VKpScdO68=";
     fetchSubmodules = true;
   };
 
   nativeBuildInputs = [ cmake pkg-config ];
   buildInputs = [ libuv zeromq libsodium gss hwloc openssl curl ]
     ++ lib.optionals stdenv.isDarwin [ Foundation ];
+
+  cmakeFlags = ["-DWITH_LTO=OFF"];
 
   installPhase = ''
     runHook preInstall

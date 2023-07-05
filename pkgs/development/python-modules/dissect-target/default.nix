@@ -16,6 +16,7 @@
 , dissect-ntfs
 , dissect-regf
 , dissect-sql
+, dissect-shellitem
 , dissect-thumbcache
 , dissect-util
 , dissect-volume
@@ -37,16 +38,16 @@
 
 buildPythonPackage rec {
   pname = "dissect-target";
-  version = "3.7";
+  version = "3.9";
   format = "pyproject";
 
-  disabled = pythonOlder "3.7";
+  disabled = pythonOlder "3.9";
 
   src = fetchFromGitHub {
     owner = "fox-it";
     repo = "dissect.target";
     rev = "refs/tags/${version}";
-    hash = "sha256-jFQ8BxCC4PW135igfXA5EmlWYIZ0zF12suiUMiLbArA=";
+    hash = "sha256-oqBBcoqk8HFuxnJK7/01Neb7Lwb1sIM/TMgXKVCBUoc=";
   };
 
   SETUPTOOLS_SCM_PRETEND_VERSION = version;
@@ -80,6 +81,7 @@ buildPythonPackage rec {
       dissect-extfs
       dissect-fat
       dissect-ffs
+      dissect-shellitem
       dissect-sql
       dissect-thumbcache
       dissect-xfs
@@ -105,6 +107,13 @@ buildPythonPackage rec {
     "test_exec_target_command"
     # Issue with tar file
     "test_tar_sensitive_drive_letter"
+    # Tests compare dates and times
+    "yum"
+  ];
+
+  disabledTestPaths = [
+    # Tests are using Windows paths
+    "tests/test_plugins_browsers.py"
   ];
 
   meta = with lib; {

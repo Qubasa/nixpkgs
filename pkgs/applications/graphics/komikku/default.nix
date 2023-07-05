@@ -1,5 +1,6 @@
 { lib
 , fetchFromGitLab
+, fetchpatch
 , desktop-file-utils
 , gettext
 , glib
@@ -7,7 +8,7 @@
 , gtk4
 , libadwaita
 , libnotify
-, webkitgtk_5_0
+, webkitgtk_6_0
 , meson
 , ninja
 , pkg-config
@@ -18,7 +19,7 @@
 
 python3.pkgs.buildPythonApplication rec {
   pname = "komikku";
-  version = "1.15.0";
+  version = "1.21.1";
 
   format = "other";
 
@@ -26,7 +27,7 @@ python3.pkgs.buildPythonApplication rec {
     owner = "valos";
     repo = "Komikku";
     rev = "v${version}";
-    hash = "sha256-dmi8a9Gf4ixq5oW6ewDGZYRmxY2qmUrD42DfjskRpHk=";
+    hash = "sha256-1VqV0tTI8XVwGJhaGWEdSxtWDhQFmrsncvhC4ftJ7Jg=";
   };
 
   nativeBuildInputs = [
@@ -45,7 +46,7 @@ python3.pkgs.buildPythonApplication rec {
     gtk4
     libadwaita
     libnotify
-    webkitgtk_5_0
+    webkitgtk_6_0
     gobject-introspection
   ];
 

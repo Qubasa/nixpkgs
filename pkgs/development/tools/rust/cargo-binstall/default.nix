@@ -11,16 +11,16 @@
 
 rustPlatform.buildRustPackage rec {
   pname = "cargo-binstall";
-  version = "0.21.3";
+  version = "1.0.0";
 
   src = fetchFromGitHub {
     owner = "cargo-bins";
     repo = "cargo-binstall";
     rev = "v${version}";
-    hash = "sha256-K4NerJSW3ckXMFFnFCMXIqMeevE3Xzr/Wsz9nloolBI=";
+    hash = "sha256-43AXxTuHwaNLDTDmLps/HbRvQFWyUgLQhTrxHtQCk3k=";
   };
 
-  cargoHash = "sha256-YSKnfhSZ885evtEK40QTt90RwtH03aO/aJ6A/DddoVU=";
+  cargoHash = "sha256-F26wjIsBjQ+z+sHGzE7PdYOZi7XwStlOXfbK/lpepDY=";
 
   nativeBuildInputs = [
     pkg-config
@@ -37,11 +37,15 @@ rustPlatform.buildRustPackage rec {
   buildNoDefaultFeatures = true;
   buildFeatures = [
     "fancy-no-backtrace"
+    "git"
     "pkg-config"
     "rustls"
     "trust-dns"
     "zstd-thin"
   ];
+
+  cargoBuildFlags = [ "-p" "cargo-binstall" ];
+  cargoTestFlags = [ "-p" "cargo-binstall" ];
 
   checkFlags = [
     # requires internet access
@@ -49,11 +53,6 @@ rustPlatform.buildRustPackage rec {
     "--skip=gh_api_client::test::test_gh_api_client_cargo_binstall_no_such_release"
     "--skip=gh_api_client::test::test_gh_api_client_cargo_binstall_v0_20_1"
   ];
-
-  # remove cargo config so it can find the linker on aarch64-unknown-linux-gnu
-  postPatch = ''
-    rm .cargo/config
-  '';
 
   meta = with lib; {
     description = "A tool for installing rust binaries as an alternative to building from source";

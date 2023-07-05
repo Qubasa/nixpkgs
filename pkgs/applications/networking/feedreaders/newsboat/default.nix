@@ -1,18 +1,18 @@
 { lib, stdenv, rustPlatform, fetchFromGitHub, stfl, sqlite, curl, gettext, pkg-config, libxml2, json_c, ncurses
-, asciidoctor, libiconv, Security, Foundation, makeWrapper }:
+, asciidoctor, libiconv, Security, Foundation, makeWrapper, nix-update-script }:
 
 rustPlatform.buildRustPackage rec {
   pname = "newsboat";
-  version = "2.30.1";
+  version = "2.32";
 
   src = fetchFromGitHub {
     owner = "newsboat";
     repo = "newsboat";
     rev = "r${version}";
-    hash = "sha256-hiZN3wWknshP8MG4ThhbMLyhQkuFozzoETs3mYaMVro=";
+    hash = "sha256-ACPnCm2cu9BEpMd02t+G4mg6DZ8jCydfK4p+Ad87Hek=";
   };
 
-  cargoHash = "sha256-Ap8i8hLqrUi6aSn4wKAdG3Z/5or+bF+epDaWUdWYt78";
+  cargoHash = "sha256-HHc8HSNWoBkDR7lQgvXUML5ly8sShDn16DWNf/Jig2g=";
 
   # TODO: Check if that's still needed
   postPatch = lib.optionalString stdenv.isDarwin ''
@@ -55,8 +55,13 @@ rustPlatform.buildRustPackage rec {
     done
   '';
 
+  passthru = {
+    updateScript = nix-update-script { };
+  };
+
   meta = with lib; {
     homepage    = "https://newsboat.org/";
+    changelog   = "https://github.com/newsboat/newsboat/blob/${src.rev}/CHANGELOG.md";
     description = "A fork of Newsbeuter, an RSS/Atom feed reader for the text console";
     maintainers = with maintainers; [ dotlambda nicknovitski ];
     license     = licenses.mit;

@@ -1,12 +1,11 @@
-{ stdenv
-, lib
+{ lib
 , fetchFromGitHub
-, buildGo120Package
+, buildGoPackage
 }:
 
-buildGo120Package rec {
+buildGoPackage rec {
   pname = "ssm-session-manager-plugin";
-  version = "1.2.398.0";
+  version = "1.2.463.0";
 
   goPackagePath = "github.com/aws/session-manager-plugin";
 
@@ -14,7 +13,7 @@ buildGo120Package rec {
     owner = "aws";
     repo = "session-manager-plugin";
     rev = version;
-    sha256 = "ufNnr/sxOHUDUsGXwxp1yloVAI6DMtuEdjcQZ2XaHRg=";
+    hash = "sha256-0n7/3CAPf+ioSE041Zik9xeHt5qtrdHotJjBWhizExo=";
   };
 
   postPatch = ''
@@ -31,7 +30,7 @@ buildGo120Package rec {
   '';
 
   doCheck = true;
-  checkFlags = "-skip TestSetSessionHandlers";
+  checkFlags = [ "-skip=TestSetSessionHandlers" ];
 
   preCheck = ''
     if ! [[ $(go/bin/sessionmanagerplugin-main --version) = ${lib.escapeShellArg version} ]]; then

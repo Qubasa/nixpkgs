@@ -12,7 +12,7 @@
 
 buildPythonPackage rec {
   pname = "skodaconnect";
-  version = "1.3.4";
+  version = "1.3.6";
   format = "setuptools";
 
   disabled = pythonOlder "3.8";
@@ -21,7 +21,7 @@ buildPythonPackage rec {
     owner = "lendy007";
     repo = pname;
     rev = "refs/tags/${version}";
-    hash = "sha256-bjFXrhwIGB50upL++VnrrfzFhxFOrxgYhoNZqkbvZ9w=";
+    hash = "sha256-gV/+mt6XxY1UcA1H8zM4pG1ugrDo0m876e3XG1yV32A=";
   };
 
   SETUPTOOLS_SCM_PRETEND_VERSION = version;

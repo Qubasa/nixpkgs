@@ -2,25 +2,30 @@
 , stdenv
 , rustPlatform
 , fetchFromGitHub
+, pkg-config
+, libgit2
 }:
 
 rustPlatform.buildRustPackage rec {
   pname = "gex";
-  version = "0.3.3";
+  version = "0.4.0";
 
   src = fetchFromGitHub {
     owner = "Piturnah";
     repo = pname;
     rev = "v${version}";
-    hash = "sha256-oUcQKpZqqb8wZDpdFfpxLpwdfQlokJE5bsoPwxh+JMM=";
+    hash = "sha256-eRforLvRVSrFWnI5UZEWr1L4UM3ABjAIvui1E1hzk5s=";
   };
 
-  cargoHash = "sha256-ZFrIlNysjlXI8n78N2Hkff6gAplipxSQXUWG8HJq8fs=";
+  nativeBuildInputs = [ pkg-config ];
+  buildInputs = [ libgit2 ];
+
+  cargoHash = "sha256-OEaNERozmJL8gYe33V/m4HQNHi2I4KHpI6PTwFQkPSs=";
 
   meta = with lib; {
     description = "Git Explorer: cross-platform git workflow improvement tool inspired by Magit";
     homepage = "https://github.com/Piturnah/gex";
     license = with licenses; [ asl20 /* or */ mit ];
-    maintainers = with maintainers; [ Br1ght0ne ];
+    maintainers = with maintainers; [ azd325 Br1ght0ne ];
   };
 }
