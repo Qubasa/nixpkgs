@@ -1,6 +1,7 @@
 { lib
 , python3
 , fetchFromGitHub
+, breakpointHook
 }:
 
 python3.pkgs.buildPythonPackage rec {
@@ -19,13 +20,11 @@ python3.pkgs.buildPythonPackage rec {
     setuptools
     jsonschema
     hypothesis
+    breakpointHook
   ];
 
-  pythonImportsCheck = [ "hypothesis_jsonschema" ];
-
-  postDist = ''
-    rm -r $out/.hypothesis
-  '';
+  # Don't do an imports check, because it will generate a .hypothesis directory
+  # in the store, which will cause a clash with other packages
 
   meta = with lib; {
     description = "Tools to generate test data from JSON schemata with Hypothesis";
