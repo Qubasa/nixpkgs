@@ -23,6 +23,10 @@ python3.pkgs.buildPythonPackage rec {
 
   pythonImportsCheck = [ "hypothesis_jsonschema" ];
 
+  postDist = ''
+    rm -r $out/.hypothesis
+  '';
+
   meta = with lib; {
     description = "Tools to generate test data from JSON schemata with Hypothesis";
     homepage = "https://github.com/python-jsonschema/hypothesis-jsonschema";
