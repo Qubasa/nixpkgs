@@ -8435,6 +8435,14 @@ self: super: with self; {
 
   openapi-schema-validator = callPackage ../development/python-modules/openapi-schema-validator { };
 
+  schemathesis = callPackage ../development/python-modules/schemathesis { };
+
+  hypothesis-jsonschema = callPackage ../development/python-modules/hypothesis-jsonschema { };
+
+  hypothesis-graphql = callPackage ../development/python-modules/hypothesis-graphql { };
+
+  starlette-testclient = callPackage ../development/python-modules/starlette-testclient { };
+
   openapi-spec-validator = callPackage ../development/python-modules/openapi-spec-validator { };
 
   openapi3 = callPackage ../development/python-modules/openapi3 { };
