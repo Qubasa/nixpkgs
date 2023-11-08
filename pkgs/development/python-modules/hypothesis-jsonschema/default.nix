@@ -1,7 +1,6 @@
 { lib
 , python3
 , fetchFromGitHub
-, breakpointHook
 }:
 
 python3.pkgs.buildPythonPackage rec {
@@ -20,7 +19,6 @@ python3.pkgs.buildPythonPackage rec {
     setuptools
     jsonschema
     hypothesis
-    breakpointHook
   ];
 
   # Don't do an imports check, because it will generate a .hypothesis directory
