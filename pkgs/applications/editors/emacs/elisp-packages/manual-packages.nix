@@ -23,6 +23,8 @@ in
 
   ebuild-mode = callPackage ./manual-packages/ebuild-mode { };
 
+  el-easydraw = callPackage ./manual-packages/el-easydraw { };
+
   elisp-ffi = callPackage ./manual-packages/elisp-ffi { };
 
   emacspeak = callPackage ./manual-packages/emacspeak { };
@@ -64,6 +66,8 @@ in
   };
 
   mu4e = callPackage ./manual-packages/mu4e { };
+
+  notdeft = callPackage ./manual-packages/notdeft { };
 
   ott-mode = callPackage ./manual-packages/ott-mode { };
 

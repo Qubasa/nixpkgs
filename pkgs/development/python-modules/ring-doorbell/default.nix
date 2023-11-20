@@ -17,7 +17,7 @@
 
 buildPythonPackage rec {
   pname = "ring-doorbell";
-  version = "0.7.7";
+  version = "0.8.1";
   pyproject = true;
 
   disabled = pythonOlder "3.8";
@@ -25,7 +25,7 @@ buildPythonPackage rec {
   src = fetchPypi {
     pname = "ring_doorbell";
     inherit version;
-    hash = "sha256-chhZj9yr/MCbvh3wo8RTqtyyt1Mj22ku4aRMK2c8Efc=";
+    hash = "sha256-A7FQeeYym0nAQlkbpejpZqd5ZgX2cw3/DbshDxlrivw=";
   };
 
   nativeBuildInputs = [

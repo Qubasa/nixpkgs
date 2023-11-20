@@ -1046,6 +1046,8 @@ let
 
     merlin-lib = callPackage ../development/tools/ocaml/merlin/lib.nix { };
 
+    metadata = callPackage ../development/ocaml-modules/metadata { };
+
     metrics = callPackage ../development/ocaml-modules/metrics { };
 
     metrics-influx = callPackage ../development/ocaml-modules/metrics/influx.nix { };
@@ -1295,8 +1297,6 @@ let
     ocamlnet = callPackage ../development/ocaml-modules/ocamlnet { };
 
     ocamlscript = callPackage ../development/tools/ocaml/ocamlscript { };
-
-    ocamlsdl = callPackage ../development/ocaml-modules/ocamlsdl { };
 
     ocb-stubblr = callPackage ../development/ocaml-modules/ocb-stubblr { };
 
@@ -1605,6 +1605,8 @@ let
     rfc7748 = callPackage ../development/ocaml-modules/rfc7748 { };
 
     ringo = callPackage ../development/ocaml-modules/ringo { };
+
+    riot = callPackage ../development/ocaml-modules/riot { };
 
     rock = callPackage ../development/ocaml-modules/rock { };
 
