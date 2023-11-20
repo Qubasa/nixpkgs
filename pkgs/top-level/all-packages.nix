@@ -689,6 +689,8 @@ with pkgs;
 
   frida-tools = callPackage ../tools/security/frida-tools { };
 
+  schemathesis = callPackage ../tools/security/schemathesis { };
+
   frink = callPackage ../development/tools/frink { };
 
   frugal = callPackage ../development/tools/frugal { };

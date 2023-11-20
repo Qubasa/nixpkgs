@@ -3,7 +3,7 @@
 , fetchFromGitHub
 }:
 
-python3.pkgs.buildPythonPackage rec {
+python3.pkgs.buildPythonApplication rec {
   pname = "schemathesis";
   version = "3.21.1";
   format = "pyproject";
