@@ -1633,6 +1633,8 @@ self: super: with self; {
 
   broadbean = callPackage ../development/python-modules/broadbean { };
 
+  broadcaster = callPackage ../development/python-modules/broadcaster { };
+
   broadlink = callPackage ../development/python-modules/broadlink { };
 
   brother = callPackage ../development/python-modules/brother { };
