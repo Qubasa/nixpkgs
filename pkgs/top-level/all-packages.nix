@@ -13027,6 +13027,8 @@ with pkgs;
 
   shiv = with python3Packages; toPythonApplication shiv;
 
+  shim-signed = callPackage ../tools/misc/shim-signed { };
+
   shim-unsigned = callPackage ../tools/misc/shim { };
 
   shocco = callPackage ../tools/text/shocco { };
