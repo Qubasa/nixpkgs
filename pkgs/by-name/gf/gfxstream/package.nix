@@ -1,8 +1,7 @@
 {
   lib,
   stdenv,
-  fetchFromGitiles,
-  fetchpatch,
+  fetchFromGitHub,
   meson,
   ninja,
   pkg-config,
@@ -13,22 +12,19 @@
   vulkan-headers,
   vulkan-loader,
   libx11,
+  libxcb,
 }:
 
 stdenv.mkDerivation (finalAttrs: {
   pname = "gfxstream";
-  version = "0.1.2";
+  version = "0.1.2-unstable-2026-06-18";
 
-  src = fetchFromGitiles {
-    url = "https://android.googlesource.com/platform/hardware/google/gfxstream";
-    rev = "v${finalAttrs.version}-gfxstream-release";
-    hash = "sha256-AN6OpZQ2te4iVuh/kFHXzmLAWIMyuoj9FHTVicnbiPw=";
+  src = fetchFromGitHub {
+    owner = "google";
+    repo = "gfxstream";
+    rev = "09f3b39fc5a9085d769ffcf5448104e2162104e0";
+    hash = "sha256-/TSQJcATB3Wp712R/xUpD2i480HNmQ2UTDDgylHAF9E=";
   };
-
-  patches = [
-    # Fix build with gcc15
-    ./gfxstream-add-include-cstdint.patch
-  ];
 
   # Ensure that meson can find an Objective-C compiler on Darwin.
   postPatch = lib.optionalString stdenv.hostPlatform.isDarwin ''
@@ -48,6 +44,7 @@ stdenv.mkDerivation (finalAttrs: {
     vulkan-headers
     vulkan-loader
     libx11
+    libxcb
   ]
   ++ lib.optionals (lib.meta.availableOn stdenv.hostPlatform libdrm) [ libdrm ];
 
