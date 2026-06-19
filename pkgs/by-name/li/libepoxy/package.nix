@@ -15,16 +15,14 @@
 
 stdenv.mkDerivation (finalAttrs: {
   pname = "libepoxy";
-  version = "1.5.10";
+  version = "1.5.11-unstable-2026-04-03";
 
-  src =
-    with finalAttrs;
-    fetchFromGitHub {
-      owner = "anholt";
-      repo = "libepoxy";
-      rev = version;
-      sha256 = "sha256-gZiyPOW2PeTMILcPiUTqPUGRNlMM5mI1z9563v4SgEs=";
-    };
+  src = fetchFromGitHub {
+    owner = "anholt";
+    repo = "libepoxy";
+    rev = "d1f952c4565c389d82fd1657153e84e050f35b27";
+    hash = "sha256-UasiYqqt7C3uxYZkk8NGIVClSLwwTFdmoVtxcbxCEZg=";
+  };
 
   patches = [ ./libgl-path.patch ];
 
